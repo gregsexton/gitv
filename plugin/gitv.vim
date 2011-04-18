@@ -19,8 +19,8 @@ if !exists("g:Gitv_CommitStep")
     let g:Gitv_CommitStep = 70 "TODO: turn this into the window height.
 endif
 
-"TODO: look into completion for this
 command! -nargs=* -bar Gitv call s:OpenGitv(<q-args>)
+cabbrev gitv Gitv
 
 fu! Gitv_OpenGitCommand(command, windowCmd, ...) "{{{
     "returns 1 if command succeeded with output
