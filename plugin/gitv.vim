@@ -19,7 +19,8 @@ if !exists("g:Gitv_CommitStep")
     let g:Gitv_CommitStep = 70 "TODO: turn this into the window height.
 endif
 
-command! -nargs=0 -bar Gitv call s:OpenGitv()
+"TODO: look into completion for this
+command! -nargs=* -bar Gitv call s:OpenGitv(<q-args>)
 
 fu! Gitv_OpenGitCommand(command, windowCmd, ...) "{{{
     "returns 1 if command succeeded with output
@@ -86,14 +87,14 @@ fu! Gitv_OpenGitCommand(command, windowCmd, ...) "{{{
         return 1
     endif
 endf "}}}
-fu! s:OpenGitv() "{{{
+fu! s:OpenGitv(extraArgs) "{{{
     silent Gtabedit HEAD
     if exists('g:Gitv_OpenHorizontal') && g:Gitv_OpenHorizontal == 1
         let direction = 'new gitv'
     else
         let direction = 'vnew gitv'
     endif
-    if !s:LoadGitv(direction, 0, g:Gitv_CommitStep)
+    if !s:LoadGitv(direction, 0, g:Gitv_CommitStep, a:extraArgs)
         return 0
     endif
     silent setlocal cursorline
@@ -105,8 +106,8 @@ fu! s:OpenGitv() "{{{
     "open the first commit
     silent call s:OpenGitvCommit()
 endf "}}}
-fu! s:LoadGitv(direction, reload, commitCount) "{{{
-    let cmd = "log --all --no-color --decorate=full --pretty=format:\"%d %s__SEP__%ar__SEP__%an__SEP__[%h]\" --graph -" . a:commitCount
+fu! s:LoadGitv(direction, reload, commitCount, extraArgs) "{{{
+    let cmd = "log " . a:extraArgs . " --no-color --decorate=full --pretty=format:\"%d %s__SEP__%ar__SEP__%an__SEP__[%h]\" --graph -" . a:commitCount
     if a:reload
         let jumpTo = line('.')
         if exists('b:Git_Command')
@@ -123,6 +124,7 @@ fu! s:LoadGitv(direction, reload, commitCount) "{{{
 
     silent set filetype=gitv
     let b:Gitv_CommitCount = a:commitCount
+    let b:Gitv_ExtraArgs   = a:extraArgs
     silent setlocal modifiable
     silent setlocal noreadonly
     silent %s/refs\/tags\//t:/ge
@@ -140,7 +142,7 @@ fu! s:LoadGitv(direction, reload, commitCount) "{{{
     "redefine some of the mappings made by Gitv_OpenGitCommand
     nmap <buffer> <silent> <cr> :call <SID>OpenGitvCommit()<cr>
     nmap <buffer> <silent> q :tabc<CR>
-    nmap <buffer> <silent> u :call <SID>LoadGitv('', 1, b:Gitv_CommitCount)<cr>
+    nmap <buffer> <silent> u :call <SID>LoadGitv('', 1, b:Gitv_CommitCount, b:Gitv_ExtraArgs)<cr>
     nmap <buffer> <silent> co :call <SID>CheckOutGitvCommit()<cr>
 
     echom "Loaded up to " . a:commitCount . " commits."
@@ -159,7 +161,7 @@ fu! s:GetGitvRefs() "{{{
 endf "}}}
 fu! s:OpenGitvCommit() "{{{
     if getline('.') == "-- Load More --"
-        call s:LoadGitv('', 1, b:Gitv_CommitCount+g:Gitv_CommitStep)
+        call s:LoadGitv('', 1, b:Gitv_CommitCount+g:Gitv_CommitStep, b:Gitv_ExtraArgs)
         return
     endif
     let sha = s:GetGitvSha()
