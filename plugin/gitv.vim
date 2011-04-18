@@ -4,12 +4,17 @@
 "NOTES:    Much of the credit for gitv goes to Tim Pope and the fugitive plugin
 "          where this plugin either uses functionality directly or was inspired heavily.
 
-if exists("g:loaded_gitv")
-  finish
-endif
+"TODO: ack for 'gitk' should not exist.
+"TODO: ensure this is uncommented
+"if exists("g:loaded_gitv")
+  "finish
+"endif
 let g:loaded_gitv = 1
 
-"configurable options
+"configurable options:
+"g:Gitv_CommitStep
+"g:Gitv_OpenHorizontal
+
 if !exists("g:Gitv_CommitStep")
     let g:Gitv_CommitStep = 70 "TODO: turn this into the window height.
 endif
@@ -18,7 +23,10 @@ command! -nargs=0 -bar Gitv call s:OpenGitv()
 
 fu! Gitv_OpenGitCommand(command, windowCmd, ...) "{{{
     "returns 1 if command succeeded with output
-    "option arg is a flag, if present runs command verbatim
+    "optional arg is a flag, if present runs command verbatim
+
+    "this function is not limited to script scope as is useful for running other commands.
+    "e.g call Gitv_OpenGitCommand("diff --no-color", 'vnew') is useful for getting an overall git diff.
 
     if !a:0     "no extra args
         "switches to the buffer repository before running the command and switches back after.
@@ -48,12 +56,12 @@ fu! Gitv_OpenGitCommand(command, windowCmd, ...) "{{{
         echo "No output."
         return 0
     else
-        if a:windowCmd != ''
-            exec a:windowCmd
-        else
+        if a:windowCmd == ''
             silent setlocal modifiable
             silent setlocal noreadonly
             1,$ d
+        else
+            exec a:windowCmd
         endif
         if !a:0
             let b:Git_Command = finalCmd
@@ -77,7 +85,7 @@ fu! Gitv_OpenGitCommand(command, windowCmd, ...) "{{{
         1
         return 1
     endif
-endfunction "}}}
+endf "}}}
 fu! s:OpenGitv() "{{{
     silent Gtabedit HEAD
     if exists('g:Gitv_OpenHorizontal') && g:Gitv_OpenHorizontal == 1
@@ -94,7 +102,7 @@ fu! s:OpenGitv() "{{{
     else
         silent command! -buffer -nargs=* -complete=customlist,fugitive#git_complete Git wincmd l|Git <args>|wincmd h|normal u
     endif
-    "open the first commit!
+    "open the first commit
     silent call s:OpenGitvCommit()
 endf "}}}
 fu! s:LoadGitv(direction, reload, commitCount) "{{{
@@ -128,12 +136,13 @@ fu! s:LoadGitv(direction, reload, commitCount) "{{{
 
     silent setlocal nomodifiable
     silent setlocal readonly
-    "redefine some of the mappings made by Gitv_OpenGitCommand
 
+    "redefine some of the mappings made by Gitv_OpenGitCommand
     nmap <buffer> <silent> <cr> :call <SID>OpenGitvCommit()<cr>
     nmap <buffer> <silent> q :tabc<CR>
     nmap <buffer> <silent> u :call <SID>LoadGitv('', 1, b:Gitv_CommitCount)<cr>
     nmap <buffer> <silent> co :call <SID>CheckOutGitvCommit()<cr>
+
     echom "Loaded up to " . a:commitCount . " commits."
     return 1
 endf "}}}
