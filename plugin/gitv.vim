@@ -42,7 +42,6 @@ fu! Gitv_OpenGitCommand(command, windowCmd, ...) "{{{
         let bufferDir = getcwd()
         try
             execute cd.'`=workingDir`'
-            echo 'git --git-dir="' .dir. '" ' . a:command
             let finalCmd = 'git --git-dir="' .dir. '" ' . a:command
             let result = system(finalCmd)
         finally
@@ -89,7 +88,7 @@ fu! Gitv_OpenGitCommand(command, windowCmd, ...) "{{{
 endf "}}}
 fu! s:OpenGitv(extraArgs, fileMode) "{{{
     if a:fileMode
-        echom "File mode!"
+        call s:OpenPreviewMode(a:extraArgs)
     else
         call s:OpenBrowserMode(a:extraArgs)
     endif
@@ -107,8 +106,6 @@ fu! s:OpenBrowserMode(extraArgs) "{{{
         return 0
     endif
 
-    silent setlocal cursorline
-
     if s:IsHorizontal()
         silent command! -buffer -nargs=* -complete=customlist,fugitive#git_complete Git wincmd j|Git <args>|wincmd k|normal u
     else
@@ -119,6 +116,11 @@ fu! s:OpenBrowserMode(extraArgs) "{{{
     silent call s:OpenGitvCommit()
 endf "}}}
 fu! s:OpenPreviewMode(extraArgs) "{{{
+    pclose!
+    call s:LoadGitv(&previewheight . "new gitv", 0, g:Gitv_CommitStep, a:extraArgs)
+    set previewwindow
+    set winfixheight
+    let b:Gitv_PreviewMode = 1
 endf "}}}
 fu! s:LoadGitv(direction, reload, commitCount, extraArgs) "{{{
     let cmd = "log " . a:extraArgs . " --no-color --decorate=full --pretty=format:\"%d %s__SEP__%ar__SEP__%an__SEP__[%h]\" --graph -" . a:commitCount
@@ -154,6 +156,7 @@ fu! s:LoadGitv(direction, reload, commitCount, extraArgs) "{{{
 
     silent setlocal nomodifiable
     silent setlocal readonly
+    silent setlocal cursorline
 
     "redefine some of the mappings made by Gitv_OpenGitCommand
     nmap <buffer> <silent> <cr> :call <SID>OpenGitvCommit()<cr>
@@ -223,10 +226,18 @@ fu! s:CheckOutGitvCommit() "{{{
     exec "Git checkout " . choice
 endf "}}}
 fu! s:IsHorizontal() "{{{
+    "TODO: extract GetToggle function?
     return exists('g:Gitv_OpenHorizontal') && g:Gitv_OpenHorizontal == 1
 endf "}}}
+fu! s:IsPreviewMode() "{{{
+    return exists('b:Gitv_PreviewMode') && b:Gitv_PreviewMode == 1
+endf "}}}
 fu! s:CloseGitv() "{{{
-    tabc
-endfu "}}}
+    if s:IsPreviewMode()
+        q
+    else
+        tabc
+    endif
+endf "}}}
 
  " vim:fdm=marker
