@@ -96,20 +96,25 @@ fu! s:OpenGitv(extraArgs, fileMode) "{{{
 endf "}}}
 fu! s:OpenBrowserMode(extraArgs) "{{{
     silent Gtabedit HEAD
-    if exists('g:Gitv_OpenHorizontal') && g:Gitv_OpenHorizontal == 1
+
+    if s:IsHorizontal()
         let direction = 'new gitv'
     else
         let direction = 'vnew gitv'
     endif
+
     if !s:LoadGitv(direction, 0, g:Gitv_CommitStep, a:extraArgs)
         return 0
     endif
+
     silent setlocal cursorline
-    if exists('g:Gitv_OpenHorizontal') && g:Gitv_OpenHorizontal == 1
+
+    if s:IsHorizontal()
         silent command! -buffer -nargs=* -complete=customlist,fugitive#git_complete Git wincmd j|Git <args>|wincmd k|normal u
     else
         silent command! -buffer -nargs=* -complete=customlist,fugitive#git_complete Git wincmd l|Git <args>|wincmd h|normal u
     endif
+
     "open the first commit
     silent call s:OpenGitvCommit()
 endf "}}}
@@ -117,8 +122,9 @@ fu! s:OpenPreviewMode(extraArgs) "{{{
 endf "}}}
 fu! s:LoadGitv(direction, reload, commitCount, extraArgs) "{{{
     let cmd = "log " . a:extraArgs . " --no-color --decorate=full --pretty=format:\"%d %s__SEP__%ar__SEP__%an__SEP__[%h]\" --graph -" . a:commitCount
+
     if a:reload
-        let jumpTo = line('.')
+        let jumpTo = line('.') "this is for repositioning the cursor after reload
         if exists('b:Git_Command')
             "substitute in the new commit count
             let newcmd = substitute(b:Git_Command, " -\\d\\+$", " -" . a:commitCount, "")
@@ -127,6 +133,7 @@ fu! s:LoadGitv(direction, reload, commitCount, extraArgs) "{{{
     else
         silent let res = Gitv_OpenGitCommand(cmd, a:direction)
     endif
+
     if !res
         return 0
     endif
@@ -150,7 +157,7 @@ fu! s:LoadGitv(direction, reload, commitCount, extraArgs) "{{{
 
     "redefine some of the mappings made by Gitv_OpenGitCommand
     nmap <buffer> <silent> <cr> :call <SID>OpenGitvCommit()<cr>
-    nmap <buffer> <silent> q :tabc<CR>
+    nmap <buffer> <silent> q :call <SID>CloseGitv()<CR>
     nmap <buffer> <silent> u :call <SID>LoadGitv('', 1, b:Gitv_CommitCount, b:Gitv_ExtraArgs)<cr>
     nmap <buffer> <silent> co :call <SID>CheckOutGitvCommit()<cr>
 
@@ -177,13 +184,13 @@ fu! s:OpenGitvCommit() "{{{
     if sha == ""
         return
     endif
-    if exists('g:Gitv_OpenHorizontal') && g:Gitv_OpenHorizontal == 1
+    if s:IsHorizontal()
         wincmd j
     else
         wincmd l
     endif
     exec "Gedit " . sha
-    if exists('g:Gitv_OpenHorizontal') && g:Gitv_OpenHorizontal == 1
+    if s:IsHorizontal()
         wincmd k
     else
         wincmd h
@@ -215,5 +222,11 @@ fu! s:CheckOutGitvCommit() "{{{
     let choice = substitute(choice, "^t:", "", "")
     exec "Git checkout " . choice
 endf "}}}
+fu! s:IsHorizontal() "{{{
+    return exists('g:Gitv_OpenHorizontal') && g:Gitv_OpenHorizontal == 1
+endf "}}}
+fu! s:CloseGitv() "{{{
+    tabc
+endfu "}}}
 
  " vim:fdm=marker
