@@ -6,7 +6,7 @@
 
 "TODO: ack for 'gitk' should not exist.
 "TODO: ensure this is uncommented
-"if exists("g:loaded_gitv")
+"if exists("g:loaded_gitv") || v:version < 700
   "finish
 "endif
 let g:loaded_gitv = 1
@@ -19,7 +19,7 @@ if !exists("g:Gitv_CommitStep")
     let g:Gitv_CommitStep = 70 "TODO: turn this into the window height.
 endif
 
-command! -nargs=* -bar Gitv call s:OpenGitv(<q-args>)
+command! -nargs=* -bar -bang Gitv call s:OpenGitv(<q-args>, <bang>0)
 cabbrev gitv Gitv
 
 fu! Gitv_OpenGitCommand(command, windowCmd, ...) "{{{
@@ -87,7 +87,14 @@ fu! Gitv_OpenGitCommand(command, windowCmd, ...) "{{{
         return 1
     endif
 endf "}}}
-fu! s:OpenGitv(extraArgs) "{{{
+fu! s:OpenGitv(extraArgs, fileMode) "{{{
+    if a:fileMode
+        echom "File mode!"
+    else
+        call s:OpenBrowserMode(a:extraArgs)
+    endif
+endf "}}}
+fu! s:OpenBrowserMode(extraArgs) "{{{
     silent Gtabedit HEAD
     if exists('g:Gitv_OpenHorizontal') && g:Gitv_OpenHorizontal == 1
         let direction = 'new gitv'
@@ -105,6 +112,8 @@ fu! s:OpenGitv(extraArgs) "{{{
     endif
     "open the first commit
     silent call s:OpenGitvCommit()
+endf "}}}
+fu! s:OpenPreviewMode(extraArgs) "{{{
 endf "}}}
 fu! s:LoadGitv(direction, reload, commitCount, extraArgs) "{{{
     let cmd = "log " . a:extraArgs . " --no-color --decorate=full --pretty=format:\"%d %s__SEP__%ar__SEP__%an__SEP__[%h]\" --graph -" . a:commitCount
