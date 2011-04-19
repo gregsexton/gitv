@@ -72,7 +72,7 @@ fu! Gitv_OpenGitCommand(command, windowCmd, ...) "{{{
         silent setlocal buftype=nofile
         silent setlocal nobuflisted
         silent setlocal noswapfile
-        silent setlocal bufhidden=delete
+        silent setlocal bufhidden=wipe
         silent setlocal nonumber
         silent setlocal nowrap
         silent setlocal fdm=syntax
@@ -88,7 +88,7 @@ fu! Gitv_OpenGitCommand(command, windowCmd, ...) "{{{
 endf "}}}
 fu! s:OpenGitv(extraArgs, fileMode) "{{{
     if a:fileMode
-        call s:OpenPreviewMode(a:extraArgs)
+        call s:OpenFileMode(a:extraArgs)
     else
         call s:OpenBrowserMode(a:extraArgs)
     endif
@@ -115,12 +115,12 @@ fu! s:OpenBrowserMode(extraArgs) "{{{
     "open the first commit
     silent call s:OpenGitvCommit()
 endf "}}}
-fu! s:OpenPreviewMode(extraArgs) "{{{
+fu! s:OpenFileMode(extraArgs) "{{{
     pclose!
     call s:LoadGitv(&previewheight . "new gitv", 0, g:Gitv_CommitStep, a:extraArgs)
     set previewwindow
     set winfixheight
-    let b:Gitv_PreviewMode = 1
+    let b:Gitv_FileMode = 1
 endf "}}}
 fu! s:LoadGitv(direction, reload, commitCount, extraArgs) "{{{
     let cmd = "log " . a:extraArgs . " --no-color --decorate=full --pretty=format:\"%d %s__SEP__%ar__SEP__%an__SEP__[%h]\" --graph -" . a:commitCount
@@ -229,11 +229,11 @@ fu! s:IsHorizontal() "{{{
     "TODO: extract GetToggle function?
     return exists('g:Gitv_OpenHorizontal') && g:Gitv_OpenHorizontal == 1
 endf "}}}
-fu! s:IsPreviewMode() "{{{
-    return exists('b:Gitv_PreviewMode') && b:Gitv_PreviewMode == 1
+fu! s:IsFileMode() "{{{
+    return exists('b:Gitv_FileMode') && b:Gitv_FileMode == 1
 endf "}}}
 fu! s:CloseGitv() "{{{
-    if s:IsPreviewMode()
+    if s:IsFileMode()
         q
     else
         tabc
