@@ -116,11 +116,13 @@ fu! s:OpenBrowserMode(extraArgs) "{{{
     silent call s:OpenGitvCommit()
 endf "}}}
 fu! s:OpenFileMode(extraArgs) "{{{
+    let relPath = fugitive#buffer().path()
     pclose!
     call s:LoadGitv(&previewheight . "new gitv", 0, g:Gitv_CommitStep, a:extraArgs)
     set previewwindow
     set winfixheight
     let b:Gitv_FileMode = 1
+    let b:Gitv_FileModeRelPath = relPath
 endf "}}}
 fu! s:LoadGitv(direction, reload, commitCount, extraArgs) "{{{
     let cmd = "log " . a:extraArgs . " --no-color --decorate=full --pretty=format:\"%d %s__SEP__%ar__SEP__%an__SEP__[%h]\" --graph -" . a:commitCount
@@ -187,19 +189,33 @@ fu! s:OpenGitvCommit() "{{{
     if sha == ""
         return
     endif
-    if s:IsHorizontal()
+    if s:IsFileMode()
+        if !exists("b:Gitv_FileModeRelPath") || b:Gitv_FileModeRelPath == ''
+            return
+        endif
+        let relPath = b:Gitv_FileModeRelPath
         wincmd j
-    else
-        wincmd l
-    endif
-    exec "Gedit " . sha
-    if s:IsHorizontal()
+        exec "Gedit " . sha . ":" . relPath
         wincmd k
     else
-        wincmd h
+        if s:IsHorizontal()
+            wincmd j
+        else
+            wincmd l
+        endif
+        exec "Gedit " . sha
+        if s:IsHorizontal()
+            wincmd k
+        else
+            wincmd h
+        endif
     endif
 endf "}}}
 fu! s:CheckOutGitvCommit() "{{{
+    if s:IsFileMode()
+        echom "Check out is not possible in file mode."
+        return
+    endif
     let allrefs = s:GetGitvRefs()
     let sha = s:GetGitvSha()
     if sha == ""
