@@ -53,7 +53,7 @@ fu! Gitv_OpenGitCommand(command, windowCmd, ...) "{{{
 
     "let result = system('git ' . a:command)
     if result == ""
-        echo "No output."
+        echom "No output."
         return 0
     else
         if a:windowCmd == ''
@@ -102,7 +102,7 @@ fu! s:OpenBrowserMode(extraArgs) "{{{
         let direction = 'vnew gitv'
     endif
 
-    if !s:LoadGitv(direction, 0, g:Gitv_CommitStep, a:extraArgs)
+    if !s:LoadGitv(direction, 0, g:Gitv_CommitStep, a:extraArgs, '')
         return 0
     endif
 
@@ -118,27 +118,18 @@ endf "}}}
 fu! s:OpenFileMode(extraArgs) "{{{
     let relPath = fugitive#buffer().path()
     pclose!
-    call s:LoadGitv(&previewheight . "new gitv", 0, g:Gitv_CommitStep, a:extraArgs)
+    call s:LoadGitv(&previewheight . "new gitv", 0, g:Gitv_CommitStep, a:extraArgs, relPath)
     set previewwindow
     set winfixheight
     let b:Gitv_FileMode = 1
     let b:Gitv_FileModeRelPath = relPath
 endf "}}}
-fu! s:LoadGitv(direction, reload, commitCount, extraArgs) "{{{
-    let cmd = "log " . a:extraArgs . " --no-color --decorate=full --pretty=format:\"%d %s__SEP__%ar__SEP__%an__SEP__[%h]\" --graph -" . a:commitCount
-
+fu! s:LoadGitv(direction, reload, commitCount, extraArgs, filePath) "{{{
     if a:reload
         let jumpTo = line('.') "this is for repositioning the cursor after reload
-        if exists('b:Git_Command')
-            "substitute in the new commit count
-            let newcmd = substitute(b:Git_Command, " -\\d\\+$", " -" . a:commitCount, "")
-            silent let res = Gitv_OpenGitCommand(newcmd, a:direction, 1)
-        endif
-    else
-        silent let res = Gitv_OpenGitCommand(cmd, a:direction)
     endif
 
-    if !res
+    if !s:ConstructAndExecuteCmd(a:direction, a:reload, a:commitCount, a:extraArgs, a:filePath)
         return 0
     endif
 
@@ -163,11 +154,37 @@ fu! s:LoadGitv(direction, reload, commitCount, extraArgs) "{{{
     "redefine some of the mappings made by Gitv_OpenGitCommand
     nmap <buffer> <silent> <cr> :call <SID>OpenGitvCommit()<cr>
     nmap <buffer> <silent> q :call <SID>CloseGitv()<CR>
-    nmap <buffer> <silent> u :call <SID>LoadGitv('', 1, b:Gitv_CommitCount, b:Gitv_ExtraArgs)<cr>
+    nmap <buffer> <silent> u :call <SID>LoadGitv('', 1, b:Gitv_CommitCount, b:Gitv_ExtraArgs, <SID>GetRelativeFilePath())<cr>
     nmap <buffer> <silent> co :call <SID>CheckOutGitvCommit()<cr>
 
     echom "Loaded up to " . a:commitCount . " commits."
     return 1
+endf "}}}
+fu! s:ConstructAndExecuteCmd(direction, reload, commitCount, extraArgs, filePath) "{{{
+    if a:reload "run the same command again with any extra args
+        if exists('b:Git_Command')
+            "substitute in the potentially new commit count taking account of a potential filePath
+            let newcmd = b:Git_Command
+            if a:filePath != ''
+                let newcmd = substitute(newcmd, " -- " . a:filePath . "$", "", "")
+            endif
+            let newcmd = substitute(newcmd, " -\\d\\+$", " -" . a:commitCount, "")
+            if a:filePath != ''
+                let newcmd .= ' -- ' . a:filePath
+            endif
+            silent let res = Gitv_OpenGitCommand(newcmd, a:direction, 1)
+            return res
+        endif
+    else
+        "TODO: break up this line
+        let cmd = "log " . a:extraArgs . " --no-color --decorate=full --pretty=format:\"%d %s__SEP__%ar__SEP__%an__SEP__[%h]\" --graph -" . a:commitCount
+        if a:filePath != ''
+            let cmd .= ' -- ' . a:filePath
+        endif
+        silent let res = Gitv_OpenGitCommand(cmd, a:direction)
+        return res
+    endif
+    return 0
 endf "}}}
 fu! s:GetGitvSha() "{{{
     let l = getline('.')
@@ -182,7 +199,7 @@ fu! s:GetGitvRefs() "{{{
 endf "}}}
 fu! s:OpenGitvCommit() "{{{
     if getline('.') == "-- Load More --"
-        call s:LoadGitv('', 1, b:Gitv_CommitCount+g:Gitv_CommitStep, b:Gitv_ExtraArgs)
+        call s:LoadGitv('', 1, b:Gitv_CommitCount+g:Gitv_CommitStep, b:Gitv_ExtraArgs, s:GetRelativeFilePath())
         return
     endif
     let sha = s:GetGitvSha()
@@ -247,6 +264,9 @@ fu! s:IsHorizontal() "{{{
 endf "}}}
 fu! s:IsFileMode() "{{{
     return exists('b:Gitv_FileMode') && b:Gitv_FileMode == 1
+endf "}}}
+fu! s:GetRelativeFilePath() "{{{
+    return exists('b:Gitv_FileModeRelPath') ? b:Gitv_FileModeRelPath : ''
 endf "}}}
 fu! s:CloseGitv() "{{{
     if s:IsFileMode()
