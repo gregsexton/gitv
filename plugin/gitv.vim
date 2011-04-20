@@ -22,7 +22,7 @@ endif
 command! -nargs=* -bar -bang Gitv call s:OpenGitv(<q-args>, <bang>0)
 cabbrev gitv Gitv
 
-"Public API:
+"Public API:"{{{
 fu! Gitv_OpenGitCommand(command, windowCmd, ...) "{{{
     "returns 1 if command succeeded with output
     "optional arg is a flag, if present runs command verbatim
@@ -86,8 +86,8 @@ fu! Gitv_OpenGitCommand(command, windowCmd, ...) "{{{
         1
         return 1
     endif
-endf "}}}
-"Open And Update:
+endf "}}} }}}
+"Open And Update:"{{{
 fu! s:OpenGitv(extraArgs, fileMode) "{{{
     if a:fileMode
         call s:OpenFileMode(a:extraArgs)
@@ -192,8 +192,8 @@ fu! s:ConstructAndExecuteCmd(direction, reload, commitCount, extraArgs, filePath
         return res
     endif
     return 0
-endf "}}}
-"Utilities:
+endf "}}} }}}
+"Utilities:"{{{
 fu! s:GetGitvSha() "{{{
     let l = getline('.')
     let sha = matchstr(l, "\\[\\zs[0-9a-f]\\{7}\\ze\\]$")
@@ -214,8 +214,8 @@ fu! s:IsFileMode() "{{{
 endf "}}}
 fu! s:GetRelativeFilePath() "{{{
     return exists('b:Gitv_FileModeRelPath') ? b:Gitv_FileModeRelPath : ''
-endf "}}}
-"Mapped Functions:
+endf "}}} }}}
+"Mapped Functions:"{{{
 fu! s:OpenGitvCommit() "{{{
     if getline('.') == "-- Load More --"
         call s:LoadGitv('', 1, b:Gitv_CommitCount+g:Gitv_CommitStep, b:Gitv_ExtraArgs, s:GetRelativeFilePath())
@@ -301,6 +301,6 @@ fu! s:DiffGitvCommit() "{{{
     endif
     wincmd j
     exec "Gdiff " . sha
-endf "}}}
+endf "}}} }}}
 
  " vim:fdm=marker
