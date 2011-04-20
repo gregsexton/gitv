@@ -145,7 +145,6 @@ fu! s:LoadGitv(direction, reload, commitCount, extraArgs, filePath) "{{{
     silent %s/__SEP__//g
     call append(line('$'), '-- Load More --')
     if a:filePath != ''
-        call append(0, '')
         call append(0, '-- ['.a:filePath.'] --')
     endif
 
