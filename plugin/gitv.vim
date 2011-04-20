@@ -144,6 +144,10 @@ fu! s:LoadGitv(direction, reload, commitCount, extraArgs, filePath) "{{{
     silent 1,$Tabularize /__SEP__/
     silent %s/__SEP__//g
     call append(line('$'), '-- Load More --')
+    if a:filePath != ''
+        call append(0, '')
+        call append(0, '-- ['.a:filePath.'] --')
+    endif
 
     exec exists('jumpTo') ? jumpTo : '1'
 
@@ -201,6 +205,12 @@ fu! s:OpenGitvCommit() "{{{
     if getline('.') == "-- Load More --"
         call s:LoadGitv('', 1, b:Gitv_CommitCount+g:Gitv_CommitStep, b:Gitv_ExtraArgs, s:GetRelativeFilePath())
         return
+    endif
+    if s:IsFileMode() && getline('.') =~ "^-- \\[.*\\] --$"
+        "open working copy of file
+        let fp = s:GetRelativeFilePath()
+        wincmd j
+        exec "e " . fugitive#buffer().repo().tree() . "/" . fp
     endif
     let sha = s:GetGitvSha()
     if sha == ""

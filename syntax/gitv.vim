@@ -38,6 +38,7 @@ syn match gitvRefTag /t:\zs.\{-}\ze\(, \|)\)/ contained containedin=gitvRef
 syn match gitvRefRemote /r:\zs.\{-}\ze\(, \|)\)/ contained containedin=gitvRef
 
 syn match gitvLoadMore /^-- Load More --$/
+syn match gitvWorkingCopy /^-- \[.*\] --$/ contained containedin=gitvSubject
 
 hi def link gitvHash              Number
 hi def link gitvRef               Directory
@@ -46,6 +47,7 @@ hi def link gitvRefRemote         Statement
 hi def link gitvDate              Statement
 hi def link gitvSubject           Normal
 hi def link gitvLoadMore          Question
+hi def link gitvWorkingCopy       Question
 
 hi def link gitvGraphEdge0        Delimiter
 
