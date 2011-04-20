@@ -123,6 +123,7 @@ fu! s:OpenFileMode(extraArgs) "{{{
     set winfixheight
     let b:Gitv_FileMode = 1
     let b:Gitv_FileModeRelPath = relPath
+    silent command! -buffer -nargs=* -complete=customlist,fugitive#git_complete Git wincmd j|Git <args>|wincmd k|normal u
 endf "}}}
 fu! s:LoadGitv(direction, reload, commitCount, extraArgs, filePath) "{{{
     if a:reload
