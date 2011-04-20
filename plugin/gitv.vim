@@ -142,7 +142,7 @@ fu! s:LoadGitv(direction, reload, commitCount, extraArgs, filePath) "{{{
     silent %s/refs\/remotes\//r:/ge
     silent %s/refs\/heads\///ge
     silent 1,$Tabularize /__SEP__/
-    silent %s/__SEP__//g
+    silent %s/__SEP__//ge
     call append(line('$'), '-- Load More --')
     if a:filePath != ''
         call append(0, '-- ['.a:filePath.'] --')
