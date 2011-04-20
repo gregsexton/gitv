@@ -163,6 +163,7 @@ fu! s:LoadGitv(direction, reload, commitCount, extraArgs, filePath) "{{{
     nmap <buffer> <silent> u :call <SID>LoadGitv('', 1, b:Gitv_CommitCount, b:Gitv_ExtraArgs, <SID>GetRelativeFilePath())<cr>
     nmap <buffer> <silent> co :call <SID>CheckOutGitvCommit()<cr>
     nmap <buffer> <silent> D :call <SID>DiffGitvCommit()<cr>
+    vmap <buffer> <silent> D :call <SID>DiffGitvCommit()<cr>
 
     echom "Loaded up to " . a:commitCount . " commits."
     return 1
@@ -194,8 +195,8 @@ fu! s:ConstructAndExecuteCmd(direction, reload, commitCount, extraArgs, filePath
     return 0
 endf "}}} }}}
 "Utilities:"{{{
-fu! s:GetGitvSha() "{{{
-    let l = getline('.')
+fu! s:GetGitvSha(lineNumber) "{{{
+    let l = getline(a:lineNumber)
     let sha = matchstr(l, "\\[\\zs[0-9a-f]\\{7}\\ze\\]$")
     return sha
 endf "}}}
@@ -214,6 +215,14 @@ fu! s:IsFileMode() "{{{
 endf "}}}
 fu! s:GetRelativeFilePath() "{{{
     return exists('b:Gitv_FileModeRelPath') ? b:Gitv_FileModeRelPath : ''
+endf "}}}
+fu! s:OpenRelativeFilePath(sha) "{{{
+    if !exists("b:Gitv_FileModeRelPath") || b:Gitv_FileModeRelPath == ''
+        return
+    endif
+    let relPath = b:Gitv_FileModeRelPath
+    wincmd j
+    exec "Gedit " . a:sha . ":" . relPath
 endf "}}} }}}
 "Mapped Functions:"{{{
 fu! s:OpenGitvCommit() "{{{
@@ -227,17 +236,12 @@ fu! s:OpenGitvCommit() "{{{
         wincmd j
         exec "e " . fugitive#buffer().repo().tree() . "/" . fp
     endif
-    let sha = s:GetGitvSha()
+    let sha = s:GetGitvSha(line('.'))
     if sha == ""
         return
     endif
     if s:IsFileMode()
-        if !exists("b:Gitv_FileModeRelPath") || b:Gitv_FileModeRelPath == ''
-            return
-        endif
-        let relPath = b:Gitv_FileModeRelPath
-        wincmd j
-        exec "Gedit " . sha . ":" . relPath
+        call s:OpenRelativeFilePath(sha)
         wincmd k
     else
         if s:IsHorizontal()
@@ -259,7 +263,7 @@ fu! s:CheckOutGitvCommit() "{{{
         return
     endif
     let allrefs = s:GetGitvRefs()
-    let sha = s:GetGitvSha()
+    let sha = s:GetGitvSha(line('.'))
     if sha == ""
         return
     endif
@@ -290,17 +294,22 @@ fu! s:CloseGitv() "{{{
         tabc
     endif
 endf "}}}
-fu! s:DiffGitvCommit() "{{{
+fu! s:DiffGitvCommit() range "{{{
     if !s:IsFileMode()
         echom "Diffing is not possible in browser mode."
         return
     endif
-    let sha = s:GetGitvSha()
-    if sha == ""
+    let shafirst = s:GetGitvSha(a:firstline)
+    let shalast  = s:GetGitvSha(a:lastline)
+    if shafirst == "" || shalast == ""
         return
     endif
-    wincmd j
-    exec "Gdiff " . sha
+    if a:firstline != a:lastline
+        call s:OpenRelativeFilePath(shafirst)
+    else
+        wincmd j
+    endif
+    exec "Gdiff " . shalast
 endf "}}} }}}
 
  " vim:fdm=marker
