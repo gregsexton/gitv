@@ -12,8 +12,8 @@
 let g:loaded_gitv = 1
 
 "configurable options:
-"g:Gitv_CommitStep
-"g:Gitv_OpenHorizontal
+"g:Gitv_CommitStep     - int
+"g:Gitv_OpenHorizontal - [0,1,'AUTO']
 
 if !exists("g:Gitv_CommitStep")
     let g:Gitv_CommitStep = 70 "TODO: turn this into the window height.
@@ -202,20 +202,29 @@ fu! s:ResizeWindow(fileMode) "{{{
     if a:fileMode "window height determined by &previewheight
         return
     endif
-    if s:IsHorizontal()
+    if !s:IsHorizontal()
+        "size window based on longest line
+        let longest = max(map(range(1, line('$')), "virtcol([v:val, '$'])"))
+        if longest > &columns/2
+            "potentially auto change to horizontal
+            if s:AutoHorizontal()
+                "switching to horizontal
+                let b:Gitv_AutoHorizontal=1
+                wincmd K
+                call s:ResizeWindow(a:fileMode)
+                return
+            else
+                let longest = &columns/2
+            endif
+        endif
+        exec "vertical resize " . longest
+    else
         "size window based on num lines
         let lines = line('$')
         if lines > &lines/2
             let lines = &lines/2
         endif
         exec "resize " . lines
-    else
-        "size window based on longest line
-        let longest = max(map(range(1, line('$')), "virtcol([v:val, '$'])"))
-        if longest > &columns/2
-            let longest = &columns/2
-        endif
-        exec "vertical resize " . longest
     endif
 endf "}}} }}}
 "Utilities:"{{{
@@ -231,8 +240,13 @@ fu! s:GetGitvRefs() "{{{
     return refs
 endf "}}}
 fu! s:IsHorizontal() "{{{
-    "TODO: extract GetToggle function?
-    return exists('g:Gitv_OpenHorizontal') && g:Gitv_OpenHorizontal == 1
+    "NOTE: this can only tell you if horizontal while cursor in browser window
+    let horizGlobal = exists('g:Gitv_OpenHorizontal') && g:Gitv_OpenHorizontal == 1
+    let horizBuffer = exists('b:Gitv_AutoHorizontal') && b:Gitv_AutoHorizontal == 1
+    return horizGlobal || horizBuffer
+endf "}}}
+fu! s:AutoHorizontal() "{{{
+    return exists('g:Gitv_OpenHorizontal') && g:Gitv_OpenHorizontal ==? 'auto'
 endf "}}}
 fu! s:IsFileMode() "{{{
     return exists('b:Gitv_FileMode') && b:Gitv_FileMode == 1
@@ -268,13 +282,14 @@ fu! s:OpenGitvCommit() "{{{
         call s:OpenRelativeFilePath(sha)
         wincmd k
     else
-        if s:IsHorizontal()
+        let horiz = s:IsHorizontal()
+        if horiz
             wincmd j
         else
             wincmd l
         endif
         exec "Gedit " . sha
-        if s:IsHorizontal()
+        if horiz
             wincmd k
         else
             wincmd h
