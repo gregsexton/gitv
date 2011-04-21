@@ -137,13 +137,10 @@ fu! s:LoadGitv(direction, reload, commitCount, extraArgs, filePath) "{{{
     if !s:ConstructAndExecuteCmd(a:direction, a:reload, a:commitCount, a:extraArgs, a:filePath)
         return 0
     endif
-
     call s:SetupBuffer(a:commitCount, a:extraArgs, a:filePath)
-
     exec exists('jumpTo') ? jumpTo : '1'
-
-    "redefine some of the mappings made by Gitv_OpenGitCommand
-    call s:SetupMappings()
+    call s:SetupMappings() "redefines some of the mappings made by Gitv_OpenGitCommand
+    call s:ResizeWindow(a:filePath!='')
 
     echom "Loaded up to " . a:commitCount . " commits."
     return 1
@@ -200,6 +197,26 @@ fu! s:SetupMappings() "{{{
     nmap <buffer> <silent> co :call <SID>CheckOutGitvCommit()<cr>
     nmap <buffer> <silent> D :call <SID>DiffGitvCommit()<cr>
     vmap <buffer> <silent> D :call <SID>DiffGitvCommit()<cr>
+endf "}}}
+fu! s:ResizeWindow(fileMode) "{{{
+    if a:fileMode "window height determined by &previewheight
+        return
+    endif
+    if s:IsHorizontal()
+        "size window based on num lines
+        let lines = line('$')
+        if lines > &lines/2
+            let lines = &lines/2
+        endif
+        exec "resize " . lines
+    else
+        "size window based on longest line
+        let longest = max(map(range(1, line('$')), "virtcol([v:val, '$'])"))
+        if longest > &columns/2
+            let longest = &columns/2
+        endif
+        exec "vertical resize " . longest
+    endif
 endf "}}} }}}
 "Utilities:"{{{
 fu! s:GetGitvSha(lineNumber) "{{{
