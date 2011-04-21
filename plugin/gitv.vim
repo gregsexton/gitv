@@ -120,7 +120,9 @@ endf "}}}
 fu! s:OpenFileMode(extraArgs) "{{{
     let relPath = fugitive#buffer().path()
     pclose!
-    call s:LoadGitv(&previewheight . "new gitv", 0, g:Gitv_CommitStep, a:extraArgs, relPath)
+    if !s:LoadGitv(&previewheight . "new gitv", 0, g:Gitv_CommitStep, a:extraArgs, relPath)
+        return 0
+    endif
     set previewwindow
     set winfixheight
     let b:Gitv_FileMode = 1
@@ -136,34 +138,12 @@ fu! s:LoadGitv(direction, reload, commitCount, extraArgs, filePath) "{{{
         return 0
     endif
 
-    silent set filetype=gitv
-    let b:Gitv_CommitCount = a:commitCount
-    let b:Gitv_ExtraArgs   = a:extraArgs
-    silent setlocal modifiable
-    silent setlocal noreadonly
-    silent %s/refs\/tags\//t:/ge
-    silent %s/refs\/remotes\//r:/ge
-    silent %s/refs\/heads\///ge
-    silent 1,$Tabularize /__SEP__/
-    silent %s/__SEP__//ge
-    call append(line('$'), '-- Load More --')
-    if a:filePath != ''
-        call append(0, '-- ['.a:filePath.'] --')
-    endif
+    call s:SetupBuffer(a:commitCount, a:extraArgs, a:filePath)
 
     exec exists('jumpTo') ? jumpTo : '1'
 
-    silent setlocal nomodifiable
-    silent setlocal readonly
-    silent setlocal cursorline
-
     "redefine some of the mappings made by Gitv_OpenGitCommand
-    nmap <buffer> <silent> <cr> :call <SID>OpenGitvCommit()<cr>
-    nmap <buffer> <silent> q :call <SID>CloseGitv()<CR>
-    nmap <buffer> <silent> u :call <SID>LoadGitv('', 1, b:Gitv_CommitCount, b:Gitv_ExtraArgs, <SID>GetRelativeFilePath())<cr>
-    nmap <buffer> <silent> co :call <SID>CheckOutGitvCommit()<cr>
-    nmap <buffer> <silent> D :call <SID>DiffGitvCommit()<cr>
-    vmap <buffer> <silent> D :call <SID>DiffGitvCommit()<cr>
+    call s:SetupMappings()
 
     echom "Loaded up to " . a:commitCount . " commits."
     return 1
@@ -193,6 +173,33 @@ fu! s:ConstructAndExecuteCmd(direction, reload, commitCount, extraArgs, filePath
         return res
     endif
     return 0
+endf "}}}
+fu! s:SetupBuffer(commitCount, extraArgs, filePath) "{{{
+    silent set filetype=gitv
+    let b:Gitv_CommitCount = a:commitCount
+    let b:Gitv_ExtraArgs   = a:extraArgs
+    silent setlocal modifiable
+    silent setlocal noreadonly
+    silent %s/refs\/tags\//t:/ge
+    silent %s/refs\/remotes\//r:/ge
+    silent %s/refs\/heads\///ge
+    silent 1,$Tabularize /__SEP__/
+    silent %s/__SEP__//ge
+    call append(line('$'), '-- Load More --')
+    if a:filePath != ''
+        call append(0, '-- ['.a:filePath.'] --')
+    endif
+    silent setlocal nomodifiable
+    silent setlocal readonly
+    silent setlocal cursorline
+endf "}}}
+fu! s:SetupMappings() "{{{
+    nmap <buffer> <silent> <cr> :call <SID>OpenGitvCommit()<cr>
+    nmap <buffer> <silent> q :call <SID>CloseGitv()<CR>
+    nmap <buffer> <silent> u :call <SID>LoadGitv('', 1, b:Gitv_CommitCount, b:Gitv_ExtraArgs, <SID>GetRelativeFilePath())<cr>
+    nmap <buffer> <silent> co :call <SID>CheckOutGitvCommit()<cr>
+    nmap <buffer> <silent> D :call <SID>DiffGitvCommit()<cr>
+    vmap <buffer> <silent> D :call <SID>DiffGitvCommit()<cr>
 endf "}}} }}}
 "Utilities:"{{{
 fu! s:GetGitvSha(lineNumber) "{{{
