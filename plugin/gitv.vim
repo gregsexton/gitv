@@ -16,7 +16,7 @@ let g:loaded_gitv = 1
 "g:Gitv_OpenHorizontal - [0,1,'AUTO']
 
 if !exists("g:Gitv_CommitStep")
-    let g:Gitv_CommitStep = 70 "TODO: turn this into the window height.
+    let g:Gitv_CommitStep = &lines
 endif
 
 command! -nargs=* -bar -bang Gitv call s:OpenGitv(<q-args>, <bang>0)
