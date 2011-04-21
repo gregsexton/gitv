@@ -12,8 +12,8 @@
 let g:loaded_gitv = 1
 
 "configurable options:
-"g:Gitv_CommitStep
-"g:Gitv_OpenHorizontal
+"g:Gitv_CommitStep     - int
+"g:Gitv_OpenHorizontal - [0,1,'AUTO']
 
 if !exists("g:Gitv_CommitStep")
     let g:Gitv_CommitStep = 70 "TODO: turn this into the window height.
@@ -120,7 +120,9 @@ endf "}}}
 fu! s:OpenFileMode(extraArgs) "{{{
     let relPath = fugitive#buffer().path()
     pclose!
-    call s:LoadGitv(&previewheight . "new gitv", 0, g:Gitv_CommitStep, a:extraArgs, relPath)
+    if !s:LoadGitv(&previewheight . "new gitv", 0, g:Gitv_CommitStep, a:extraArgs, relPath)
+        return 0
+    endif
     set previewwindow
     set winfixheight
     let b:Gitv_FileMode = 1
@@ -135,35 +137,10 @@ fu! s:LoadGitv(direction, reload, commitCount, extraArgs, filePath) "{{{
     if !s:ConstructAndExecuteCmd(a:direction, a:reload, a:commitCount, a:extraArgs, a:filePath)
         return 0
     endif
-
-    silent set filetype=gitv
-    let b:Gitv_CommitCount = a:commitCount
-    let b:Gitv_ExtraArgs   = a:extraArgs
-    silent setlocal modifiable
-    silent setlocal noreadonly
-    silent %s/refs\/tags\//t:/ge
-    silent %s/refs\/remotes\//r:/ge
-    silent %s/refs\/heads\///ge
-    silent 1,$Tabularize /__SEP__/
-    silent %s/__SEP__//ge
-    call append(line('$'), '-- Load More --')
-    if a:filePath != ''
-        call append(0, '-- ['.a:filePath.'] --')
-    endif
-
+    call s:SetupBuffer(a:commitCount, a:extraArgs, a:filePath)
     exec exists('jumpTo') ? jumpTo : '1'
-
-    silent setlocal nomodifiable
-    silent setlocal readonly
-    silent setlocal cursorline
-
-    "redefine some of the mappings made by Gitv_OpenGitCommand
-    nmap <buffer> <silent> <cr> :call <SID>OpenGitvCommit()<cr>
-    nmap <buffer> <silent> q :call <SID>CloseGitv()<CR>
-    nmap <buffer> <silent> u :call <SID>LoadGitv('', 1, b:Gitv_CommitCount, b:Gitv_ExtraArgs, <SID>GetRelativeFilePath())<cr>
-    nmap <buffer> <silent> co :call <SID>CheckOutGitvCommit()<cr>
-    nmap <buffer> <silent> D :call <SID>DiffGitvCommit()<cr>
-    vmap <buffer> <silent> D :call <SID>DiffGitvCommit()<cr>
+    call s:SetupMappings() "redefines some of the mappings made by Gitv_OpenGitCommand
+    call s:ResizeWindow(a:filePath!='')
 
     echom "Loaded up to " . a:commitCount . " commits."
     return 1
@@ -193,6 +170,62 @@ fu! s:ConstructAndExecuteCmd(direction, reload, commitCount, extraArgs, filePath
         return res
     endif
     return 0
+endf "}}}
+fu! s:SetupBuffer(commitCount, extraArgs, filePath) "{{{
+    silent set filetype=gitv
+    let b:Gitv_CommitCount = a:commitCount
+    let b:Gitv_ExtraArgs   = a:extraArgs
+    silent setlocal modifiable
+    silent setlocal noreadonly
+    silent %s/refs\/tags\//t:/ge
+    silent %s/refs\/remotes\//r:/ge
+    silent %s/refs\/heads\///ge
+    silent 1,$Tabularize /__SEP__/
+    silent %s/__SEP__//ge
+    call append(line('$'), '-- Load More --')
+    if a:filePath != ''
+        call append(0, '-- ['.a:filePath.'] --')
+    endif
+    silent setlocal nomodifiable
+    silent setlocal readonly
+    silent setlocal cursorline
+endf "}}}
+fu! s:SetupMappings() "{{{
+    nmap <buffer> <silent> <cr> :call <SID>OpenGitvCommit()<cr>
+    nmap <buffer> <silent> q :call <SID>CloseGitv()<CR>
+    nmap <buffer> <silent> u :call <SID>LoadGitv('', 1, b:Gitv_CommitCount, b:Gitv_ExtraArgs, <SID>GetRelativeFilePath())<cr>
+    nmap <buffer> <silent> co :call <SID>CheckOutGitvCommit()<cr>
+    nmap <buffer> <silent> D :call <SID>DiffGitvCommit()<cr>
+    vmap <buffer> <silent> D :call <SID>DiffGitvCommit()<cr>
+endf "}}}
+fu! s:ResizeWindow(fileMode) "{{{
+    if a:fileMode "window height determined by &previewheight
+        return
+    endif
+    if !s:IsHorizontal()
+        "size window based on longest line
+        let longest = max(map(range(1, line('$')), "virtcol([v:val, '$'])"))
+        if longest > &columns/2
+            "potentially auto change to horizontal
+            if s:AutoHorizontal()
+                "switching to horizontal
+                let b:Gitv_AutoHorizontal=1
+                wincmd K
+                call s:ResizeWindow(a:fileMode)
+                return
+            else
+                let longest = &columns/2
+            endif
+        endif
+        exec "vertical resize " . longest
+    else
+        "size window based on num lines
+        let lines = line('$')
+        if lines > &lines/2
+            let lines = &lines/2
+        endif
+        exec "resize " . lines
+    endif
 endf "}}} }}}
 "Utilities:"{{{
 fu! s:GetGitvSha(lineNumber) "{{{
@@ -207,8 +240,13 @@ fu! s:GetGitvRefs() "{{{
     return refs
 endf "}}}
 fu! s:IsHorizontal() "{{{
-    "TODO: extract GetToggle function?
-    return exists('g:Gitv_OpenHorizontal') && g:Gitv_OpenHorizontal == 1
+    "NOTE: this can only tell you if horizontal while cursor in browser window
+    let horizGlobal = exists('g:Gitv_OpenHorizontal') && g:Gitv_OpenHorizontal == 1
+    let horizBuffer = exists('b:Gitv_AutoHorizontal') && b:Gitv_AutoHorizontal == 1
+    return horizGlobal || horizBuffer
+endf "}}}
+fu! s:AutoHorizontal() "{{{
+    return exists('g:Gitv_OpenHorizontal') && g:Gitv_OpenHorizontal ==? 'auto'
 endf "}}}
 fu! s:IsFileMode() "{{{
     return exists('b:Gitv_FileMode') && b:Gitv_FileMode == 1
@@ -244,13 +282,14 @@ fu! s:OpenGitvCommit() "{{{
         call s:OpenRelativeFilePath(sha)
         wincmd k
     else
-        if s:IsHorizontal()
+        let horiz = s:IsHorizontal()
+        if horiz
             wincmd j
         else
             wincmd l
         endif
         exec "Gedit " . sha
-        if s:IsHorizontal()
+        if horiz
             wincmd k
         else
             wincmd h
