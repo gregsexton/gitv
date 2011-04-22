@@ -223,11 +223,7 @@ fu! s:ResizeWindow(fileMode) "{{{
         exec "vertical resize " . longest
     else
         "size window based on num lines
-        let lines = line('$')
-        if lines > &lines/2
-            let lines = &lines/2
-        endif
-        exec "resize " . lines
+        call s:ResizeHorizontal()
     endif
 endf "}}} }}}
 "Utilities:"{{{
@@ -242,6 +238,20 @@ fu! s:GetGitvRefs() "{{{
     let refs = split(refstr, ', ')
     return refs
 endf "}}}
+fu! s:MoveIntoPreviewAndExecute(cmd) "{{{
+    let horiz = s:IsHorizontal()
+    if horiz
+        wincmd j
+    else
+        wincmd l
+    endif
+    exec a:cmd
+    if horiz
+        wincmd k
+    else
+        wincmd h
+    endif
+endfu "}}}
 fu! s:IsHorizontal() "{{{
     "NOTE: this can only tell you if horizontal while cursor in browser window
     let horizGlobal = exists('g:Gitv_OpenHorizontal') && g:Gitv_OpenHorizontal == 1
@@ -253,6 +263,13 @@ fu! s:AutoHorizontal() "{{{
 endf "}}}
 fu! s:IsFileMode() "{{{
     return exists('b:Gitv_FileMode') && b:Gitv_FileMode == 1
+endf "}}}
+fu! s:ResizeHorizontal() "{{{
+    let lines = line('$')
+    if lines > &lines/2
+        let lines = &lines/2
+    endif
+    exec "resize " . lines
 endf "}}}
 fu! s:GetRelativeFilePath() "{{{
     return exists('b:Gitv_FileModeRelPath') ? b:Gitv_FileModeRelPath : ''
@@ -285,18 +302,7 @@ fu! s:OpenGitvCommit() "{{{
         call s:OpenRelativeFilePath(sha)
         wincmd k
     else
-        let horiz = s:IsHorizontal()
-        if horiz
-            wincmd j
-        else
-            wincmd l
-        endif
-        exec "Gedit " . sha
-        if horiz
-            wincmd k
-        else
-            wincmd h
-        endif
+        call s:MoveIntoPreviewAndExecute("Gedit " . sha)
     endif
 endf "}}}
 fu! s:CheckOutGitvCommit() "{{{
@@ -364,10 +370,14 @@ fu! s:StatGitvCommit() range "{{{
         let cmd .= ' '.shalast
     endif
     let cmd .= ' --stat'
-    silent let res = Gitv_OpenGitCommand(cmd, 'new')
+    let cmd = "call s:SetupStatBuffer('".cmd."')"
+    call s:MoveIntoPreviewAndExecute(cmd)
+endf "}}}
+fu! s:SetupStatBuffer(cmd) "{{{
+    silent let res = Gitv_OpenGitCommand(a:cmd, '')
     if res
         silent set filetype=gitv
     endif
-endf "}}} }}}
+endfu "}}} }}}
 
  " vim:fdm=marker
