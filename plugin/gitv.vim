@@ -52,7 +52,6 @@ fu! Gitv_OpenGitCommand(command, windowCmd, ...) "{{{
         let result = system(a:command)
     endif
 
-    "let result = system('git ' . a:command)
     if result == ""
         echom "No output."
         return 0
@@ -192,11 +191,15 @@ fu! s:SetupBuffer(commitCount, extraArgs, filePath) "{{{
 endf "}}}
 fu! s:SetupMappings() "{{{
     nmap <buffer> <silent> <cr> :call <SID>OpenGitvCommit()<cr>
-    nmap <buffer> <silent> q :call <SID>CloseGitv()<CR>
+    nmap <buffer> <silent> q :call <SID>CloseGitv()<cr>
     nmap <buffer> <silent> u :call <SID>LoadGitv('', 1, b:Gitv_CommitCount, b:Gitv_ExtraArgs, <SID>GetRelativeFilePath())<cr>
     nmap <buffer> <silent> co :call <SID>CheckOutGitvCommit()<cr>
+
     nmap <buffer> <silent> D :call <SID>DiffGitvCommit()<cr>
     vmap <buffer> <silent> D :call <SID>DiffGitvCommit()<cr>
+
+    nmap <buffer> <silent> S :call <SID>StatGitvCommit()<cr>
+    vmap <buffer> <silent> S :call <SID>StatGitvCommit()<cr>
 endf "}}}
 fu! s:ResizeWindow(fileMode) "{{{
     if a:fileMode "window height determined by &previewheight
@@ -220,11 +223,7 @@ fu! s:ResizeWindow(fileMode) "{{{
         exec "vertical resize " . longest
     else
         "size window based on num lines
-        let lines = line('$')
-        if lines > &lines/2
-            let lines = &lines/2
-        endif
-        exec "resize " . lines
+        call s:ResizeHorizontal()
     endif
 endf "}}} }}}
 "Utilities:"{{{
@@ -239,6 +238,25 @@ fu! s:GetGitvRefs() "{{{
     let refs = split(refstr, ', ')
     return refs
 endf "}}}
+fu! s:MoveIntoPreviewAndExecute(cmd) "{{{
+    let horiz = s:IsHorizontal()
+    let filem = s:IsFileMode()
+    if !filem
+        if horiz
+            wincmd j
+        else
+            wincmd l
+        endif
+    endif
+    exec a:cmd
+    if !filem
+        if horiz
+            wincmd k
+        else
+            wincmd h
+        endif
+    endif
+endfu "}}}
 fu! s:IsHorizontal() "{{{
     "NOTE: this can only tell you if horizontal while cursor in browser window
     let horizGlobal = exists('g:Gitv_OpenHorizontal') && g:Gitv_OpenHorizontal == 1
@@ -250,6 +268,13 @@ fu! s:AutoHorizontal() "{{{
 endf "}}}
 fu! s:IsFileMode() "{{{
     return exists('b:Gitv_FileMode') && b:Gitv_FileMode == 1
+endf "}}}
+fu! s:ResizeHorizontal() "{{{
+    let lines = line('$')
+    if lines > &lines/2
+        let lines = &lines/2
+    endif
+    exec "resize " . lines
 endf "}}}
 fu! s:GetRelativeFilePath() "{{{
     return exists('b:Gitv_FileModeRelPath') ? b:Gitv_FileModeRelPath : ''
@@ -282,18 +307,7 @@ fu! s:OpenGitvCommit() "{{{
         call s:OpenRelativeFilePath(sha)
         wincmd k
     else
-        let horiz = s:IsHorizontal()
-        if horiz
-            wincmd j
-        else
-            wincmd l
-        endif
-        exec "Gedit " . sha
-        if horiz
-            wincmd k
-        else
-            wincmd h
-        endif
+        call s:MoveIntoPreviewAndExecute("Gedit " . sha)
     endif
 endf "}}}
 fu! s:CheckOutGitvCommit() "{{{
@@ -349,6 +363,26 @@ fu! s:DiffGitvCommit() range "{{{
         wincmd j
     endif
     exec "Gdiff " . shalast
-endf "}}} }}}
+endf "}}} 
+fu! s:StatGitvCommit() range "{{{
+    let shafirst = s:GetGitvSha(a:firstline)
+    let shalast  = s:GetGitvSha(a:lastline)
+    if shafirst == "" || shalast == ""
+        return
+    endif
+    let cmd  = 'diff '.shafirst
+    if shafirst != shalast
+        let cmd .= ' '.shalast
+    endif
+    let cmd .= ' --stat'
+    let cmd = "call s:SetupStatBuffer('".cmd."')"
+    call s:MoveIntoPreviewAndExecute(cmd)
+endf "}}}
+fu! s:SetupStatBuffer(cmd) "{{{
+    silent let res = Gitv_OpenGitCommand(a:cmd, s:IsFileMode()?'vnew':'')
+    if res
+        silent set filetype=gitv
+    endif
+endfu "}}} }}}
 
  " vim:fdm=marker
