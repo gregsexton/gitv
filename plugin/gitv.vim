@@ -291,10 +291,10 @@ fu! s:GetRelativeFilePath() "{{{
     return exists('b:Gitv_FileModeRelPath') ? b:Gitv_FileModeRelPath : ''
 endf "}}}
 fu! s:OpenRelativeFilePath(sha) "{{{
-    if !exists("b:Gitv_FileModeRelPath") || b:Gitv_FileModeRelPath == ''
+    let relPath = s:GetRelativeFilePath()
+    if relPath == ''
         return
     endif
-    let relPath = b:Gitv_FileModeRelPath
     wincmd j
     exec "Gedit " . a:sha . ":" . relPath
 endf "}}} }}}
@@ -322,23 +322,14 @@ fu! s:OpenGitvCommit() "{{{
     endif
 endf "}}}
 fu! s:CheckOutGitvCommit() "{{{
-    if s:IsFileMode()
-        echom "Check out is not possible in file mode."
-        return
-    endif
     let allrefs = s:GetGitvRefs()
     let sha = s:GetGitvSha(line('.'))
     if sha == ""
         return
     endif
-    "remove remotes -- TODO: replace this with filter
-    let refs = []
-    for ref in allrefs
-        if match(ref, "^r:") == -1
-            let refs += [ref]
-        endif
-    endfor
-    let refs += [sha]
+    "remove remotes
+    let refs   = filter(allrefs, 'match(v:val, "^r:")==-1')
+    let refs  += [sha]
     let refstr = join(refs, "\n")
     let choice = confirm("Checkout commit:", refstr . "\nCancel")
     if choice == 0
@@ -349,6 +340,10 @@ fu! s:CheckOutGitvCommit() "{{{
         return
     endif
     let choice = substitute(choice, "^t:", "", "")
+    if s:IsFileMode()
+        let relPath = s:GetRelativeFilePath()
+        let choice .= " -- " . relPath
+    endif
     exec "Git checkout " . choice
 endf "}}}
 fu! s:CloseGitv() "{{{
