@@ -240,16 +240,21 @@ fu! s:GetGitvRefs() "{{{
 endf "}}}
 fu! s:MoveIntoPreviewAndExecute(cmd) "{{{
     let horiz = s:IsHorizontal()
-    if horiz
-        wincmd j
-    else
-        wincmd l
+    let filem = s:IsFileMode()
+    if !filem
+        if horiz
+            wincmd j
+        else
+            wincmd l
+        endif
     endif
     exec a:cmd
-    if horiz
-        wincmd k
-    else
-        wincmd h
+    if !filem
+        if horiz
+            wincmd k
+        else
+            wincmd h
+        endif
     endif
 endfu "}}}
 fu! s:IsHorizontal() "{{{
@@ -374,7 +379,7 @@ fu! s:StatGitvCommit() range "{{{
     call s:MoveIntoPreviewAndExecute(cmd)
 endf "}}}
 fu! s:SetupStatBuffer(cmd) "{{{
-    silent let res = Gitv_OpenGitCommand(a:cmd, '')
+    silent let res = Gitv_OpenGitCommand(a:cmd, s:IsFileMode()?'vnew':'')
     if res
         silent set filetype=gitv
     endif
