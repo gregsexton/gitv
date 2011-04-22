@@ -61,7 +61,18 @@ fu! Gitv_OpenGitCommand(command, windowCmd, ...) "{{{
             silent setlocal noreadonly
             1,$ d
         else
-            exec a:windowCmd
+            try
+                if exists('workingDir') && exists('cd')
+                    execute cd.'`=workingDir`'
+                endif
+                exec a:windowCmd
+            finally
+                wincmd p
+                if exists('bufferDir') && exists('cd')
+                    execute cd.'`=bufferDir`'
+                endif
+                wincmd p
+            endtry
         endif
         if !a:0
             let b:Git_Command = finalCmd
