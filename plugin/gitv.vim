@@ -52,7 +52,6 @@ fu! Gitv_OpenGitCommand(command, windowCmd, ...) "{{{
         let result = system(a:command)
     endif
 
-    "let result = system('git ' . a:command)
     if result == ""
         echom "No output."
         return 0
@@ -192,11 +191,15 @@ fu! s:SetupBuffer(commitCount, extraArgs, filePath) "{{{
 endf "}}}
 fu! s:SetupMappings() "{{{
     nmap <buffer> <silent> <cr> :call <SID>OpenGitvCommit()<cr>
-    nmap <buffer> <silent> q :call <SID>CloseGitv()<CR>
+    nmap <buffer> <silent> q :call <SID>CloseGitv()<cr>
     nmap <buffer> <silent> u :call <SID>LoadGitv('', 1, b:Gitv_CommitCount, b:Gitv_ExtraArgs, <SID>GetRelativeFilePath())<cr>
     nmap <buffer> <silent> co :call <SID>CheckOutGitvCommit()<cr>
+
     nmap <buffer> <silent> D :call <SID>DiffGitvCommit()<cr>
     vmap <buffer> <silent> D :call <SID>DiffGitvCommit()<cr>
+
+    nmap <buffer> <silent> S :call <SID>StatGitvCommit()<cr>
+    vmap <buffer> <silent> S :call <SID>StatGitvCommit()<cr>
 endf "}}}
 fu! s:ResizeWindow(fileMode) "{{{
     if a:fileMode "window height determined by &previewheight
@@ -349,6 +352,19 @@ fu! s:DiffGitvCommit() range "{{{
         wincmd j
     endif
     exec "Gdiff " . shalast
+endf "}}} 
+fu! s:StatGitvCommit() range "{{{
+    let shafirst = s:GetGitvSha(a:firstline)
+    let shalast  = s:GetGitvSha(a:lastline)
+    if shafirst == "" || shalast == ""
+        return
+    endif
+    let cmd  = 'diff '.shafirst
+    if shafirst != shalast
+        let cmd .= ' '.shalast
+    endif
+    let cmd .= ' --stat'
+    silent call Gitv_OpenGitCommand(cmd, 'new')
 endf "}}} }}}
 
  " vim:fdm=marker
