@@ -364,7 +364,10 @@ fu! s:StatGitvCommit() range "{{{
         let cmd .= ' '.shalast
     endif
     let cmd .= ' --stat'
-    silent call Gitv_OpenGitCommand(cmd, 'new')
+    silent let res = Gitv_OpenGitCommand(cmd, 'new')
+    if res
+        silent set filetype=gitv
+    endif
 endf "}}} }}}
 
  " vim:fdm=marker

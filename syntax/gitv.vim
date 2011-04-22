@@ -28,17 +28,17 @@ syn match  gitvGraphEdge1 /\(|\|\/\|\\\|\*\)\s\?/  nextgroup=gitvGraphEdge2,gitv
 syn match  gitvGraphEdge0 /^\(\(|\|\/\|\\\|\*\)\s\?\)/  nextgroup=gitvGraphEdge1,gitvRef,gitvSubject skipwhite
 
 syn match gitvRef /\s*(.\{-})/ nextgroup=gitvSubject skipwhite
-"syn match gitvRefTag /refs\/tags\/.\{-}\ze\(, \|)\)/ contained containedin=gitvRef
-"syn match gitvRefRemote /refs\/remotes\/.\{-}\ze\(, \|)\)/ contained containedin=gitvRef
-"syn match gitvRefBranch /refs\/heads\/.\{-}\ze\(, \|)\)/ contained containedin=gitvRef
-"syn match gitvRefLeaderTags /refs\/tags\// contained containedin=gitvRefTag conceal
-"syn match gitvRefLeaderRemotes /refs\/remotes\// contained containedin=gitvRefRemote conceal
-"syn match gitvRefLeaderBranch /refs\/heads\// contained containedin=gitvRefBranch conceal
 syn match gitvRefTag /t:\zs.\{-}\ze\(, \|)\)/ contained containedin=gitvRef
 syn match gitvRefRemote /r:\zs.\{-}\ze\(, \|)\)/ contained containedin=gitvRef
 
 syn match gitvLoadMore /^-- Load More --$/
 syn match gitvWorkingCopy /^-- \[.*\] --$/ contained containedin=gitvSubject
+
+syn match gitvAddedMarks /|\s\+\d\+ \zs+*-*\ze$/ contained containedin=gitvSubject
+syn match gitvAddedMarks /|\s\+Bin \zs\d\+ -> \d\+\ze bytes$/ contained containedin=gitvSubject
+syn match gitvRemovedMarks /-*$/ contained containedin=gitvAddedMarks
+syn match gitvRemovedMarks /\d\+\ze ->/ contained containedin=gitvAddedMarks
+syn match gitvSeperatorMarks /\s\+->\s\+/ contained containedin=gitvAddedMarks
 
 hi def link gitvHash              Number
 hi def link gitvRef               Directory
@@ -48,6 +48,10 @@ hi def link gitvDate              Statement
 hi def link gitvSubject           Normal
 hi def link gitvLoadMore          Question
 hi def link gitvWorkingCopy       Question
+
+hi def link gitvAddedMarks        diffAdded
+hi def link gitvRemovedMarks      diffRemoved
+hi def link gitvSeperatorMarks    Normal
 
 hi def link gitvGraphEdge0        Delimiter
 
