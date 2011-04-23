@@ -11,6 +11,9 @@
 "endif
 let g:loaded_gitv = 1
 
+let s:savecpo = &cpo
+set cpo&vim
+
 "configurable options:
 "g:Gitv_CommitStep     - int
 "g:Gitv_OpenHorizontal - [0,1,'AUTO']
@@ -192,8 +195,10 @@ fu! s:SetupBuffer(commitCount, extraArgs, filePath) "{{{
     silent %s/refs\/tags\//t:/ge
     silent %s/refs\/remotes\//r:/ge
     silent %s/refs\/heads\///ge
-    silent 1,$Tabularize /__SEP__/
-    silent %s/__SEP__//ge
+    "silent 1,$Tabularize /__SEP__/
+    "silent %s/__SEP__//ge
+    silent %call s:Align("__SEP__")
+    silent %s/\s\+$//e
     call append(line('$'), '-- Load More --')
     if a:filePath != ''
         call append(0, '-- ['.a:filePath.'] --')
@@ -426,5 +431,55 @@ fu! s:JumpToHead() "{{{
     silent! /^\(\(|\|\/\|\\\|\*\)\s\?\)\+\s\+\zs(HEAD/
 endf "}}}
 "}}} }}}
+"Alignment Functions: "{{{
+fu! s:Align(seperator) range "{{{
+    let lines = getline(a:firstline, a:lastline)
+    call map(lines, 'split(v:val,"'.a:seperator.'")')
 
+    let newlines = copy(lines)
+    call filter(newlines, 'len(v:val)>1')
+    let maxLens = s:MaxLengths(newlines)
+
+    let cnt = a:firstline
+    for tokens in lines
+        if len(tokens)>1
+            let newline = []
+            for i in range(len(tokens))
+                let token = tokens[i]
+                call add(newline, token . repeat(' ', maxLens[i]-strlen(token)+1))
+            endfor
+            call setline(cnt, join(newline))
+        endif
+        let cnt += 1
+    endfor
+endfu "}}}
+fu! s:MaxLengths(colls) "{{{
+    "precondition: coll is a list of lists of strings -- should be square
+    "returns a list of maximum string lengths
+    let localColl = copy(a:colls)
+    fu! s:ListStringLen(coll)
+        let lcoll = copy(a:coll)
+        return map(lcoll, 'strlen(v:val)')
+    endfu
+    call map(localColl, 's:ListStringLen(v:val)')
+    let localColl = s:Transpose(localColl)
+    return map(localColl, 'max(v:val)')
+endfu "}}}
+fu! s:Transpose(colls) "{{{
+    "transpose a list of lists
+    "precondition colls is rectangular -- no checks performed
+    let ret = []
+    for i in range(len(a:colls[0]))
+        call add(ret, s:Column(a:colls, i))
+    endfor
+    return ret
+endfu "}}}
+fu! s:Column(colls, idx) "{{{
+    "extract a column from a list of lists
+    let localColls = copy(a:colls)
+    return map(localColls, 'v:val['.a:idx.']')
+endfu "}}} }}}
+
+let &cpo = s:savecpo
+unlet s:savecpo
  " vim:fdm=marker
