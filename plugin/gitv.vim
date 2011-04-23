@@ -19,7 +19,7 @@ if !exists("g:Gitv_CommitStep")
     let g:Gitv_CommitStep = &lines
 endif
 
-command! -nargs=* -bar -bang Gitv call s:OpenGitv(<q-args>, <bang>0)
+command! -nargs=* -bang Gitv call s:OpenGitv(shellescape(<q-args>), <bang>0)
 cabbrev gitv Gitv
 
 "Public API:"{{{
@@ -99,10 +99,11 @@ fu! Gitv_OpenGitCommand(command, windowCmd, ...) "{{{
 endf "}}} }}}
 "Open And Update:"{{{
 fu! s:OpenGitv(extraArgs, fileMode) "{{{
+    let sanatizedArgs = a:extraArgs == "''" ? '' : a:extraArgs
     if a:fileMode
-        call s:OpenFileMode(a:extraArgs)
+        call s:OpenFileMode(sanatizedArgs)
     else
-        call s:OpenBrowserMode(a:extraArgs)
+        call s:OpenBrowserMode(sanatizedArgs)
     endif
 endf "}}}
 fu! s:OpenBrowserMode(extraArgs) "{{{
