@@ -434,7 +434,7 @@ endf "}}}
 "Alignment Functions: "{{{
 fu! s:Align(seperator) range "{{{
     let lines = getline(a:firstline, a:lastline)
-    call map(lines, 'split(v:val,"'.a:seperator.'")')
+    call map(lines, 'split(v:val, a:seperator)')
 
     let newlines = copy(lines)
     call filter(newlines, 'len(v:val)>1')
@@ -454,30 +454,22 @@ fu! s:Align(seperator) range "{{{
     endfor
 endfu "}}}
 fu! s:MaxLengths(colls) "{{{
-    "precondition: coll is a list of lists of strings -- should be square
+    "precondition: coll is a list of lists of strings -- should be rectangular
     "returns a list of maximum string lengths
-    let localColl = copy(a:colls)
-    fu! s:ListStringLen(coll)
-        let lcoll = copy(a:coll)
-        return map(lcoll, 'strlen(v:val)')
-    endfu
-    call map(localColl, 's:ListStringLen(v:val)')
-    let localColl = s:Transpose(localColl)
-    return map(localColl, 'max(v:val)')
-endfu "}}}
-fu! s:Transpose(colls) "{{{
-    "transpose a list of lists
-    "precondition colls is rectangular -- no checks performed
-    let ret = []
-    for i in range(len(a:colls[0]))
-        call add(ret, s:Column(a:colls, i))
+    let lengths = []
+    for x in a:colls
+        for y in range(len(x))
+            let length = strlen(x[y])
+            if length > get(lengths, y, 0)
+                if len(lengths)-1 < y
+                    call add(lengths, length)
+                else
+                    let lengths[y] = length
+                endif
+            endif
+        endfor
     endfor
-    return ret
-endfu "}}}
-fu! s:Column(colls, idx) "{{{
-    "extract a column from a list of lists
-    let localColls = copy(a:colls)
-    return map(localColls, 'v:val['.a:idx.']')
+    return lengths
 endfu "}}} }}}
 
 let &cpo = s:savecpo
