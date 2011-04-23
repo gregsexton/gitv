@@ -202,6 +202,7 @@ fu! s:SetupBuffer(commitCount, extraArgs, filePath) "{{{
     silent setlocal cursorline
 endf "}}}
 fu! s:SetupMappings() "{{{
+    "operations
     nmap <buffer> <silent> <cr> :call <SID>OpenGitvCommit()<cr>
     nmap <buffer> <silent> q :call <SID>CloseGitv()<cr>
     nmap <buffer> <silent> u :call <SID>LoadGitv('', 1, b:Gitv_CommitCount, b:Gitv_ExtraArgs, <SID>GetRelativeFilePath())<cr>
@@ -212,6 +213,10 @@ fu! s:SetupMappings() "{{{
 
     nmap <buffer> <silent> S :call <SID>StatGitvCommit()<cr>
     vmap <buffer> <silent> S :call <SID>StatGitvCommit()<cr>
+
+    "movement
+    nmap <buffer> <silent> x :call <SID>JumpToBranch(0)<cr>
+    nmap <buffer> <silent> X :call <SID>JumpToBranch(1)<cr>
 endf "}}}
 fu! s:ResizeWindow(fileMode) "{{{
     if a:fileMode "window height determined by &previewheight
@@ -300,6 +305,7 @@ fu! s:OpenRelativeFilePath(sha) "{{{
     exec "Gedit " . a:sha . ":" . relPath
 endf "}}} }}}
 "Mapped Functions:"{{{
+"Operations: "{{{
 fu! s:OpenGitvCommit() "{{{
     if getline('.') == "-- Load More --"
         call s:LoadGitv('', 1, b:Gitv_CommitCount+g:Gitv_CommitStep, b:Gitv_ExtraArgs, s:GetRelativeFilePath())
@@ -391,5 +397,14 @@ fu! s:SetupStatBuffer(cmd) "{{{
         silent set filetype=gitv
     endif
 endfu "}}} }}}
+"Movement: "{{{
+fu! s:JumpToBranch(backward) "{{{
+    if a:backward
+        ?|/\||\\?-1
+    else
+        /|\\\||\//+1
+    endif
+endf "}}}
+"}}} }}}
 
  " vim:fdm=marker
