@@ -219,6 +219,7 @@ fu! s:SetupMappings() "{{{
     nmap <buffer> <silent> X :call <SID>JumpToBranch(1)<cr>
     nmap <buffer> <silent> r :call <SID>JumpToRef(0)<cr>
     nmap <buffer> <silent> R :call <SID>JumpToRef(1)<cr>
+    nmap <buffer> <silent> P :call <SID>JumpToHead()<cr>
 endf "}}}
 fu! s:ResizeWindow(fileMode) "{{{
     if a:fileMode "window height determined by &previewheight
@@ -413,6 +414,9 @@ fu! s:JumpToRef(backward) "{{{
     else
         silent! /^\(\(|\|\/\|\\\|\*\)\s\?\)\+\s\+\zs(/
     endif
+endf "}}}
+fu! s:JumpToHead() "{{{
+    silent! /^\(\(|\|\/\|\\\|\*\)\s\?\)\+\s\+\zs(HEAD/
 endf "}}}
 "}}} }}}
 
