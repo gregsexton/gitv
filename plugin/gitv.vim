@@ -217,6 +217,8 @@ fu! s:SetupMappings() "{{{
     "movement
     nmap <buffer> <silent> x :call <SID>JumpToBranch(0)<cr>
     nmap <buffer> <silent> X :call <SID>JumpToBranch(1)<cr>
+    nmap <buffer> <silent> r :call <SID>JumpToRef(0)<cr>
+    nmap <buffer> <silent> R :call <SID>JumpToRef(1)<cr>
 endf "}}}
 fu! s:ResizeWindow(fileMode) "{{{
     if a:fileMode "window height determined by &previewheight
@@ -400,9 +402,16 @@ endfu "}}} }}}
 "Movement: "{{{
 fu! s:JumpToBranch(backward) "{{{
     if a:backward
-        ?|/\||\\?-1
+        silent! ?|/\||\\?-1
     else
-        /|\\\||\//+1
+        silent! /|\\\||\//+1
+    endif
+endf "}}}
+fu! s:JumpToRef(backward) "{{{
+    if a:backward
+        silent! ?^\(\(|\|\/\|\\\|\*\)\s\=\)\+\s\+\zs(
+    else
+        silent! /^\(\(|\|\/\|\\\|\*\)\s\?\)\+\s\+\zs(/
     endif
 endf "}}}
 "}}} }}}
