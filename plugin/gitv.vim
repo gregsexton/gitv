@@ -126,7 +126,7 @@ fu! s:OpenBrowserMode(extraArgs) "{{{
     endif
 
     "open the first commit
-    silent call s:OpenGitvCommit()
+    silent call s:OpenGitvCommit("Gedit")
 endf "}}}
 fu! s:OpenFileMode(extraArgs) "{{{
     let relPath = fugitive#buffer().path()
@@ -202,7 +202,12 @@ fu! s:SetupBuffer(commitCount, extraArgs, filePath) "{{{
     silent setlocal cursorline
 endf "}}}
 fu! s:SetupMappings() "{{{
-    nmap <buffer> <silent> <cr> :call <SID>OpenGitvCommit()<cr>
+    "operations
+    nmap <buffer> <silent> <cr> :call <SID>OpenGitvCommit("Gedit")<cr>
+    nmap <buffer> <silent> o :call <SID>OpenGitvCommit("Gsplit")<cr>
+    nmap <buffer> <silent> O :call <SID>OpenGitvCommit("Gtabedit")<cr>
+    nmap <buffer> <silent> s :call <SID>OpenGitvCommit("Gvsplit")<cr>
+
     nmap <buffer> <silent> q :call <SID>CloseGitv()<cr>
     nmap <buffer> <silent> u :call <SID>LoadGitv('', 1, b:Gitv_CommitCount, b:Gitv_ExtraArgs, <SID>GetRelativeFilePath())<cr>
     nmap <buffer> <silent> co :call <SID>CheckOutGitvCommit()<cr>
@@ -212,6 +217,13 @@ fu! s:SetupMappings() "{{{
 
     nmap <buffer> <silent> S :call <SID>StatGitvCommit()<cr>
     vmap <buffer> <silent> S :call <SID>StatGitvCommit()<cr>
+
+    "movement
+    nmap <buffer> <silent> x :call <SID>JumpToBranch(0)<cr>
+    nmap <buffer> <silent> X :call <SID>JumpToBranch(1)<cr>
+    nmap <buffer> <silent> r :call <SID>JumpToRef(0)<cr>
+    nmap <buffer> <silent> R :call <SID>JumpToRef(1)<cr>
+    nmap <buffer> <silent> P :call <SID>JumpToHead()<cr>
 endf "}}}
 fu! s:ResizeWindow(fileMode) "{{{
     if a:fileMode "window height determined by &previewheight
@@ -291,16 +303,17 @@ endf "}}}
 fu! s:GetRelativeFilePath() "{{{
     return exists('b:Gitv_FileModeRelPath') ? b:Gitv_FileModeRelPath : ''
 endf "}}}
-fu! s:OpenRelativeFilePath(sha) "{{{
+fu! s:OpenRelativeFilePath(sha, geditForm) "{{{
     let relPath = s:GetRelativeFilePath()
     if relPath == ''
         return
     endif
     wincmd j
-    exec "Gedit " . a:sha . ":" . relPath
+    exec a:geditForm . " " . a:sha . ":" . relPath
 endf "}}} }}}
 "Mapped Functions:"{{{
-fu! s:OpenGitvCommit() "{{{
+"Operations: "{{{
+fu! s:OpenGitvCommit(geditForm) "{{{
     if getline('.') == "-- Load More --"
         call s:LoadGitv('', 1, b:Gitv_CommitCount+g:Gitv_CommitStep, b:Gitv_ExtraArgs, s:GetRelativeFilePath())
         return
@@ -309,17 +322,19 @@ fu! s:OpenGitvCommit() "{{{
         "open working copy of file
         let fp = s:GetRelativeFilePath()
         wincmd j
-        exec "e " . fugitive#buffer().repo().tree() . "/" . fp
+        let form = a:geditForm[1:] "strip off the leading 'G'
+        exec form . " " . fugitive#buffer().repo().tree() . "/" . fp
+        return
     endif
     let sha = s:GetGitvSha(line('.'))
     if sha == ""
         return
     endif
     if s:IsFileMode()
-        call s:OpenRelativeFilePath(sha)
+        call s:OpenRelativeFilePath(sha, a:geditForm)
         wincmd k
     else
-        call s:MoveIntoPreviewAndExecute("Gedit " . sha)
+        call s:MoveIntoPreviewAndExecute(a:geditForm . " " . sha)
     endif
 endf "}}}
 fu! s:CheckOutGitvCommit() "{{{
@@ -365,7 +380,7 @@ fu! s:DiffGitvCommit() range "{{{
         return
     endif
     if a:firstline != a:lastline
-        call s:OpenRelativeFilePath(shafirst)
+        call s:OpenRelativeFilePath(shafirst, "Gedit")
     else
         wincmd j
     endif
@@ -391,5 +406,24 @@ fu! s:SetupStatBuffer(cmd) "{{{
         silent set filetype=gitv
     endif
 endfu "}}} }}}
+"Movement: "{{{
+fu! s:JumpToBranch(backward) "{{{
+    if a:backward
+        silent! ?|/\||\\?-1
+    else
+        silent! /|\\\||\//+1
+    endif
+endf "}}}
+fu! s:JumpToRef(backward) "{{{
+    if a:backward
+        silent! ?^\(\(|\|\/\|\\\|\*\)\s\=\)\+\s\+\zs(
+    else
+        silent! /^\(\(|\|\/\|\\\|\*\)\s\?\)\+\s\+\zs(/
+    endif
+endf "}}}
+fu! s:JumpToHead() "{{{
+    silent! /^\(\(|\|\/\|\\\|\*\)\s\?\)\+\s\+\zs(HEAD/
+endf "}}}
+"}}} }}}
 
  " vim:fdm=marker
