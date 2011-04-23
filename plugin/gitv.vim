@@ -110,9 +110,9 @@ fu! s:OpenBrowserMode(extraArgs) "{{{
     silent Gtabedit HEAD
 
     if s:IsHorizontal()
-        let direction = 'new gitv'
+        let direction = 'new'
     else
-        let direction = 'vnew gitv'
+        let direction = 'vnew'
     endif
 
     if !s:LoadGitv(direction, 0, g:Gitv_CommitStep, a:extraArgs, '')
@@ -131,7 +131,7 @@ endf "}}}
 fu! s:OpenFileMode(extraArgs) "{{{
     let relPath = fugitive#buffer().path()
     pclose!
-    if !s:LoadGitv(&previewheight . "new gitv", 0, g:Gitv_CommitStep, a:extraArgs, relPath)
+    if !s:LoadGitv(&previewheight . "new", 0, g:Gitv_CommitStep, a:extraArgs, relPath)
         return 0
     endif
     set previewwindow
@@ -172,8 +172,9 @@ fu! s:ConstructAndExecuteCmd(direction, reload, commitCount, extraArgs, filePath
             return res
         endif
     else
-        "TODO: break up this line
-        let cmd = "log " . a:extraArgs . " --no-color --decorate=full --pretty=format:\"%d %s__SEP__%ar__SEP__%an__SEP__[%h]\" --graph -" . a:commitCount
+        let cmd  = "log " . a:extraArgs 
+        let cmd .= " --no-color --decorate=full --pretty=format:\"%d %s__SEP__%ar__SEP__%an__SEP__[%h]\" --graph -" 
+        let cmd .= a:commitCount
         if a:filePath != ''
             let cmd .= ' -- ' . a:filePath
         endif
