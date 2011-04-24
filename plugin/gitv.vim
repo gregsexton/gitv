@@ -17,9 +17,14 @@ set cpo&vim
 "configurable options:
 "g:Gitv_CommitStep     - int
 "g:Gitv_OpenHorizontal - [0,1,'AUTO']
+"g:Gitv_GitExecutable  - string
 
 if !exists("g:Gitv_CommitStep")
     let g:Gitv_CommitStep = &lines
+endif
+
+if !exists('g:Gitv_GitExecutable')
+  let g:Gitv_GitExecutable = 'git'
 endif
 
 "this counts up each time gitv is opened to ensure a unique file name
@@ -49,8 +54,7 @@ fu! Gitv_OpenGitCommand(command, windowCmd, ...) "{{{
         let bufferDir = getcwd()
         try
             execute cd.'`=workingDir`'
-            "TODO: this should use g:fugitive_git_executable
-            let finalCmd = 'git --git-dir="' .dir. '" ' . a:command
+            let finalCmd = g:Gitv_GitExecutable.' --git-dir="' .dir. '" ' . a:command
             let result = system(finalCmd)
         finally
             execute cd.'`=bufferDir`'
