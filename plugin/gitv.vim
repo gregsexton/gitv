@@ -301,8 +301,8 @@ fu! s:IsFileMode() "{{{
 endf "}}}
 fu! s:ResizeHorizontal() "{{{
     let lines = line('$')
-    if lines > &lines/2
-        let lines = &lines/2
+    if lines > (&lines/2)-2
+        let lines = (&lines/2)-2
     endif
     exec "resize " . lines
 endf "}}}
