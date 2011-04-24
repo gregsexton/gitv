@@ -1,0 +1,323 @@
+*gitv* -- gitk for vim.
+
+AUTHOR:   Greg Sexton <gregsexton@gmail.com>                      *gitv-author*
+WEBSITE:  http://www.gregsexton.org/portfolio/gitv/
+LICENSE:  Same terms as Vim itself (see :help license).
+NOTES:    Much of the credit for gitv goes to Tim Pope and the fugitive plugin
+          where this plugin either uses functionality directly or was inspired
+          heavily.
+
+gitv                                                                     *gitv*
+
+1. Introduction              |gitv-introduction|
+2. Installation              |gitv-installation|
+3. Usage                     |gitv-usage|
+4. Configuration Options     |gitv-config-options|
+5. Changelog                 |gitv-changelog|
+6. Misc                      |gitv-misc|
+
+==============================================================================
+1. Introduction                                             *gitv-introduction*
+
+|gitv| is a 'gitk clone' plugin for the text editor Vim. The goal is to give
+you a similar set of functionality as a repository viewer. Using this plugin
+you can view a repository's history including branching and merging, you can
+see which commits refs point to. You can quickly and easily view what changed
+to which files and when. You can perform arbitrary diffs (using Vim's
+excellent built in diff functionality) and you can easily check out whole
+commits and branches or just individual files if need be.
+
+Throw in the fact that it is running in Vim and you get for free: the ability
+to move over repository history quickly and precisely using Vim's built in
+movement operators. You get excellent code syntax highlighting due to Vim's
+built in ability. You can open up all sorts of repository views in multiple
+windows and position them exactly how you like. You can take advantage of
+Vim's registers to copy multiple fragments of code from previous commits. The
+list goes on.
+
+This plugin is an extension of the |fugitive| plugin.
+
+I hope you like it!
+
+==============================================================================
+2. Installation                                             *gitv-installation*
+
+Install in ~/.vim, or in ~\vimfiles if you're on Windows. This plugin should
+be fully pathogen compatible if you want to install it this way.
+
+|gitv| was developed against Vim 7.3 but earlier versions of Vim should work.
+Vim 7.2+ is recommended as it ships with syntax highlighting for many Git file
+types. You will also need the |fugitive| plugin installed and working for
+|gitv| to work.
+
+==============================================================================
+3. Usage                                                           *gitv-usage*
+
+|gitv| defines the following command.
+
+:Gitv[!] [args]   Invoking this command on a buffer that belongs to a git
+                  repository causes the gitv browser to open. '!' causes gitv
+                  to open in file mode rather than browser mode. Any [args]
+                  supplied are passed on to the gitv viewer and can be used to
+                  narrow the commits that are shown. If this command is run
+                  on a buffer not belonging to a git repository a message
+                  stating 'Not a git repository.' is displayed.
+
+The following abbreviation is also defined so that you can type :gitv without
+capitalisation.
+>
+    cabbrev gitv Gitv
+<
+
+3.1 Browser mode
+
+|gitv| has two distinct modes. Browser mode and file mode. The browser mode is
+opened in a new tab and allows the repository history to be viewed for all
+files. This is activated by running :Gitv without a '!'.
+
+In this mode you can view the entire repository history and see which files
+were changed with each commit. This mode tries to closely resemble gitk.
+
+3.2 File mode
+
+File mode is opened in a preview window above the buffer you are currently in.
+This view is tailored to act on the buffer that :Gitv! was run from, the
+"focused" file. Whilst in this mode all actions performed are specific to the
+single focused file. The browser only shows commits where the focused file
+changed.  Selecting a commit, views the focused file as it was in that commit.
+Performing a check out only checks the focused file out as it was in the
+commit. And so on. See 3.4 for the differences.
+
+3.3 Arguments
+
+You can pass arguments to the :Gitv command. These allow you to filter and
+narrow the commits shown. Essentially, gitv is a glorified 'git log' wrapper
+and so any flag that 'git log' accepts so will gitv. gitv does not inspect the
+arguments passed on to 'git log' and so may not work if they don't make sense.
+
+Without any arguments gitv behaves just like gitk and git log without
+arguments. It will display the commit history for the currently checked out
+branch.
+
+Here are some particularly useful examples of arguments that could be
+passed to :Gitv. For more info see 'git help log' and in particular the
+section: "Commit Limiting".
+
+    Flag              Description ~
+
+    --all             View repository history for all refs.
+
+    <since>..<until>  Show only commits between the named two commits. When
+                      either <since> or <until> is omitted, it defaults to
+                      HEAD, i.e. the tip of the current branch. For a more
+                      complete list of ways to spell <since> and <until>,
+                      see gitrevisions(7).
+
+    --merges          View only merge commits.
+
+    -S<string>        Look for differences that introduce or remove an
+                      instance of <string>. Note that this is different than
+                      the string simply appearing in diff output; see the
+                      pickaxe entry in gitdiffcore(7) for more details.
+
+    -G<regex>         Look for differences whose added or removed line
+                      matches the given <regex>.
+
+3.4 Key mappings.
+
+This is a list of key mappings that will work only in the gitv browser window.
+Where appropriate the differences in action is described for the two modes.
+
+    Mode        Map     Description~
+
+    normal      <cr>    Opens a commit. In browser mode this will show the
+                        commit header information including the commit
+                        message. It will also dispaly a full diff showing all the
+                        changes to files.
+
+                        Tip: if you press <cr> on anything sensible you can
+                        view the expected output. For example pressing <cr> on
+                        the line beginning a file diff, it will display the
+                        diff using Vim's built in diff viewing capability.
+                        Pressing <cr> on the tree sha will list all the files
+                        in the commit and pressing <cr> on one of these will
+                        show that file as it was in the commit. And so on.
+
+                        Pressing <cr> on the line "-- Load More --" will load
+                        |g:Gitv_CommitStep| more commits.
+
+                        In file mode this will open the focused file as it was
+                        in the currently selected diff. This allows you to
+                        easily go back in time and look at the focused file.
+
+                        Pressing <cr> on the top line in file mode opens the
+                        current working copy of the focused file.
+
+    normal      o       The same as <cr> but opens in a new |split|.
+    normal      O       The same as <cr> but opens in a new |tab|.
+    normal      s       The same as <cr> but opens in a new |vsplit|.
+
+    normal      q       Quits gitv. In browser mode this will close the entire
+                        tab. In file mode this closes only the preview window.
+                        Note: in browser mode this will close the tab
+                        regardless of any windows you may have opened as well
+                        as the gitv windows.
+
+    normal      u       Forces an update of the content of the browser window.
+
+    normal      co      Performs a 'git checkout' of the commit the cursor is
+                        on. In both modes this will present you with a choice
+                        of whether you would like to checkout the sha or any
+                        ref that might point to this commit.
+
+                        File mode differs in that it doesn't check out the
+                        entire commit but just the focused file in that
+                        commit.
+
+                        Tip: in gVim this will present you with a pop up dialog
+                        you can make this a text choice by performing ':set
+                        guioptions+=c.'
+
+    normal      D       Performs a diff using Vim's built in diff viewing
+                        capabilities. This does nothing in browser mode. In
+                        file mode it will diff the current file with the
+                        focused file in the commit under the cursor.
+
+    visual      D       In visual mode this performs a diff against the file
+                        in the commit at the top of the selection against the
+                        file in the commit at the bottom of the selection. The
+                        newest file is always on the right.
+
+    normal      S       This works for both browser and file mode. It opens a
+                        diffstat of everything that has changed since the
+                        commit under the cursor.
+
+    visual      S       In visual mode this works in exactly the same way as
+                        normal mode. However, it only shows what has changed in
+                        the range of commits that are highlighted.
+
+Here is a list of extra key mappings that can be used to efficiently move
+around a repository history in the browser window.
+
+    Mode        Map     Description~
+
+    normal      x       Jumps the cursor forward to the next branching point
+                        in the history.
+
+    normal      X       Jumps the cursor backward to the previous branching
+                        point in the history.
+
+    normal      r       Jumps the cursor forward to the next ref in the
+                        history.
+
+    normal      R       Jumps the cursor backward to the previous ref in the
+                        history.
+
+    normal      P       Jumps the cursor to the commit referenced by HEAD.
+
+3.5 Commands
+
+Running the |:Git| command in the commit browser window, in either mode, will
+cause the |:Git| command to be run as expected but the commit history will
+automatically update to reflect any changes too.
+
+==============================================================================
+4. Configuration Options                               *gitv-config-options*
+
+You can set the following options in your .vimrc to override the values used
+by |gitv|. The defaults are shown.
+
+4.1 Commit Step
+
+This is the number of commits to show each time. When pressing <cr> on
+"-- Load More --", the number of extra commits loaded is g:Gitv_CommitStep.
+The default is a screen's worth of lines. This should be set to an integer
+number. Setting this to a value _really_ high will load the entire repo in one
+go.
+>
+    g:Gitv_CommitStep = &lines
+<
+
+4.2 Open Horizontal
+
+This is the default layout to use in browser mode. If set to 0 then browser
+mode will open in a vertical split. If set to 1 then browser mode will open in
+a horizontal split. If set to 'auto' then browser mode will open in a vertical
+split unless the content fits better in horizontal split, in which case it
+will open horizontally. The commit browser width and height is automatically
+sized to best fit the content in all modes and settings.
+>
+    g:Gitv_OpenHorizontal = 0
+<
+
+4.3 Git Executable
+
+This is the name of the git executable to use to run commands. This should be
+a string.
+>
+    g:Gitv_GitExecutable = 'git'
+<
+
+==============================================================================
+5. Changelog                                                *gitv-changelog*
+
+1.0         First release. I hope you enjoy gitv!
+
+==============================================================================
+6. Misc                                                          *gitv-misc*
+
+6.1 Tips and tricks
+
+I use the following mappings to make working with |gitv| easier.
+>
+    nmap <leader>gv :Gitv --all<cr>
+    nmap <leader>gV :Gitv! --all<cr>
+<
+
+The following abbreviation makes running arbitrary git commands much easier.
+>
+    cabbrev git Git
+<
+
+The function: 'Gitv_OpenGitCommand(command, windowCmd)' is provided to allow
+the more advanced user to create their own commands. This function will
+execute the git command provided in the new window created using windowCmd.
+
+By using this function you get for free: the buffer set up for read only git
+output, including syntax highlighting and many other tailored options. You
+also get mappings for 'u' to update the output and 'q' to easily close the
+window.
+
+Here is an example of getting diff output both cached and not, in a vertical
+and horizontal split respectively.
+>
+    call Gitv_OpenGitCommand("diff --no-color --cached", 'vnew')
+    call Gitv_OpenGitCommand("diff --no-color", 'new')
+<
+
+I like my diff colors to be green for added lines and red for removed lines,
+just like in the shell. Adding this to your vimrc will accomplish this.
+>
+    highlight diffAdded guifg=#00bf00
+    highlight diffRemoved guifg=#bf0000
+<
+
+I highly recommend adding to your vimrc:
+>
+    set lazyredraw
+<
+
+This stops Vim from redrawing the screen during complex operations and results
+in much smoother looking plugins.
+
+
+6.2 Bugs, issues, features and contributing.
+
+There are no known bugs. Hopefully there are not too many unknown. Please see
+below to help.
+
+Bugs, suggestions, pull requests and patches are all very welcome. If you find
+issues with |gitv| please add them to the issues page on the github project.
+Anything else, feel free to email me: gregsexton@gmail.com.
+
+ vim:tw=78:ts=8:ft=help:norl:
