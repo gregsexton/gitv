@@ -440,6 +440,7 @@ fu! s:Align(seperator) range "{{{
     call filter(newlines, 'len(v:val)>1')
     let maxLens = s:MaxLengths(newlines)
 
+    "TODO: this could probably be nicer:
     let cnt = a:firstline
     for tokens in lines
         if len(tokens)>1
