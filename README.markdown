@@ -5,8 +5,6 @@ help me find and remove any bugs by adding any problems you have
 to the issues tracker of this repository. Suggestions, pull
 requests and patches are also all very welcome.
 
-***
-
 ##Introduction
 
 gitv is a 'gitk clone' plugin for the text editor Vim. The goal is
