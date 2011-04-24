@@ -103,13 +103,21 @@ endf "}}} }}}
 "Open And Update:"{{{
 fu! s:OpenGitv(extraArgs, fileMode) "{{{
     let sanatizedArgs = a:extraArgs == "''" ? '' : a:extraArgs
-    if a:fileMode
-        call s:OpenFileMode(sanatizedArgs)
-    else
-        call s:OpenBrowserMode(sanatizedArgs)
-    endif
+    try
+        if a:fileMode
+            call s:OpenFileMode(sanatizedArgs)
+        else
+            call s:OpenBrowserMode(sanatizedArgs)
+        endif
+    catch /not a git repository/
+        echom 'Not a git repository.'
+        return
+    endtry
 endf "}}}
 fu! s:OpenBrowserMode(extraArgs) "{{{
+    "this throws an exception if not a git repo which is caught immediately
+    let fubuffer = fugitive#buffer()
+
     silent Gtabedit HEAD
 
     if s:IsHorizontal()
