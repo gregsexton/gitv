@@ -1,14 +1,12 @@
 "AUTHOR:   Greg Sexton <gregsexton@gmail.com>
-"WEBSITE:  ???
+"WEBSITE:  http://www.gregsexton.org/portfolio/gitv/
 "LICENSE:  Same terms as Vim itself (see :help license).
 "NOTES:    Much of the credit for gitv goes to Tim Pope and the fugitive plugin
 "          where this plugin either uses functionality directly or was inspired heavily.
 
-"TODO: ack for 'gitk' should not exist.
-"TODO: ensure this is uncommented
-"if exists("g:loaded_gitv") || v:version < 700
-  "finish
-"endif
+if exists("g:loaded_gitv") || v:version < 700
+  finish
+endif
 let g:loaded_gitv = 1
 
 let s:savecpo = &cpo
