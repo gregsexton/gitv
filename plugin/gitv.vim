@@ -119,6 +119,9 @@ endf "}}} }}}
 fu! s:OpenGitv(extraArgs, fileMode) "{{{
     let sanatizedArgs = a:extraArgs == "''" ? '' : a:extraArgs
     let g:Gitv_InstanceCounter += 1
+    if !s:IsCompatible() "this outputs specific errors
+        return
+    endif
     try
         if a:fileMode
             call s:OpenFileMode(sanatizedArgs)
@@ -130,6 +133,12 @@ fu! s:OpenGitv(extraArgs, fileMode) "{{{
         return
     endtry
 endf "}}}
+fu! s:IsCompatible()
+    if !exists('g:loaded_fugitive')
+        echoerr "gitv requires the fugitive plugin to be installed."
+    endif
+    return exists('g:loaded_fugitive')
+endfu
 fu! s:OpenBrowserMode(extraArgs) "{{{
     "this throws an exception if not a git repo which is caught immediately
     let fubuffer = fugitive#buffer()
