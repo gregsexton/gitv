@@ -22,6 +22,9 @@ if !exists("g:Gitv_CommitStep")
     let g:Gitv_CommitStep = &lines
 endif
 
+"this counts up each time gitv is opened to ensure a unique file name
+let g:Gitv_InstanceCounter = 0
+
 command! -nargs=* -bang Gitv call s:OpenGitv(shellescape(<q-args>), <bang>0)
 cabbrev gitv Gitv
 
@@ -35,9 +38,9 @@ fu! Gitv_OpenGitCommand(command, windowCmd, ...) "{{{
 
     if !a:0     "no extra args
         "switches to the buffer repository before running the command and switches back after.
-        let dir = fugitive#extract_dir()
+        let dir = fugitive#buffer().repo().dir()
         if dir == ''
-            echo "No git repository could be found."
+            echom "No git repository could be found."
             return 0
         endif
         let workingDir = fnamemodify(dir,':h')
@@ -46,6 +49,7 @@ fu! Gitv_OpenGitCommand(command, windowCmd, ...) "{{{
         let bufferDir = getcwd()
         try
             execute cd.'`=workingDir`'
+            "TODO: this should use g:fugitive_git_executable
             let finalCmd = 'git --git-dir="' .dir. '" ' . a:command
             let result = system(finalCmd)
         finally
@@ -55,7 +59,7 @@ fu! Gitv_OpenGitCommand(command, windowCmd, ...) "{{{
         let result = system(a:command)
     endif
 
-    if result == ""
+    if !exists('result') || result == ""
         echom "No output."
         return 0
     else
@@ -76,6 +80,9 @@ fu! Gitv_OpenGitCommand(command, windowCmd, ...) "{{{
                 endif
                 wincmd p
             endtry
+        endif
+        if !(&modifiable)
+            return 0
         endif
         if !a:0
             let b:Git_Command = finalCmd
@@ -100,9 +107,10 @@ fu! Gitv_OpenGitCommand(command, windowCmd, ...) "{{{
         return 1
     endif
 endf "}}} }}}
-"Open And Update:"{{{
+"Open And Update Gitv:"{{{
 fu! s:OpenGitv(extraArgs, fileMode) "{{{
     let sanatizedArgs = a:extraArgs == "''" ? '' : a:extraArgs
+    let g:Gitv_InstanceCounter += 1
     try
         if a:fileMode
             call s:OpenFileMode(sanatizedArgs)
@@ -117,39 +125,31 @@ endf "}}}
 fu! s:OpenBrowserMode(extraArgs) "{{{
     "this throws an exception if not a git repo which is caught immediately
     let fubuffer = fugitive#buffer()
-
     silent Gtabedit HEAD
 
     if s:IsHorizontal()
-        let direction = 'new'
+        let direction = 'new gitv'.'-'.g:Gitv_InstanceCounter
     else
-        let direction = 'vnew'
+        let direction = 'vnew gitv'.'-'.g:Gitv_InstanceCounter
     endif
-
     if !s:LoadGitv(direction, 0, g:Gitv_CommitStep, a:extraArgs, '')
         return 0
     endif
-
-    if s:IsHorizontal()
-        silent command! -buffer -nargs=* -complete=customlist,fugitive#git_complete Git wincmd j|Git <args>|wincmd k|normal u
-    else
-        silent command! -buffer -nargs=* -complete=customlist,fugitive#git_complete Git wincmd l|Git <args>|wincmd h|normal u
-    endif
-
+    call s:SetupBufferCommands(0)
     "open the first commit
     silent call s:OpenGitvCommit("Gedit")
 endf "}}}
 fu! s:OpenFileMode(extraArgs) "{{{
     let relPath = fugitive#buffer().path()
     pclose!
-    if !s:LoadGitv(&previewheight . "new", 0, g:Gitv_CommitStep, a:extraArgs, relPath)
+    if !s:LoadGitv(&previewheight . "new gitv".'-'.g:Gitv_InstanceCounter, 0, g:Gitv_CommitStep, a:extraArgs, relPath)
         return 0
     endif
     set previewwindow
     set winfixheight
     let b:Gitv_FileMode = 1
     let b:Gitv_FileModeRelPath = relPath
-    silent command! -buffer -nargs=* -complete=customlist,fugitive#git_complete Git wincmd j|Git <args>|wincmd k|normal u
+    call s:SetupBufferCommands(1)
 endf "}}}
 fu! s:LoadGitv(direction, reload, commitCount, extraArgs, filePath) "{{{
     if a:reload
@@ -239,6 +239,13 @@ fu! s:SetupMappings() "{{{
     nmap <buffer> <silent> R :call <SID>JumpToRef(1)<cr>
     nmap <buffer> <silent> P :call <SID>JumpToHead()<cr>
 endf "}}}
+fu! s:SetupBufferCommands(fileMode) "{{{
+    if a:fileMode || s:IsHorizontal()
+        silent command! -buffer -nargs=* -complete=customlist,s:fugitive_GitComplete Git wincmd j|Git <args>|wincmd k|normal u
+    else
+        silent command! -buffer -nargs=* -complete=customlist,s:fugitive_GitComplete Git wincmd l|Git <args>|wincmd h|normal u
+    endif
+endfu "}}}
 fu! s:ResizeWindow(fileMode) "{{{
     if a:fileMode "window height determined by &previewheight
         return
@@ -480,6 +487,24 @@ fu! s:MaxLengths(colls) "{{{
     endfor
     return lengths
 endfu "}}} }}}
+"Fugitive Functions: "{{{
+"These functions are lifted directly from fugitive and modified only to work with gitv.
+function! s:fugitive_sub(str,pat,rep) abort "{{{
+  return substitute(a:str,'\v\C'.a:pat,a:rep,'')
+endfunction "}}}
+function! s:fugitive_GitComplete(A,L,P) abort "{{{
+  if !exists('s:exec_path')
+    let s:exec_path = s:fugitive_sub(system(g:fugitive_git_executable.' --exec-path'),'\n$','')
+  endif
+  let cmds = map(split(glob(s:exec_path.'/git-*'),"\n"),'s:fugitive_sub(v:val[strlen(s:exec_path)+5 : -1],"\\.exe$","")')
+  if a:L =~ ' [[:alnum:]-]\+ '
+    return fugitive#buffer().repo().superglob(a:A)
+  elseif a:A == ''
+    return cmds
+  else
+    return filter(cmds,'v:val[0 : strlen(a:A)-1] ==# a:A')
+  endif
+endfunction "}}} }}}
 
 let &cpo = s:savecpo
 unlet s:savecpo
