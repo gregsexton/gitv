@@ -68,17 +68,21 @@ fu! Gitv_OpenGitCommand(command, windowCmd, ...) "{{{
             silent setlocal noreadonly
             1,$ d
         else
+            let goBackTo = winnr()
             try
                 if exists('workingDir') && exists('cd')
                     execute cd.'`=workingDir`'
                 endif
                 exec a:windowCmd
+                let newWindow = winnr()
             finally
-                wincmd p
+                exec goBackTo . 'wincmd w'
                 if exists('bufferDir') && exists('cd')
                     execute cd.'`=bufferDir`'
                 endif
-                wincmd p
+                if exists('newWindow')
+                    exec newWindow . 'wincmd w'
+                endif
             endtry
         endif
         if !(&modifiable)
@@ -508,4 +512,5 @@ endfunction "}}} }}}
 
 let &cpo = s:savecpo
 unlet s:savecpo
+
  " vim:fdm=marker
