@@ -1,4 +1,4 @@
-*gitv* -- gitk for vim.
+gitv -- gitk for vim.
 
 AUTHOR:   Greg Sexton <gregsexton@gmail.com>                      *gitv-author*
 WEBSITE:  http://www.gregsexton.org/portfolio/gitv/
