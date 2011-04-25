@@ -131,12 +131,12 @@ fu! s:OpenGitv(extraArgs, fileMode) "{{{
         return
     endtry
 endf "}}}
-fu! s:IsCompatible()
+fu! s:IsCompatible() "{{{
     if !exists('g:loaded_fugitive')
         echoerr "gitv requires the fugitive plugin to be installed."
     endif
     return exists('g:loaded_fugitive')
-endfu
+endfu "}}}
 fu! s:OpenBrowserMode(extraArgs) "{{{
     "this throws an exception if not a git repo which is caught immediately
     let fubuffer = fugitive#buffer()
@@ -319,7 +319,7 @@ fu! s:MoveIntoPreviewAndExecute(cmd) "{{{
             wincmd l
         endif
     endif
-    exec a:cmd
+    silent exec a:cmd
     if !filem
         if horiz
             wincmd k
