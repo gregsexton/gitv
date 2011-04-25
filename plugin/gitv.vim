@@ -14,7 +14,7 @@ set cpo&vim
 
 "configurable options:
 "g:Gitv_CommitStep     - int
-"g:Gitv_OpenHorizontal - [0,1,'AUTO']
+"g:Gitv_OpenHorizontal - {0,1,'AUTO'}
 "g:Gitv_GitExecutable  - string
 
 if !exists("g:Gitv_CommitStep")
@@ -298,6 +298,17 @@ fu! s:GetGitvRefs() "{{{
     let refs = split(refstr, ', ')
     return refs
 endf "}}}
+fu! s:RecordBufferExecAndWipe(cmd, wipe) "{{{
+    "this should be used to replace the buffer in a window
+    let buf = bufnr('%')
+    exec a:cmd
+    if a:wipe
+        "safe guard against wiping out buffer you're in
+        if bufnr('%') != buf
+            exec 'bwipeout ' . buf
+        endif
+    endif
+endfu "}}}
 fu! s:MoveIntoPreviewAndExecute(cmd) "{{{
     let horiz = s:IsHorizontal()
     let filem = s:IsFileMode()
@@ -345,7 +356,8 @@ fu! s:OpenRelativeFilePath(sha, geditForm) "{{{
         return
     endif
     wincmd j
-    exec a:geditForm . " " . a:sha . ":" . relPath
+    let cmd = a:geditForm . " " . a:sha . ":" . relPath
+    call s:RecordBufferExecAndWipe(cmd, a:geditForm=='Gedit')
 endf "}}} }}}
 "Mapped Functions:"{{{
 "Operations: "{{{
@@ -359,7 +371,9 @@ fu! s:OpenGitvCommit(geditForm) "{{{
         let fp = s:GetRelativeFilePath()
         wincmd j
         let form = a:geditForm[1:] "strip off the leading 'G'
-        exec form . " " . fugitive#buffer().repo().tree() . "/" . fp
+        let cmd = form . " " . fugitive#buffer().repo().tree() . "/" . fp
+        call s:RecordBufferExecAndWipe(cmd, form=='edit')
+        wincmd k
         return
     endif
     let sha = s:GetGitvSha(line('.'))
@@ -370,7 +384,9 @@ fu! s:OpenGitvCommit(geditForm) "{{{
         call s:OpenRelativeFilePath(sha, a:geditForm)
         wincmd k
     else
-        call s:MoveIntoPreviewAndExecute(a:geditForm . " " . sha)
+        let cmd = a:geditForm . " " . sha
+        let cmd = 'call s:RecordBufferExecAndWipe("'.cmd.'", '.(a:geditForm=='Gedit').')'
+        call s:MoveIntoPreviewAndExecute(cmd)
     endif
 endf "}}}
 fu! s:CheckOutGitvCommit() "{{{
