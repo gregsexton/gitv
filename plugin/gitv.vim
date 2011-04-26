@@ -400,9 +400,7 @@ fu! s:CheckOutGitvCommit() "{{{
     if sha == ""
         return
     endif
-    "remove remotes
-    let refs   = filter(allrefs, 'match(v:val, "^r:")==-1')
-    let refs  += [sha]
+    let refs   = allrefs + [sha]
     let refstr = join(refs, "\n")
     let choice = confirm("Checkout commit:", refstr . "\nCancel")
     if choice == 0
@@ -413,6 +411,7 @@ fu! s:CheckOutGitvCommit() "{{{
         return
     endif
     let choice = substitute(choice, "^t:", "", "")
+    let choice = substitute(choice, "^r:", "", "")
     if s:IsFileMode()
         let relPath = s:GetRelativeFilePath()
         let choice .= " -- " . relPath
