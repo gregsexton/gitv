@@ -304,7 +304,7 @@ fu! s:RecordBufferExecAndWipe(cmd, wipe) "{{{
     exec a:cmd
     if a:wipe
         "safe guard against wiping out buffer you're in
-        if bufnr('%') != buf
+        if bufnr('%') != buf && bufexists(buf)
             exec 'bwipeout ' . buf
         endif
     endif
