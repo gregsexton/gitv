@@ -171,7 +171,7 @@ fu! s:OpenBrowserMode(extraArgs) "{{{
     endif
     call s:SetupBufferCommands(0)
     "open the first commit
-    silent call s:OpenGitvCommit("Gedit")
+    silent call s:OpenGitvCommit("Gedit", 0)
 endf "}}}
 fu! s:OpenFileMode(extraArgs) "{{{
     let relPath = fugitive#buffer().path()
@@ -251,10 +251,12 @@ fu! s:SetupBuffer(commitCount, extraArgs, filePath) "{{{
 endf "}}}
 fu! s:SetupMappings() "{{{
     "operations
-    nmap <buffer> <silent> <cr> :call <SID>OpenGitvCommit("Gedit")<cr>
-    nmap <buffer> <silent> o :call <SID>OpenGitvCommit("Gsplit")<cr>
-    nmap <buffer> <silent> O :call <SID>OpenGitvCommit("Gtabedit")<cr>
-    nmap <buffer> <silent> s :call <SID>OpenGitvCommit("Gvsplit")<cr>
+    nmap <buffer> <silent> <cr> :call <SID>OpenGitvCommit("Gedit", 0)<cr>
+    nmap <buffer> <silent> o :call <SID>OpenGitvCommit("Gsplit", 0)<cr>
+    nmap <buffer> <silent> O :call <SID>OpenGitvCommit("Gtabedit", 0)<cr>
+    nmap <buffer> <silent> s :call <SID>OpenGitvCommit("Gvsplit", 0)<cr>
+    "force opening the fugitive buffer for the commit
+    nmap <buffer> <silent> <c-cr> :call <SID>OpenGitvCommit("Gedit", 1)<cr>
 
     nmap <buffer> <silent> q :call <SID>CloseGitv()<cr>
     nmap <buffer> <silent> u :call <SID>LoadGitv('', 1, b:Gitv_CommitCount, b:Gitv_ExtraArgs, <SID>GetRelativeFilePath())<cr>
@@ -380,7 +382,7 @@ fu! s:OpenRelativeFilePath(sha, geditForm) "{{{
 endf "}}} }}}
 "Mapped Functions:"{{{
 "Operations: "{{{
-fu! s:OpenGitvCommit(geditForm) "{{{
+fu! s:OpenGitvCommit(geditForm, forceOpenFugitive) "{{{
     if getline('.') == "-- Load More --"
         call s:LoadGitv('', 1, b:Gitv_CommitCount+g:Gitv_CommitStep, b:Gitv_ExtraArgs, s:GetRelativeFilePath())
         return
@@ -399,13 +401,19 @@ fu! s:OpenGitvCommit(geditForm) "{{{
     if sha == ""
         return
     endif
-    if s:IsFileMode()
+    if s:IsFileMode() && !a:forceOpenFugitive
         call s:OpenRelativeFilePath(sha, a:geditForm)
         wincmd k
     else
         let cmd = a:geditForm . " " . sha
         let cmd = 'call s:RecordBufferExecAndWipe("'.cmd.'", '.(a:geditForm=='Gedit').')'
-        call s:MoveIntoPreviewAndExecute(cmd)
+        if s:IsFileMode()
+            wincmd j
+            exec cmd
+            wincmd k
+        else
+            call s:MoveIntoPreviewAndExecute(cmd)
+        endif
     endif
 endf "}}}
 fu! s:CheckOutGitvCommit() "{{{

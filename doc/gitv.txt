@@ -157,6 +157,10 @@ Where appropriate the differences in action is described for the two modes.
     normal      O       The same as <cr> but opens in a new |tab|.
     normal      s       The same as <cr> but opens in a new |vsplit|.
 
+    normal      <c-cr>  This performs the same thing as <cr> in browser mode.
+                        In file mode it opens the commit details rather than
+                        the focused file.
+
     normal      q       Quits gitv. In browser mode this will close the entire
                         tab. In file mode this closes only the |preview-window|.
                         Note: in browser mode this will close the tab
@@ -174,8 +178,8 @@ Where appropriate the differences in action is described for the two modes.
                         entire commit but just the focused file in that
                         commit.
 
-                        Tip: in gVim this will present you with a pop up dialog
-                        you can make this a text choice by performing ':set
+                        Tip: in gVim this will present you with a pop up dialog.
+                        You can make this a text choice by performing ':set
                         guioptions+=c.'
 
     normal      D       Performs a diff using Vim's built in diff viewing
