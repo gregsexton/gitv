@@ -80,7 +80,7 @@ were changed with each commit. This mode tries to closely resemble gitk.
 
 3.2 File mode
 
-File mode is opened in a preview window above the buffer you are currently in.
+File mode is opened in a |preview-window| above the buffer you are currently in.
 This view is tailored to act on the buffer that :Gitv! was run from, the
 "focused" file. Whilst in this mode all actions performed are specific to the
 single focused file. The browser only shows commits where the focused file
@@ -158,7 +158,7 @@ Where appropriate the differences in action is described for the two modes.
     normal      s       The same as <cr> but opens in a new |vsplit|.
 
     normal      q       Quits gitv. In browser mode this will close the entire
-                        tab. In file mode this closes only the preview window.
+                        tab. In file mode this closes only the |preview-window|.
                         Note: in browser mode this will close the tab
                         regardless of any windows you may have opened as well
                         as the gitv windows.
@@ -221,6 +221,30 @@ Running the |:Git| command in the commit browser window, in either mode, will
 cause the |:Git| command to be run as expected but the commit history will
 automatically update to reflect any changes too.
 
+3.6 Windows
+
+In browser mode, two windows are opened initially. The "browser window" that
+displays the commit history and the "preview window" that shows the currently
+selected commit.
+
+In file mode, a |preview-window| is opened above the current file. This is a
+browser window filtered to show commits only affecting the focused file. The
+window holding the focused file acts as the preview window in this mode.
+
+NOTE: In both modes the buffer in the preview window is wiped after replacing
+it.  This is to stop the quick build up of fugitive buffers. A buffer will not
+be wiped if it contains unsaved changes. Buffers are not wiped when opening a
+commit in a split, vsplit or a new tab.
+
+When opening a commit, the window it will be opened in is determined by simple
+rules. If in browser mode and the layout is vertical it will open in the
+window to the immediate right (exactly as if you performed <c-w>l). If in a
+horizontal layout, it will be opened in the window immediately below (exactly
+as if you performed <c-w>j). If in file mode, it will open exactly like
+browser mode split horizontally. NOTE: It is for this reason that you should
+not move the browser window as it will cause commits to be opened in
+unexpected places.
+
 ==============================================================================
 4. Configuration Options                               *gitv-config-options*
 
@@ -243,9 +267,11 @@ go.
 This is the default layout to use in browser mode. If set to 0 then browser
 mode will open in a vertical split. If set to 1 then browser mode will open in
 a horizontal split. If set to 'auto' then browser mode will open in a vertical
-split unless the content fits better in horizontal split, in which case it
-will open horizontally. The commit browser width and height is automatically
-sized to best fit the content in all modes and settings.
+split unless the content fits better in a horizontal split, in which case it
+will open horizontally.
+
+The commit browser width and height is automatically sized to best fit the
+content in all modes and settings.
 >
     g:Gitv_OpenHorizontal = 0
 <
@@ -256,6 +282,18 @@ This is the name of the git executable to use to run commands. This should be
 a string.
 >
     g:Gitv_GitExecutable = 'git'
+<
+4.4 Wipe All on Close
+
+This option should be set to either 0 (to disable) or 1 (to enable). If set to
+1 then on closing the browser mode by using the q key all buffers displayed in
+a window in the tab will be wiped before the tab is closed. This option allows
+you to limit the number of fugitve buffers that accumulate in the use of gitv.
+
+NOTE: This will not wipe any buffer with unsaved content. It will however
+mercilessly wipe all buffers in the tab regardless of the file they hold.
+>
+    g:Gitv_WipeAllOnClose = 0
 <
 
 ==============================================================================

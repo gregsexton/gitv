@@ -14,15 +14,20 @@ set cpo&vim
 
 "configurable options:
 "g:Gitv_CommitStep     - int
-"g:Gitv_OpenHorizontal - [0,1,'AUTO']
+"g:Gitv_OpenHorizontal - {0,1,'AUTO'}
 "g:Gitv_GitExecutable  - string
+"g:Gitv_WipeAllOnClose - int
 
 if !exists("g:Gitv_CommitStep")
     let g:Gitv_CommitStep = &lines
 endif
 
 if !exists('g:Gitv_GitExecutable')
-  let g:Gitv_GitExecutable = 'git'
+    let g:Gitv_GitExecutable = 'git'
+endif
+
+if !exists('g:Gitv_WipeAllOnClose')
+    let g:Gitv_WipeAllOnClose = 0 "default for safety
 endif
 
 "this counts up each time gitv is opened to ensure a unique file name
@@ -131,12 +136,12 @@ fu! s:OpenGitv(extraArgs, fileMode) "{{{
         return
     endtry
 endf "}}}
-fu! s:IsCompatible()
+fu! s:IsCompatible() "{{{
     if !exists('g:loaded_fugitive')
         echoerr "gitv requires the fugitive plugin to be installed."
     endif
     return exists('g:loaded_fugitive')
-endfu
+endfu "}}}
 fu! s:OpenBrowserMode(extraArgs) "{{{
     "this throws an exception if not a git repo which is caught immediately
     let fubuffer = fugitive#buffer()
@@ -298,6 +303,17 @@ fu! s:GetGitvRefs() "{{{
     let refs = split(refstr, ', ')
     return refs
 endf "}}}
+fu! s:RecordBufferExecAndWipe(cmd, wipe) "{{{
+    "this should be used to replace the buffer in a window
+    let buf = bufnr('%')
+    exec a:cmd
+    if a:wipe
+        "safe guard against wiping out buffer you're in
+        if bufnr('%') != buf && bufexists(buf)
+            exec 'bwipeout ' . buf
+        endif
+    endif
+endfu "}}}
 fu! s:MoveIntoPreviewAndExecute(cmd) "{{{
     let horiz = s:IsHorizontal()
     let filem = s:IsFileMode()
@@ -308,7 +324,7 @@ fu! s:MoveIntoPreviewAndExecute(cmd) "{{{
             wincmd l
         endif
     endif
-    exec a:cmd
+    silent exec a:cmd
     if !filem
         if horiz
             wincmd k
@@ -345,7 +361,8 @@ fu! s:OpenRelativeFilePath(sha, geditForm) "{{{
         return
     endif
     wincmd j
-    exec a:geditForm . " " . a:sha . ":" . relPath
+    let cmd = a:geditForm . " " . a:sha . ":" . relPath
+    call s:RecordBufferExecAndWipe(cmd, a:geditForm=='Gedit')
 endf "}}} }}}
 "Mapped Functions:"{{{
 "Operations: "{{{
@@ -359,7 +376,9 @@ fu! s:OpenGitvCommit(geditForm) "{{{
         let fp = s:GetRelativeFilePath()
         wincmd j
         let form = a:geditForm[1:] "strip off the leading 'G'
-        exec form . " " . fugitive#buffer().repo().tree() . "/" . fp
+        let cmd = form . " " . fugitive#buffer().repo().tree() . "/" . fp
+        call s:RecordBufferExecAndWipe(cmd, form=='edit')
+        wincmd k
         return
     endif
     let sha = s:GetGitvSha(line('.'))
@@ -370,7 +389,9 @@ fu! s:OpenGitvCommit(geditForm) "{{{
         call s:OpenRelativeFilePath(sha, a:geditForm)
         wincmd k
     else
-        call s:MoveIntoPreviewAndExecute(a:geditForm . " " . sha)
+        let cmd = a:geditForm . " " . sha
+        let cmd = 'call s:RecordBufferExecAndWipe("'.cmd.'", '.(a:geditForm=='Gedit').')'
+        call s:MoveIntoPreviewAndExecute(cmd)
     endif
 endf "}}}
 fu! s:CheckOutGitvCommit() "{{{
@@ -402,6 +423,9 @@ fu! s:CloseGitv() "{{{
     if s:IsFileMode()
         q
     else
+        if g:Gitv_WipeAllOnClose
+            silent windo setlocal bufhidden=wipe
+        endif
         tabc
     endif
 endf "}}}
