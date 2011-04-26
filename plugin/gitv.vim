@@ -13,11 +13,12 @@ let s:savecpo = &cpo
 set cpo&vim
 
 "configurable options:
-"g:Gitv_CommitStep     - int
-"g:Gitv_OpenHorizontal - {0,1,'AUTO'}
-"g:Gitv_GitExecutable  - string
-"g:Gitv_WipeAllOnClose - int
-"g:Gitv_WrapLines      - {0,1}
+"g:Gitv_CommitStep             - int
+"g:Gitv_OpenHorizontal         - {0,1,'AUTO'}
+"g:Gitv_GitExecutable          - string
+"g:Gitv_WipeAllOnClose         - int
+"g:Gitv_WrapLines              - {0,1}
+"g:Gitv_TruncateCommitSubjects - {0, 1}
 
 if !exists("g:Gitv_CommitStep")
     let g:Gitv_CommitStep = &lines

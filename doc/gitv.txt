@@ -288,7 +288,7 @@ a string.
 This option should be set to either 0 (to disable) or 1 (to enable). If set to
 1 then on closing the browser mode by using the q key all buffers displayed in
 a window in the tab will be wiped before the tab is closed. This option allows
-you to limit the number of fugitve buffers that accumulate in the use of gitv.
+you to limit the number of fugitive buffers that accumulate in the use of gitv.
 
 NOTE: This will not wipe any buffer with unsaved content. It will however
 mercilessly wipe all buffers in the tab regardless of the file they hold.
@@ -299,9 +299,20 @@ mercilessly wipe all buffers in the tab regardless of the file they hold.
 4.5 Wrap Lines
 
 If set to 1 then line wrapping is enabled. This is useful if you have
-ocassional very long commit messages.
+occasional very long commit messages.
 >
-    let g:Gitv_WrapLines = 0
+    g:Gitv_WrapLines = 0
+<
+
+4.6 Truncate Commit Subjects
+
+If set to 1 then commit subject truncation is enabled. This will truncate
+commit subjects, where necessary, so that the whole line will fit in one
+screen width. NOTE: It is possible that this can truncate any refs pointing at
+a commit. In this situation it will not be possible to check out any of these
+refs. This is due to gitv being unable to recognise that they are refs.
+>
+    g:Gitv_TruncateCommitSubjects = 0
 <
 ==============================================================================
 5. Changelog                                                *gitv-changelog*
