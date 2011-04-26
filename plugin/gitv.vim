@@ -426,7 +426,11 @@ fu! s:CloseGitv() "{{{
         if g:Gitv_WipeAllOnClose
             silent windo setlocal bufhidden=wipe
         endif
+        let moveLeft = tabpagenr() == tabpagenr('$') ? 0 : 1
         tabc
+        if moveLeft && tabpagenr() != 1
+            tabp
+        endif
     endif
 endf "}}}
 fu! s:DiffGitvCommit() range "{{{
