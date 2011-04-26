@@ -17,6 +17,7 @@ set cpo&vim
 "g:Gitv_OpenHorizontal - {0,1,'AUTO'}
 "g:Gitv_GitExecutable  - string
 "g:Gitv_WipeAllOnClose - int
+"g:Gitv_WrapLines      - {0,1}
 
 if !exists("g:Gitv_CommitStep")
     let g:Gitv_CommitStep = &lines
@@ -28,6 +29,10 @@ endif
 
 if !exists('g:Gitv_WipeAllOnClose')
     let g:Gitv_WipeAllOnClose = 0 "default for safety
+endif
+
+if !exists('g:Gitv_WrapLines')
+    let g:Gitv_WrapLines = 0
 endif
 
 "this counts up each time gitv is opened to ensure a unique file name
@@ -106,7 +111,11 @@ fu! Gitv_OpenGitCommand(command, windowCmd, ...) "{{{
         silent setlocal noswapfile
         silent setlocal bufhidden=wipe
         silent setlocal nonumber
-        silent setlocal nowrap
+        if g:Gitv_WrapLines
+            silent setlocal wrap
+        else
+            silent setlocal nowrap
+        endif
         silent setlocal fdm=syntax
         silent setlocal foldlevel=0
         nmap <buffer> <silent> q :q!<CR>

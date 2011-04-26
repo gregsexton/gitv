@@ -296,6 +296,13 @@ mercilessly wipe all buffers in the tab regardless of the file they hold.
     g:Gitv_WipeAllOnClose = 0
 <
 
+4.5 Wrap Lines
+
+If set to 1 then line wrapping is enabled. This is useful if you have
+ocassional very long commit messages.
+>
+    let g:Gitv_WrapLines = 0
+<
 ==============================================================================
 5. Changelog                                                *gitv-changelog*
 
