@@ -16,13 +16,18 @@ set cpo&vim
 "g:Gitv_CommitStep     - int
 "g:Gitv_OpenHorizontal - {0,1,'AUTO'}
 "g:Gitv_GitExecutable  - string
+"g:Gitv_WipeAllOnClose - int
 
 if !exists("g:Gitv_CommitStep")
     let g:Gitv_CommitStep = &lines
 endif
 
 if !exists('g:Gitv_GitExecutable')
-  let g:Gitv_GitExecutable = 'git'
+    let g:Gitv_GitExecutable = 'git'
+endif
+
+if !exists('g:Gitv_WipeAllOnClose')
+    let g:Gitv_WipeAllOnClose = 0 "default for safety
 endif
 
 "this counts up each time gitv is opened to ensure a unique file name
@@ -418,6 +423,9 @@ fu! s:CloseGitv() "{{{
     if s:IsFileMode()
         q
     else
+        if g:Gitv_WipeAllOnClose
+            silent windo setlocal bufhidden=wipe
+        endif
         tabc
     endif
 endf "}}}
