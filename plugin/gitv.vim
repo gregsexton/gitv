@@ -35,6 +35,10 @@ if !exists('g:Gitv_WrapLines')
     let g:Gitv_WrapLines = 0
 endif
 
+if !exists('g:Gitv_TruncateCommitSubjects')
+    let g:Gitv_TruncateCommitSubjects = 0
+endif
+
 "this counts up each time gitv is opened to ensure a unique file name
 let g:Gitv_InstanceCounter = 0
 
@@ -497,7 +501,7 @@ fu! s:JumpToHead() "{{{
     silent! /^\(\(|\|\/\|\\\|\*\)\s\?\)\+\s\+\zs(HEAD/
 endf "}}}
 "}}} }}}
-"Alignment Functions: "{{{
+"Alignment And Truncate Functions: "{{{
 fu! s:Align(seperator) range "{{{
     let lines = getline(a:firstline, a:lastline)
     call map(lines, 'split(v:val, a:seperator)')
@@ -506,8 +510,7 @@ fu! s:Align(seperator) range "{{{
     call filter(newlines, 'len(v:val)>1')
     let maxLens = s:MaxLengths(newlines)
 
-    "TODO: this could probably be nicer:
-    let cnt = a:firstline
+    let newlines = []
     for tokens in lines
         if len(tokens)>1
             let newline = []
@@ -515,11 +518,38 @@ fu! s:Align(seperator) range "{{{
                 let token = tokens[i]
                 call add(newline, token . repeat(' ', maxLens[i]-strlen(token)+1))
             endfor
-            call setline(cnt, join(newline))
+            call add(newlines, newline)
+        else
+            call add(newlines, tokens)
         endif
-        let cnt += 1
     endfor
+
+    if g:Gitv_TruncateCommitSubjects
+        call s:TruncateLines(newlines)
+    endif
+
+    call map(newlines, "join(v:val)")
+    call setline(a:firstline, newlines)
 endfu "}}}
+fu! s:TruncateLines(lines) "{{{
+    "truncates the commit subject for any line > &columns
+    call map(a:lines, "s:TruncateHelp(v:val)")
+endfu "}}}
+fu! s:TruncateHelp(line)
+    let length = strlen(join(a:line))
+    if length > &columns
+        let delta = length - &columns
+        "offset = 3 for the elipsis and 1 for truncation
+        let offset = 3 + 1
+        if a:line[0][-(delta + offset + 1):] =~ "^\\s\\+$"
+            let extension = "   "
+        else
+            let extension = "..."
+        endif
+        let a:line[0] = a:line[0][:-(delta + offset)] . extension
+    endif
+    return a:line
+endfu
 fu! s:MaxLengths(colls) "{{{
     "precondition: coll is a list of lists of strings -- should be rectangular
     "returns a list of maximum string lengths
