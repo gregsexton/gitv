@@ -331,20 +331,53 @@ fu! s:RecordBufferExecAndWipe(cmd, wipe) "{{{
         endif
     endif
 endfu "}}}
-fu! s:MoveIntoPreviewAndExecute(cmd) "{{{
-    let horiz = s:IsHorizontal()
-    let filem = s:IsFileMode()
+fu! s:MoveIntoPreviewAndExecute(cmd, tryToOpenNewWin) "{{{
+    if winnr("$") == 1 "is the only window
+        if a:tryToOpenNewWin
+            call s:CreateNewPreviewWindow()
+            call s:MoveIntoPreviewAndExecute(a:cmd, 0)
+        else
+            echoerr "No preview window detected."
+        endif
+        return
+    endif
+    let horiz      = s:IsHorizontal()
+    let filem      = s:IsFileMode()
+    let currentWin = winnr()
+
     if horiz || filem
         wincmd j
     else
         wincmd l
     endif
+
+    if currentWin == winnr() "haven't moved anywhere
+        if a:tryToOpenNewWin
+            call s:CreateNewPreviewWindow()
+            call s:MoveIntoPreviewAndExecute(a:cmd, 0)
+        else
+            echoerr "No preview window detected."
+        endif
+        return
+    endif
+
     silent exec a:cmd
     if horiz || filem
         wincmd k
     else
         wincmd h
     endif
+endfu "}}}
+fu! s:CreateNewPreviewWindow() "{{{
+    "this should not be called by anything other than MoveIntoPreviewAndExecute
+    let horiz      = s:IsHorizontal()
+    let filem      = s:IsFileMode()
+    if horiz || filem
+        Gsplit HEAD
+    else
+        Gvsplit HEAD
+    endif
+    wincmd x
 endfu "}}}
 fu! s:IsHorizontal() "{{{
     "NOTE: this can only tell you if horizontal while cursor in browser window
@@ -377,7 +410,7 @@ fu! s:OpenRelativeFilePath(sha, geditForm) "{{{
     endif
     let cmd = a:geditForm . " " . a:sha . ":" . relPath
     let cmd = 'call s:RecordBufferExecAndWipe("'.cmd.'", '.(a:geditForm=='Gedit').')'
-    call s:MoveIntoPreviewAndExecute(cmd)
+    call s:MoveIntoPreviewAndExecute(cmd, 1)
 endf "}}} }}}
 "Mapped Functions:"{{{
 "Operations: "{{{
@@ -392,7 +425,7 @@ fu! s:OpenGitvCommit(geditForm, forceOpenFugitive) "{{{
         let form = a:geditForm[1:] "strip off the leading 'G'
         let cmd = form . " " . fugitive#buffer().repo().tree() . "/" . fp
         let cmd = 'call s:RecordBufferExecAndWipe("'.cmd.'", '.(form=='edit').')'
-        call s:MoveIntoPreviewAndExecute(cmd)
+        call s:MoveIntoPreviewAndExecute(cmd, 1)
         return
     endif
     let sha = s:GetGitvSha(line('.'))
@@ -404,7 +437,7 @@ fu! s:OpenGitvCommit(geditForm, forceOpenFugitive) "{{{
     else
         let cmd = a:geditForm . " " . sha
         let cmd = 'call s:RecordBufferExecAndWipe("'.cmd.'", '.(a:geditForm=='Gedit').')'
-        call s:MoveIntoPreviewAndExecute(cmd)
+        call s:MoveIntoPreviewAndExecute(cmd, 1)
     endif
 endf "}}}
 fu! s:CheckOutGitvCommit() "{{{
@@ -458,7 +491,7 @@ fu! s:DiffGitvCommit() range "{{{
     if a:firstline != a:lastline
         call s:OpenRelativeFilePath(shafirst, "Gedit")
     endif
-    call s:MoveIntoPreviewAndExecute("Gdiff " . shalast)
+    call s:MoveIntoPreviewAndExecute("Gdiff " . shalast, a:firstline != a:lastline)
 endf "}}} 
 fu! s:StatGitvCommit() range "{{{
     let shafirst = s:GetGitvSha(a:firstline)
@@ -475,7 +508,7 @@ fu! s:StatGitvCommit() range "{{{
     if s:IsFileMode()
         exec cmd
     else
-        call s:MoveIntoPreviewAndExecute(cmd)
+        call s:MoveIntoPreviewAndExecute(cmd, 1)
     endif
 endf "}}}
 fu! s:SetupStatBuffer(cmd) "{{{
