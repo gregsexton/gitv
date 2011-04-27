@@ -17,6 +17,14 @@ setlocal fdm=expr
 
 fu! Foldlevelforbranch() "{{{
     let line = getline(v:lnum)
+
+    if line == "-- Load More --"
+        return 0
+    endif
+    if line =~ "^-- \\[.*\\] --$"
+        return 0
+    endif
+
     let line = substitute(line, "\\s", "", "g")
     let level = match(line, "*") + 1
     return level == 0 ? -1 : level
