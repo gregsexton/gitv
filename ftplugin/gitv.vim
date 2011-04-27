@@ -11,8 +11,6 @@
 let s:cpo_save = &cpo
 set cpo&vim
 
-setlocal fillchars+=fold:.
-
 setlocal fdm=expr
 
 fu! Foldlevelforbranch() "{{{
