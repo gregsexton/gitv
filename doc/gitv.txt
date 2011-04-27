@@ -249,6 +249,12 @@ browser mode split horizontally. NOTE: It is for this reason that you should
 not move the browser window as it will cause commits to be opened in
 unexpected places.
 
+3.7 Folding
+
+Folding of branches is supported in the browser window. Initially all folds
+are always open and will open on a reload. You can collapse any branch by
+using Vim's built in fold operators. See |folding| for more details.
+
 ==============================================================================
 4. Configuration Options                               *gitv-config-options*
 
