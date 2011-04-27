@@ -334,20 +334,16 @@ endfu "}}}
 fu! s:MoveIntoPreviewAndExecute(cmd) "{{{
     let horiz = s:IsHorizontal()
     let filem = s:IsFileMode()
-    if !filem
-        if horiz
-            wincmd j
-        else
-            wincmd l
-        endif
+    if horiz || filem
+        wincmd j
+    else
+        wincmd l
     endif
     silent exec a:cmd
-    if !filem
-        if horiz
-            wincmd k
-        else
-            wincmd h
-        endif
+    if horiz || filem
+        wincmd k
+    else
+        wincmd h
     endif
 endfu "}}}
 fu! s:IsHorizontal() "{{{
@@ -379,9 +375,9 @@ fu! s:OpenRelativeFilePath(sha, geditForm) "{{{
     if relPath == ''
         return
     endif
-    wincmd j
     let cmd = a:geditForm . " " . a:sha . ":" . relPath
-    call s:RecordBufferExecAndWipe(cmd, a:geditForm=='Gedit')
+    let cmd = 'call s:RecordBufferExecAndWipe("'.cmd.'", '.(a:geditForm=='Gedit').')'
+    call s:MoveIntoPreviewAndExecute(cmd)
 endf "}}} }}}
 "Mapped Functions:"{{{
 "Operations: "{{{
@@ -393,11 +389,10 @@ fu! s:OpenGitvCommit(geditForm, forceOpenFugitive) "{{{
     if s:IsFileMode() && getline('.') =~ "^-- \\[.*\\] --$"
         "open working copy of file
         let fp = s:GetRelativeFilePath()
-        wincmd j
         let form = a:geditForm[1:] "strip off the leading 'G'
         let cmd = form . " " . fugitive#buffer().repo().tree() . "/" . fp
-        call s:RecordBufferExecAndWipe(cmd, form=='edit')
-        wincmd k
+        let cmd = 'call s:RecordBufferExecAndWipe("'.cmd.'", '.(form=='edit').')'
+        call s:MoveIntoPreviewAndExecute(cmd)
         return
     endif
     let sha = s:GetGitvSha(line('.'))
@@ -406,17 +401,10 @@ fu! s:OpenGitvCommit(geditForm, forceOpenFugitive) "{{{
     endif
     if s:IsFileMode() && !a:forceOpenFugitive
         call s:OpenRelativeFilePath(sha, a:geditForm)
-        wincmd k
     else
         let cmd = a:geditForm . " " . sha
         let cmd = 'call s:RecordBufferExecAndWipe("'.cmd.'", '.(a:geditForm=='Gedit').')'
-        if s:IsFileMode()
-            wincmd j
-            exec cmd
-            wincmd k
-        else
-            call s:MoveIntoPreviewAndExecute(cmd)
-        endif
+        call s:MoveIntoPreviewAndExecute(cmd)
     endif
 endf "}}}
 fu! s:CheckOutGitvCommit() "{{{
@@ -469,10 +457,8 @@ fu! s:DiffGitvCommit() range "{{{
     endif
     if a:firstline != a:lastline
         call s:OpenRelativeFilePath(shafirst, "Gedit")
-    else
-        wincmd j
     endif
-    exec "Gdiff " . shalast
+    call s:MoveIntoPreviewAndExecute("Gdiff " . shalast)
 endf "}}} 
 fu! s:StatGitvCommit() range "{{{
     let shafirst = s:GetGitvSha(a:firstline)
@@ -486,7 +472,11 @@ fu! s:StatGitvCommit() range "{{{
     endif
     let cmd .= ' --stat'
     let cmd = "call s:SetupStatBuffer('".cmd."')"
-    call s:MoveIntoPreviewAndExecute(cmd)
+    if s:IsFileMode()
+        exec cmd
+    else
+        call s:MoveIntoPreviewAndExecute(cmd)
+    endif
 endf "}}}
 fu! s:SetupStatBuffer(cmd) "{{{
     silent let res = Gitv_OpenGitCommand(a:cmd, s:IsFileMode()?'vnew':'')
