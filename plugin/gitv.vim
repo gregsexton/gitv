@@ -238,9 +238,7 @@ fu! s:SetupBuffer(commitCount, extraArgs, filePath) "{{{
     silent %s/refs\/tags\//t:/ge
     silent %s/refs\/remotes\//r:/ge
     silent %s/refs\/heads\///ge
-    "silent 1,$Tabularize /__SEP__/
-    "silent %s/__SEP__//ge
-    silent %call s:Align("__SEP__")
+    silent %call s:Align("__SEP__", a:filePath)
     silent %s/\s\+$//e
     call append(line('$'), '-- Load More --')
     if a:filePath != ''
@@ -531,7 +529,7 @@ fu! s:JumpToHead() "{{{
 endf "}}}
 "}}} }}}
 "Align And Truncate Functions: "{{{
-fu! s:Align(seperator) range "{{{
+fu! s:Align(seperator, filePath) range "{{{
     let lines = getline(a:firstline, a:lastline)
     call map(lines, 'split(v:val, a:seperator)')
 
@@ -554,19 +552,20 @@ fu! s:Align(seperator) range "{{{
     endfor
 
     if g:Gitv_TruncateCommitSubjects
-        call s:TruncateLines(newlines)
+        call s:TruncateLines(newlines, a:filePath)
     endif
 
     call map(newlines, "join(v:val)")
     call setline(a:firstline, newlines)
 endfu "}}}
-fu! s:TruncateLines(lines) "{{{
+fu! s:TruncateLines(lines, filePath) "{{{
     "truncates the commit subject for any line > &columns
-    call map(a:lines, "s:TruncateHelp(v:val)")
+    call map(a:lines, "s:TruncateHelp(v:val, a:filePath)")
 endfu "}}}
-fu! s:TruncateHelp(line) "{{{
+fu! s:TruncateHelp(line, filePath) "{{{
     let length = strlen(join(a:line))
     let maxWidth = s:IsHorizontal() ? &columns : &columns/2
+    let maxWidth = a:filePath != '' ? winwidth(0) : maxWidth
     if length > maxWidth
         let delta = length - maxWidth
         "offset = 3 for the elipsis and 1 for truncation
