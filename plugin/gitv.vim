@@ -134,8 +134,8 @@ fu! Gitv_OpenGitCommand(command, windowCmd, ...) "{{{
 endf "}}} }}}
 "Open And Update Gitv:"{{{
 fu! s:OpenGitv(extraArgs, fileMode) "{{{
-    let sanatizedArgs = a:extraArgs == "''" ? '' : a:extraArgs
-    let sanatizedArgs = a:extraArgs == '""' ? '' : a:extraArgs
+    let sanatizedArgs = a:extraArgs   == "''" ? '' : a:extraArgs
+    let sanatizedArgs = sanatizedArgs == '""' ? '' : sanatizedArgs
     let g:Gitv_InstanceCounter += 1
     if !s:IsCompatible() "this outputs specific errors
         return
