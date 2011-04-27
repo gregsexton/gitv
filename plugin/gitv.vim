@@ -18,7 +18,7 @@ set cpo&vim
 "g:Gitv_GitExecutable          - string
 "g:Gitv_WipeAllOnClose         - int
 "g:Gitv_WrapLines              - {0,1}
-"g:Gitv_TruncateCommitSubjects - {0, 1}
+"g:Gitv_TruncateCommitSubjects - {0,1}
 
 if !exists("g:Gitv_CommitStep")
     let g:Gitv_CommitStep = &lines
@@ -512,7 +512,7 @@ fu! s:JumpToHead() "{{{
     silent! /^\(\(|\|\/\|\\\|\*\)\s\?\)\+\s\+\zs(HEAD/
 endf "}}}
 "}}} }}}
-"Alignment And Truncate Functions: "{{{
+"Align And Truncate Functions: "{{{
 fu! s:Align(seperator) range "{{{
     let lines = getline(a:firstline, a:lastline)
     call map(lines, 'split(v:val, a:seperator)')
@@ -546,7 +546,7 @@ fu! s:TruncateLines(lines) "{{{
     "truncates the commit subject for any line > &columns
     call map(a:lines, "s:TruncateHelp(v:val)")
 endfu "}}}
-fu! s:TruncateHelp(line)
+fu! s:TruncateHelp(line) "{{{
     let length = strlen(join(a:line))
     let maxWidth = s:IsHorizontal() ? &columns : &columns/2
     if length > maxWidth
@@ -561,7 +561,7 @@ fu! s:TruncateHelp(line)
         let a:line[0] = a:line[0][:-(delta + offset)] . extension
     endif
     return a:line
-endfu
+endfu "}}}
 fu! s:MaxLengths(colls) "{{{
     "precondition: coll is a list of lists of strings -- should be rectangular
     "returns a list of maximum string lengths
