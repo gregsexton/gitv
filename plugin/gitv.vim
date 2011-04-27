@@ -356,7 +356,9 @@ fu! s:IsHorizontal() "{{{
     return horizGlobal || horizBuffer
 endf "}}}
 fu! s:AutoHorizontal() "{{{
-    return exists('g:Gitv_OpenHorizontal') && g:Gitv_OpenHorizontal ==? 'auto'
+    return exists('g:Gitv_OpenHorizontal') && 
+                \ type(g:Gitv_OpenHorizontal) == type("") && 
+                \ g:Gitv_OpenHorizontal ==? 'auto'
 endf "}}}
 fu! s:IsFileMode() "{{{
     return exists('b:Gitv_FileMode') && b:Gitv_FileMode == 1
@@ -546,8 +548,9 @@ fu! s:TruncateLines(lines) "{{{
 endfu "}}}
 fu! s:TruncateHelp(line)
     let length = strlen(join(a:line))
-    if length > &columns
-        let delta = length - &columns
+    let maxWidth = s:IsHorizontal() ? &columns : &columns/2
+    if length > maxWidth
+        let delta = length - maxWidth
         "offset = 3 for the elipsis and 1 for truncation
         let offset = 3 + 1
         if a:line[0][-(delta + offset + 1):] =~ "^\\s\\+$"

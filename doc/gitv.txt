@@ -312,9 +312,11 @@ occasional very long commit messages.
 
 If set to 1 then commit subject truncation is enabled. This will truncate
 commit subjects, where necessary, so that the whole line will fit in one
-screen width. NOTE: It is possible that this can truncate any refs pointing at
-a commit. In this situation it will not be possible to check out any of these
-refs. This is due to gitv being unable to recognise that they are refs.
+screen width. If this is set, then automatically switching to a horizontal
+layout will no longer work as commits will be truncated to always fit in a
+vertical split. NOTE: It is possible that this can truncate any refs pointing
+at a commit. In this situation it will not be possible to check out any of
+these refs. This is due to gitv being unable to recognise that they are refs.
 >
     g:Gitv_TruncateCommitSubjects = 0
 <
