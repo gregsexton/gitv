@@ -277,11 +277,7 @@ fu! s:SetupMappings() "{{{
     nmap <buffer> <silent> P :call <SID>JumpToHead()<cr>
 endf "}}}
 fu! s:SetupBufferCommands(fileMode) "{{{
-    if a:fileMode || s:IsHorizontal()
-        silent command! -buffer -nargs=* -complete=customlist,s:fugitive_GitComplete Git wincmd j|Git <args>|wincmd k|normal u
-    else
-        silent command! -buffer -nargs=* -complete=customlist,s:fugitive_GitComplete Git wincmd l|Git <args>|wincmd h|normal u
-    endif
+    silent command! -buffer -nargs=* -complete=customlist,s:fugitive_GitComplete Git call <sid>MoveIntoPreviewAndExecute("Git <args>",1)|normal u
 endfu "}}}
 fu! s:ResizeWindow(fileMode) "{{{
     if a:fileMode "window height determined by &previewheight
@@ -367,7 +363,7 @@ fu! s:AttemptToCreateAPreviewWindow(shouldAttempt, cmd) "{{{
     endif
 endfu "}}}
 fu! s:CreateNewPreviewWindow() "{{{
-    "this should not be called by anything other than MoveIntoPreviewAndExecute
+    "this should not be called by anything other than AttemptToCreateAPreviewWindow
     let horiz      = s:IsHorizontal()
     let filem      = s:IsFileMode()
     if horiz || filem
