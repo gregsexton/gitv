@@ -33,6 +33,10 @@ syn match gitvRefRemote /r:\zs.\{-}\ze\(, \|)\)/ contained containedin=gitvRef
 
 syn match gitvLoadMore /^-- Load More --$/
 syn match gitvWorkingCopy /^-- \[.*\] --$/ contained containedin=gitvSubject
+syn match gitvLocalUncommit /^\*  Local uncommitted changes, not checked in to index\.$/
+syn match gitvLocalCommited /^\*  Local changes checked in to index but not committed\.$/
+syn match gitvLocalCommitedNode /\*/ contained containedin=gitvLocalCommited
+syn match gitvLocalUncommitNode /\*/ contained containedin=gitvLocalUncommit
 
 syn match gitvAddedMarks /|\s\+\d\+ \zs+*-*\ze$/ contained containedin=gitvSubject
 syn match gitvAddedMarks /|\s\+Bin \zs\d\+ -> \d\+\ze bytes$/ contained containedin=gitvSubject
@@ -76,5 +80,10 @@ else
     highlight default gitvGraphEdge8 ctermfg=blue        guifg=darkslateblue
     highlight default gitvGraphEdge9 ctermfg=darkmagenta guifg=darkviolet
 endif
+
+highlight default gitvLocalCommitedNode ctermfg=green guifg=green
+highlight default gitvLocalUncommitNode ctermfg=red   guifg=red
+highlight default gitvLocalCommited     gui=bold
+highlight default gitvLocalUncommit     gui=bold
 
 let b:current_syntax = "gitv"
