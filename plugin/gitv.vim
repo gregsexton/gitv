@@ -257,7 +257,7 @@ fu! s:SetupBuffer(commitCount, extraArgs, filePath) "{{{
     silent %call s:Align("__SEP__", a:filePath)
     silent %s/\s\+$//e
     call append(line('$'), '-- Load More --')
-    call s:AddLocalNodes()
+    call s:AddLocalNodes(a:filePath)
     if a:filePath != ''
         call append(0, '-- ['.a:filePath.'] --')
     endif
@@ -265,12 +265,15 @@ fu! s:SetupBuffer(commitCount, extraArgs, filePath) "{{{
     silent setlocal readonly
     silent setlocal cursorline
 endf "}}}
-fu! s:AddLocalNodes() "{{{
-    let [result, cmd] = s:RunGitCommand("diff --no-color --cached", 0)
+fu! s:AddLocalNodes(filePath) "{{{
+    let suffix = a:filePath == '' ? '' : ' -- '.a:filePath
+    let gitCmd = "diff --no-color --cached" . suffix
+    let [result, cmd] = s:RunGitCommand(gitCmd, 0)
     if result != ""
         call append(0, s:localCommitedMsg)
     endif
-    let [result, cmd] = s:RunGitCommand("diff --no-color", 0)
+    let gitCmd = "diff --no-color" . suffix
+    let [result, cmd] = s:RunGitCommand(gitCmd, 0)
     if result != ""
         call append(0, s:localUncommitedMsg)
     endif
@@ -471,10 +474,18 @@ fu! s:OpenWorkingCopy(geditForm)
 endfu
 fu! s:OpenWorkingDiff(geditForm, staged)
     let winCmd = a:geditForm[1:] == 'edit' ? '' : a:geditForm[1:]
-    if a:staged
-        let cmd = 'call Gitv_OpenGitCommand("diff --no-color --cached", "'.winCmd.'")'
+    if s:IsFileMode()
+        let fp = s:GetRelativeFilePath()
+        let suffix = ' -- '.fp
+        let g:Gitv_InstanceCounter += 1
+        let winCmd = 'new gitv'.'-'.g:Gitv_InstanceCounter
     else
-        let cmd = 'call Gitv_OpenGitCommand(\"diff --no-color\", \"'.winCmd.'\")'
+        let suffix = ''
+    endif
+    if a:staged
+        let cmd = 'call Gitv_OpenGitCommand(\"diff --no-color --cached'.suffix.'\", \"'.winCmd.'\")'
+    else
+        let cmd = 'call Gitv_OpenGitCommand(\"diff --no-color'.suffix.'\", \"'.winCmd.'\")'
     endif
     let cmd = 'call s:RecordBufferExecAndWipe("'.cmd.'", '.(winCmd=='').')'
     call s:MoveIntoPreviewAndExecute(cmd, 1)
