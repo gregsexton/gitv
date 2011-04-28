@@ -57,29 +57,12 @@ fu! Gitv_OpenGitCommand(command, windowCmd, ...) "{{{
     "this function is not limited to script scope as is useful for running other commands.
     "e.g call Gitv_OpenGitCommand("diff --no-color", 'vnew') is useful for getting an overall git diff.
 
-    if !a:0     "no extra args
-        "switches to the buffer repository before running the command and switches back after.
-        let dir = fugitive#buffer().repo().dir()
-        if dir == ''
-            echom "No git repository could be found."
-            return 0
-        endif
-        let workingDir = fnamemodify(dir,':h')
+    let [result, finalCmd] = s:RunGitCommand(a:command, a:0)
 
-        let cd = exists('*haslocaldir') && haslocaldir() ? 'lcd ' : 'cd '
-        let bufferDir = getcwd()
-        try
-            execute cd.'`=workingDir`'
-            let finalCmd = g:Gitv_GitExecutable.' --git-dir="' .dir. '" ' . a:command
-            let result = system(finalCmd)
-        finally
-            execute cd.'`=bufferDir`'
-        endtry
-    else
-        let result = system(a:command)
+    if type(result) == type(0)
+        return 0
     endif
-
-    if !exists('result') || result == ""
+    if type(result) == type("") && result == ""
         echom "No output."
         return 0
     else
@@ -88,18 +71,18 @@ fu! Gitv_OpenGitCommand(command, windowCmd, ...) "{{{
             silent setlocal noreadonly
             1,$ d
         else
-            let goBackTo = winnr()
+            let goBackTo   = winnr()
+            let dir        = s:GetRepoDir()
+            let workingDir = fnamemodify(dir,':h')
+            let cd         = exists('*haslocaldir') && haslocaldir() ? 'lcd ' : 'cd '
+            let bufferDir  = getcwd()
             try
-                if exists('workingDir') && exists('cd')
-                    execute cd.'`=workingDir`'
-                endif
+                execute cd.'`=workingDir`'
                 exec a:windowCmd
                 let newWindow = winnr()
             finally
                 exec goBackTo . 'wincmd w'
-                if exists('bufferDir') && exists('cd')
-                    execute cd.'`=bufferDir`'
-                endif
+                execute cd.'`=bufferDir`'
                 if exists('newWindow')
                     exec newWindow . 'wincmd w'
                 endif
@@ -108,11 +91,7 @@ fu! Gitv_OpenGitCommand(command, windowCmd, ...) "{{{
         if !(&modifiable)
             return 0
         endif
-        if !a:0
-            let b:Git_Command = finalCmd
-        else
-            let b:Git_Command = a:command
-        endif
+        let b:Git_Command = finalCmd
         silent setlocal ft=git
         silent setlocal buftype=nofile
         silent setlocal nobuflisted
@@ -135,6 +114,40 @@ fu! Gitv_OpenGitCommand(command, windowCmd, ...) "{{{
         return 1
     endif
 endf "}}} }}}
+"General Git Functions: "{{{
+fu! s:RunGitCommand(command, verbatim) "{{{
+    "if verbatim returns result of system command, else
+    "switches to the buffer repository before running the command and switches back after.
+    if !a:verbatim
+        "switches to the buffer repository before running the command and switches back after.
+        let dir        = s:GetRepoDir()
+        let workingDir = fnamemodify(dir,':h')
+        if workingDir == ''
+            return 0
+        endif
+
+        let cd = exists('*haslocaldir') && haslocaldir() ? 'lcd ' : 'cd '
+        let bufferDir = getcwd()
+        try
+            execute cd.'`=workingDir`'
+            let finalCmd = g:Gitv_GitExecutable.' --git-dir="' .dir. '" ' . a:command
+            let result   = system(finalCmd)
+        finally
+            execute cd.'`=bufferDir`'
+        endtry
+    else
+        let result   = system(a:command)
+        let finalCmd = a:command
+    endif
+    return [result, finalCmd]
+endfu "}}}
+fu! s:GetRepoDir() "{{{
+    let dir = fugitive#buffer().repo().dir()
+    if dir == ''
+        echom "No git repository could be found."
+    endif
+    return dir
+endfu "}}} }}}
 "Open And Update Gitv:"{{{
 fu! s:OpenGitv(extraArgs, fileMode) "{{{
     let sanatizedArgs = a:extraArgs   == "''" ? '' : a:extraArgs
