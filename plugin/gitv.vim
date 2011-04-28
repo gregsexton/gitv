@@ -43,6 +43,9 @@ endif
 "this counts up each time gitv is opened to ensure a unique file name
 let g:Gitv_InstanceCounter = 0
 
+let s:localUncommitedMsg = '*  Local uncommitted changes, not checked in to index.'
+let s:localCommitedMsg   = '*  Local changes checked in to index but not committed.'
+
 command! -nargs=* -bang Gitv call s:OpenGitv(shellescape(<q-args>), <bang>0)
 cabbrev gitv Gitv
 
@@ -241,6 +244,8 @@ fu! s:SetupBuffer(commitCount, extraArgs, filePath) "{{{
     silent %call s:Align("__SEP__", a:filePath)
     silent %s/\s\+$//e
     call append(line('$'), '-- Load More --')
+    call append(0, s:localCommitedMsg)
+    call append(0, s:localUncommitedMsg)
     if a:filePath != ''
         call append(0, '-- ['.a:filePath.'] --')
     endif
@@ -412,12 +417,15 @@ fu! s:OpenGitvCommit(geditForm, forceOpenFugitive) "{{{
         return
     endif
     if s:IsFileMode() && getline('.') =~ "^-- \\[.*\\] --$"
-        "open working copy of file
-        let fp = s:GetRelativeFilePath()
-        let form = a:geditForm[1:] "strip off the leading 'G'
-        let cmd = form . " " . fugitive#buffer().repo().tree() . "/" . fp
-        let cmd = 'call s:RecordBufferExecAndWipe("'.cmd.'", '.(form=='edit').')'
-        call s:MoveIntoPreviewAndExecute(cmd, 1)
+        call s:OpenWorkingCopy(a:geditForm)
+        return
+    endif
+    if getline('.') == s:localUncommitedMsg
+        call s:OpenWorkingDiff(a:geditForm, 0)
+        return
+    endif
+    if getline('.') == s:localCommitedMsg
+        call s:OpenWorkingDiff(a:geditForm, 1)
         return
     endif
     let sha = s:GetGitvSha(line('.'))
@@ -431,7 +439,23 @@ fu! s:OpenGitvCommit(geditForm, forceOpenFugitive) "{{{
         let cmd = 'call s:RecordBufferExecAndWipe("'.cmd.'", '.(a:geditForm=='Gedit').')'
         call s:MoveIntoPreviewAndExecute(cmd, 1)
     endif
-endf "}}}
+endf
+fu! s:OpenWorkingCopy(geditForm)
+    let fp = s:GetRelativeFilePath()
+    let form = a:geditForm[1:] "strip off the leading 'G'
+    let cmd = form . " " . fugitive#buffer().repo().tree() . "/" . fp
+    let cmd = 'call s:RecordBufferExecAndWipe("'.cmd.'", '.(form=='edit').')'
+    call s:MoveIntoPreviewAndExecute(cmd, 1)
+endfu
+fu! s:OpenWorkingDiff(geditForm, staged)
+    let winCmd = a:geditForm[1:] == 'edit' ? '' : a:geditForm[1:]
+    if a:staged
+        let cmd = 'call Gitv_OpenGitCommand("diff --no-color --cached", "'.winCmd.'")'
+    else
+        let cmd = 'call Gitv_OpenGitCommand("diff --no-color", "'.winCmd.'")'
+    endif
+    call s:MoveIntoPreviewAndExecute(cmd, 1)
+endfu "}}}
 fu! s:CheckOutGitvCommit() "{{{
     let allrefs = s:GetGitvRefs()
     let sha = s:GetGitvSha(line('.'))
@@ -502,8 +526,8 @@ fu! s:StatGitvCommit() range "{{{
     else
         call s:MoveIntoPreviewAndExecute(cmd, 1)
     endif
-endf "}}}
-fu! s:SetupStatBuffer(cmd) "{{{
+endf
+fu! s:SetupStatBuffer(cmd)
     silent let res = Gitv_OpenGitCommand(a:cmd, s:IsFileMode()?'vnew':'')
     if res
         silent set filetype=gitv
