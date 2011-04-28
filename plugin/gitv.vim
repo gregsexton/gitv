@@ -43,6 +43,9 @@ endif
 "this counts up each time gitv is opened to ensure a unique file name
 let g:Gitv_InstanceCounter = 0
 
+let s:localUncommitedMsg = '*  Local uncommitted changes, not checked in to index.'
+let s:localCommitedMsg   = '*  Local changes checked in to index but not committed.'
+
 command! -nargs=* -bang Gitv call s:OpenGitv(shellescape(<q-args>), <bang>0)
 cabbrev gitv Gitv
 
@@ -54,29 +57,12 @@ fu! Gitv_OpenGitCommand(command, windowCmd, ...) "{{{
     "this function is not limited to script scope as is useful for running other commands.
     "e.g call Gitv_OpenGitCommand("diff --no-color", 'vnew') is useful for getting an overall git diff.
 
-    if !a:0     "no extra args
-        "switches to the buffer repository before running the command and switches back after.
-        let dir = fugitive#buffer().repo().dir()
-        if dir == ''
-            echom "No git repository could be found."
-            return 0
-        endif
-        let workingDir = fnamemodify(dir,':h')
+    let [result, finalCmd] = s:RunGitCommand(a:command, a:0)
 
-        let cd = exists('*haslocaldir') && haslocaldir() ? 'lcd ' : 'cd '
-        let bufferDir = getcwd()
-        try
-            execute cd.'`=workingDir`'
-            let finalCmd = g:Gitv_GitExecutable.' --git-dir="' .dir. '" ' . a:command
-            let result = system(finalCmd)
-        finally
-            execute cd.'`=bufferDir`'
-        endtry
-    else
-        let result = system(a:command)
+    if type(result) == type(0)
+        return 0
     endif
-
-    if !exists('result') || result == ""
+    if type(result) == type("") && result == ""
         echom "No output."
         return 0
     else
@@ -85,18 +71,18 @@ fu! Gitv_OpenGitCommand(command, windowCmd, ...) "{{{
             silent setlocal noreadonly
             1,$ d
         else
-            let goBackTo = winnr()
+            let goBackTo   = winnr()
+            let dir        = s:GetRepoDir()
+            let workingDir = fnamemodify(dir,':h')
+            let cd         = exists('*haslocaldir') && haslocaldir() ? 'lcd ' : 'cd '
+            let bufferDir  = getcwd()
             try
-                if exists('workingDir') && exists('cd')
-                    execute cd.'`=workingDir`'
-                endif
+                execute cd.'`=workingDir`'
                 exec a:windowCmd
                 let newWindow = winnr()
             finally
                 exec goBackTo . 'wincmd w'
-                if exists('bufferDir') && exists('cd')
-                    execute cd.'`=bufferDir`'
-                endif
+                execute cd.'`=bufferDir`'
                 if exists('newWindow')
                     exec newWindow . 'wincmd w'
                 endif
@@ -105,11 +91,7 @@ fu! Gitv_OpenGitCommand(command, windowCmd, ...) "{{{
         if !(&modifiable)
             return 0
         endif
-        if !a:0
-            let b:Git_Command = finalCmd
-        else
-            let b:Git_Command = a:command
-        endif
+        let b:Git_Command = finalCmd
         silent setlocal ft=git
         silent setlocal buftype=nofile
         silent setlocal nobuflisted
@@ -132,6 +114,40 @@ fu! Gitv_OpenGitCommand(command, windowCmd, ...) "{{{
         return 1
     endif
 endf "}}} }}}
+"General Git Functions: "{{{
+fu! s:RunGitCommand(command, verbatim) "{{{
+    "if verbatim returns result of system command, else
+    "switches to the buffer repository before running the command and switches back after.
+    if !a:verbatim
+        "switches to the buffer repository before running the command and switches back after.
+        let dir        = s:GetRepoDir()
+        let workingDir = fnamemodify(dir,':h')
+        if workingDir == ''
+            return 0
+        endif
+
+        let cd = exists('*haslocaldir') && haslocaldir() ? 'lcd ' : 'cd '
+        let bufferDir = getcwd()
+        try
+            execute cd.'`=workingDir`'
+            let finalCmd = g:Gitv_GitExecutable.' --git-dir="' .dir. '" ' . a:command
+            let result   = system(finalCmd)
+        finally
+            execute cd.'`=bufferDir`'
+        endtry
+    else
+        let result   = system(a:command)
+        let finalCmd = a:command
+    endif
+    return [result, finalCmd]
+endfu "}}}
+fu! s:GetRepoDir() "{{{
+    let dir = fugitive#buffer().repo().dir()
+    if dir == ''
+        echom "No git repository could be found."
+    endif
+    return dir
+endfu "}}} }}}
 "Open And Update Gitv:"{{{
 fu! s:OpenGitv(extraArgs, fileMode) "{{{
     let sanatizedArgs = a:extraArgs   == "''" ? '' : a:extraArgs
@@ -241,6 +257,7 @@ fu! s:SetupBuffer(commitCount, extraArgs, filePath) "{{{
     silent %call s:Align("__SEP__", a:filePath)
     silent %s/\s\+$//e
     call append(line('$'), '-- Load More --')
+    call s:AddLocalNodes(a:filePath)
     if a:filePath != ''
         call append(0, '-- ['.a:filePath.'] --')
     endif
@@ -248,6 +265,19 @@ fu! s:SetupBuffer(commitCount, extraArgs, filePath) "{{{
     silent setlocal readonly
     silent setlocal cursorline
 endf "}}}
+fu! s:AddLocalNodes(filePath) "{{{
+    let suffix = a:filePath == '' ? '' : ' -- '.a:filePath
+    let gitCmd = "diff --no-color --cached" . suffix
+    let [result, cmd] = s:RunGitCommand(gitCmd, 0)
+    if result != ""
+        call append(0, s:localCommitedMsg)
+    endif
+    let gitCmd = "diff --no-color" . suffix
+    let [result, cmd] = s:RunGitCommand(gitCmd, 0)
+    if result != ""
+        call append(0, s:localUncommitedMsg)
+    endif
+endfu "}}}
 fu! s:SetupMappings() "{{{
     "operations
     nmap <buffer> <silent> <cr> :call <SID>OpenGitvCommit("Gedit", 0)<cr>
@@ -412,12 +442,15 @@ fu! s:OpenGitvCommit(geditForm, forceOpenFugitive) "{{{
         return
     endif
     if s:IsFileMode() && getline('.') =~ "^-- \\[.*\\] --$"
-        "open working copy of file
-        let fp = s:GetRelativeFilePath()
-        let form = a:geditForm[1:] "strip off the leading 'G'
-        let cmd = form . " " . fugitive#buffer().repo().tree() . "/" . fp
-        let cmd = 'call s:RecordBufferExecAndWipe("'.cmd.'", '.(form=='edit').')'
-        call s:MoveIntoPreviewAndExecute(cmd, 1)
+        call s:OpenWorkingCopy(a:geditForm)
+        return
+    endif
+    if getline('.') == s:localUncommitedMsg
+        call s:OpenWorkingDiff(a:geditForm, 0)
+        return
+    endif
+    if getline('.') == s:localCommitedMsg
+        call s:OpenWorkingDiff(a:geditForm, 1)
         return
     endif
     let sha = s:GetGitvSha(line('.'))
@@ -431,7 +464,32 @@ fu! s:OpenGitvCommit(geditForm, forceOpenFugitive) "{{{
         let cmd = 'call s:RecordBufferExecAndWipe("'.cmd.'", '.(a:geditForm=='Gedit').')'
         call s:MoveIntoPreviewAndExecute(cmd, 1)
     endif
-endf "}}}
+endf
+fu! s:OpenWorkingCopy(geditForm)
+    let fp = s:GetRelativeFilePath()
+    let form = a:geditForm[1:] "strip off the leading 'G'
+    let cmd = form . " " . fugitive#buffer().repo().tree() . "/" . fp
+    let cmd = 'call s:RecordBufferExecAndWipe("'.cmd.'", '.(form=='edit').')'
+    call s:MoveIntoPreviewAndExecute(cmd, 1)
+endfu
+fu! s:OpenWorkingDiff(geditForm, staged)
+    let winCmd = a:geditForm[1:] == 'edit' ? '' : a:geditForm[1:]
+    if s:IsFileMode()
+        let fp = s:GetRelativeFilePath()
+        let suffix = ' -- '.fp
+        let g:Gitv_InstanceCounter += 1
+        let winCmd = 'new gitv'.'-'.g:Gitv_InstanceCounter
+    else
+        let suffix = ''
+    endif
+    if a:staged
+        let cmd = 'call Gitv_OpenGitCommand(\"diff --no-color --cached'.suffix.'\", \"'.winCmd.'\")'
+    else
+        let cmd = 'call Gitv_OpenGitCommand(\"diff --no-color'.suffix.'\", \"'.winCmd.'\")'
+    endif
+    let cmd = 'call s:RecordBufferExecAndWipe("'.cmd.'", '.(winCmd=='').')'
+    call s:MoveIntoPreviewAndExecute(cmd, 1)
+endfu "}}}
 fu! s:CheckOutGitvCommit() "{{{
     let allrefs = s:GetGitvRefs()
     let sha = s:GetGitvSha(line('.'))
@@ -502,8 +560,8 @@ fu! s:StatGitvCommit() range "{{{
     else
         call s:MoveIntoPreviewAndExecute(cmd, 1)
     endif
-endf "}}}
-fu! s:SetupStatBuffer(cmd) "{{{
+endf
+fu! s:SetupStatBuffer(cmd)
     silent let res = Gitv_OpenGitCommand(a:cmd, s:IsFileMode()?'vnew':'')
     if res
         silent set filetype=gitv
