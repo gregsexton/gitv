@@ -474,8 +474,9 @@ fu! s:OpenWorkingDiff(geditForm, staged)
     if a:staged
         let cmd = 'call Gitv_OpenGitCommand("diff --no-color --cached", "'.winCmd.'")'
     else
-        let cmd = 'call Gitv_OpenGitCommand("diff --no-color", "'.winCmd.'")'
+        let cmd = 'call Gitv_OpenGitCommand(\"diff --no-color\", \"'.winCmd.'\")'
     endif
+    let cmd = 'call s:RecordBufferExecAndWipe("'.cmd.'", '.(winCmd=='').')'
     call s:MoveIntoPreviewAndExecute(cmd, 1)
 endfu "}}}
 fu! s:CheckOutGitvCommit() "{{{
