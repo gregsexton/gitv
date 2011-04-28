@@ -257,8 +257,7 @@ fu! s:SetupBuffer(commitCount, extraArgs, filePath) "{{{
     silent %call s:Align("__SEP__", a:filePath)
     silent %s/\s\+$//e
     call append(line('$'), '-- Load More --')
-    call append(0, s:localCommitedMsg)
-    call append(0, s:localUncommitedMsg)
+    call s:AddLocalNodes()
     if a:filePath != ''
         call append(0, '-- ['.a:filePath.'] --')
     endif
@@ -266,6 +265,16 @@ fu! s:SetupBuffer(commitCount, extraArgs, filePath) "{{{
     silent setlocal readonly
     silent setlocal cursorline
 endf "}}}
+fu! s:AddLocalNodes() "{{{
+    let [result, cmd] = s:RunGitCommand("diff --no-color --cached", 0)
+    if result != ""
+        call append(0, s:localCommitedMsg)
+    endif
+    let [result, cmd] = s:RunGitCommand("diff --no-color", 0)
+    if result != ""
+        call append(0, s:localUncommitedMsg)
+    endif
+endfu "}}}
 fu! s:SetupMappings() "{{{
     "operations
     nmap <buffer> <silent> <cr> :call <SID>OpenGitvCommit("Gedit", 0)<cr>
