@@ -256,7 +256,7 @@ fu! s:SetupBuffer(commitCount, extraArgs, filePath) "{{{
     silent %s/refs\/heads\///ge
     silent %call s:Align("__SEP__", a:filePath)
     silent %s/\s\+$//e
-    call append(line('$'), '-- Load More --')
+    call s:AddLoadMore()
     call s:AddLocalNodes(a:filePath)
     if a:filePath != ''
         call append(0, '-- ['.a:filePath.'] --')
@@ -277,6 +277,9 @@ fu! s:AddLocalNodes(filePath) "{{{
     if result != ""
         call append(0, s:localUncommitedMsg)
     endif
+endfu "}}}
+fu! s:AddLoadMore() "{{{
+    call append(line('$'), '-- Load More --')
 endfu "}}}
 fu! s:SetupMappings() "{{{
     "operations
