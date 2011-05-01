@@ -71,12 +71,16 @@ fu! Gitv_OpenGitCommand(command, windowCmd, ...) "{{{
             silent setlocal noreadonly
             1,$ d
         else
-            let goBackTo   = winnr()
-            let dir        = s:GetRepoDir()
-            let workingDir = fnamemodify(dir,':h')
-            let cd         = exists('*haslocaldir') && haslocaldir() ? 'lcd ' : 'cd '
-            let bufferDir  = getcwd()
+            let goBackTo       = winnr()
+            let dir            = s:GetRepoDir()
+            let workingDir     = fnamemodify(dir,':h')
+            let cd             = exists('*haslocaldir') && haslocaldir() ? 'lcd ' : 'cd '
+            let bufferDir      = getcwd()
+            let tempSplitBelow = &splitbelow
+            let tempSplitRight = &splitright
             try
+                set nosplitbelow
+                set nosplitright
                 execute cd.'`=workingDir`'
                 exec a:windowCmd
                 let newWindow = winnr()
@@ -86,6 +90,8 @@ fu! Gitv_OpenGitCommand(command, windowCmd, ...) "{{{
                 if exists('newWindow')
                     exec newWindow . 'wincmd w'
                 endif
+                exec 'set '. (tempSplitBelow ? '' : 'no') . 'splitbelow'
+                exec 'set '. (tempSplitRight ? '' : 'no') . 'splitright'
             endtry
         endif
         if !(&modifiable)
