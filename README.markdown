@@ -48,3 +48,7 @@ Here is a screenshot to keep you going.
 
 More can be found at the homepage for gitv:
 http://www.gregsexton.org/portfolio/gitv/
+
+You can download stable release versions (and vote for gitv!) at
+[gitv’s page](http://www.vim.org/scripts/script.php?script_id=3574) on
+Vim.org.
