@@ -1,9 +1,9 @@
 #Readme
 
-Currently this is a stable beta release of this plugin. Please
-help me find and remove any bugs by adding any problems you have
-to the issues tracker of this repository. Suggestions, pull
-requests and patches are also all very welcome.
+Currently this is a v1.0 release of this plugin. Please help me
+find and remove any bugs by adding any problems you have to the
+issues tracker of this repository. Suggestions, pull requests and
+patches are also all very welcome.
 
 ##Introduction
 
