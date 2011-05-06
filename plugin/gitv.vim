@@ -46,7 +46,7 @@ let g:Gitv_InstanceCounter = 0
 let s:localUncommitedMsg = '*  Local uncommitted changes, not checked in to index.'
 let s:localCommitedMsg   = '*  Local changes checked in to index but not committed.'
 
-command! -nargs=* -bang Gitv call s:OpenGitv(shellescape(<q-args>), <bang>0)
+command! -nargs=* -range -bang Gitv call s:OpenGitv(shellescape(<q-args>), <bang>0, <line1>, <line2>)
 cabbrev gitv Gitv
 
 "Public API:"{{{
@@ -155,7 +155,7 @@ fu! s:GetRepoDir() "{{{
     return dir
 endfu "}}} }}}
 "Open And Update Gitv:"{{{
-fu! s:OpenGitv(extraArgs, fileMode) "{{{
+fu! s:OpenGitv(extraArgs, fileMode, rangeStart, rangeEnd) "{{{
     let sanatizedArgs = a:extraArgs   == "''" ? '' : a:extraArgs
     let sanatizedArgs = sanatizedArgs == '""' ? '' : sanatizedArgs
     let g:Gitv_InstanceCounter += 1
@@ -164,7 +164,7 @@ fu! s:OpenGitv(extraArgs, fileMode) "{{{
     endif
     try
         if a:fileMode
-            call s:OpenFileMode(sanatizedArgs)
+            call s:OpenFileMode(sanatizedArgs, a:rangeStart, a:rangeEnd)
         else
             call s:OpenBrowserMode(sanatizedArgs)
         endif
@@ -189,31 +189,35 @@ fu! s:OpenBrowserMode(extraArgs) "{{{
     else
         let direction = 'vnew gitv'.'-'.g:Gitv_InstanceCounter
     endif
-    if !s:LoadGitv(direction, 0, g:Gitv_CommitStep, a:extraArgs, '')
+    if !s:LoadGitv(direction, 0, g:Gitv_CommitStep, a:extraArgs, '', [])
         return 0
     endif
     call s:SetupBufferCommands(0)
     "open the first commit
     silent call s:OpenGitvCommit("Gedit", 0)
 endf "}}}
-fu! s:OpenFileMode(extraArgs) "{{{
+fu! s:OpenFileMode(extraArgs, rangeStart, rangeEnd) "{{{
     let relPath = fugitive#buffer().path()
     pclose!
-    if !s:LoadGitv(&previewheight . "new gitv".'-'.g:Gitv_InstanceCounter, 0, g:Gitv_CommitStep, a:extraArgs, relPath)
+    let range = a:rangeStart != a:rangeEnd ? [a:rangeStart, a:rangeEnd] : []
+    if !s:LoadGitv(&previewheight . "new gitv".'-'.g:Gitv_InstanceCounter, 0, g:Gitv_CommitStep, a:extraArgs, relPath, range)
         return 0
     endif
     set previewwindow
     set winfixheight
     let b:Gitv_FileMode = 1
     let b:Gitv_FileModeRelPath = relPath
+    let b:Gitv_FileModeRange = range
     call s:SetupBufferCommands(1)
 endf "}}}
-fu! s:LoadGitv(direction, reload, commitCount, extraArgs, filePath) "{{{
+fu! s:LoadGitv(direction, reload, commitCount, extraArgs, filePath, range) "{{{
     if a:reload
         let jumpTo = line('.') "this is for repositioning the cursor after reload
     endif
 
-    if !s:ConstructAndExecuteCmd(a:direction, a:reload, a:commitCount, a:extraArgs, a:filePath)
+    "precondition: a:range should be of the form [a, b] or []
+    "   where a,b are integers && a<b
+    if !s:ConstructAndExecuteCmd(a:direction, a:reload, a:commitCount, a:extraArgs, a:filePath, a:range)
         return 0
     endif
     call s:SetupBuffer(a:commitCount, a:extraArgs, a:filePath)
@@ -224,7 +228,7 @@ fu! s:LoadGitv(direction, reload, commitCount, extraArgs, filePath) "{{{
     echom "Loaded up to " . a:commitCount . " commits."
     return 1
 endf "}}}
-fu! s:ConstructAndExecuteCmd(direction, reload, commitCount, extraArgs, filePath) "{{{
+fu! s:ConstructAndExecuteCmd(direction, reload, commitCount, extraArgs, filePath, range) "{{{
     if a:reload "run the same command again with any extra args
         if exists('b:Git_Command')
             "substitute in the potentially new commit count taking account of a potential filePath
@@ -297,7 +301,7 @@ fu! s:SetupMappings() "{{{
     nmap <buffer> <silent> <c-cr> :call <SID>OpenGitvCommit("Gedit", 1)<cr>
 
     nmap <buffer> <silent> q :call <SID>CloseGitv()<cr>
-    nmap <buffer> <silent> u :call <SID>LoadGitv('', 1, b:Gitv_CommitCount, b:Gitv_ExtraArgs, <SID>GetRelativeFilePath())<cr>
+    nmap <buffer> <silent> u :call <SID>LoadGitv('', 1, b:Gitv_CommitCount, b:Gitv_ExtraArgs, <SID>GetRelativeFilePath(), <SID>GetRange())<cr>
     nmap <buffer> <silent> co :call <SID>CheckOutGitvCommit()<cr>
 
     nmap <buffer> <silent> D :call <SID>DiffGitvCommit()<cr>
@@ -434,6 +438,9 @@ endf "}}}
 fu! s:GetRelativeFilePath() "{{{
     return exists('b:Gitv_FileModeRelPath') ? b:Gitv_FileModeRelPath : ''
 endf "}}}
+fu! s:GetRange() "{{{
+    return exists('b:Gitv_FileModeRange') ? b:Gitv_FileModeRange : []
+endfu "}}}
 fu! s:OpenRelativeFilePath(sha, geditForm) "{{{
     let relPath = s:GetRelativeFilePath()
     if relPath == ''
@@ -447,7 +454,7 @@ endf "}}} }}}
 "Operations: "{{{
 fu! s:OpenGitvCommit(geditForm, forceOpenFugitive) "{{{
     if getline('.') == "-- Load More --"
-        call s:LoadGitv('', 1, b:Gitv_CommitCount+g:Gitv_CommitStep, b:Gitv_ExtraArgs, s:GetRelativeFilePath())
+        call s:LoadGitv('', 1, b:Gitv_CommitCount+g:Gitv_CommitStep, b:Gitv_ExtraArgs, s:GetRelativeFilePath(), s:GetRange())
         return
     endif
     if s:IsFileMode() && getline('.') =~ "^-- \\[.*\\] --$"
