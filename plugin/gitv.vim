@@ -217,7 +217,7 @@ fu! s:LoadGitv(direction, reload, commitCount, extraArgs, filePath, range) "{{{
 
     "precondition: a:range should be of the form [a, b] or []
     "   where a,b are integers && a<b
-    if !s:ConstructAndExecuteCmd(a:direction, a:reload, a:commitCount, a:extraArgs, a:filePath, a:range)
+    if !s:ConstructAndExecuteCmd(a:direction, a:commitCount, a:extraArgs, a:filePath, a:range)
         return 0
     endif
     call s:SetupBuffer(a:commitCount, a:extraArgs, a:filePath)
@@ -228,22 +228,7 @@ fu! s:LoadGitv(direction, reload, commitCount, extraArgs, filePath, range) "{{{
     echom "Loaded up to " . a:commitCount . " commits."
     return 1
 endf "}}}
-fu! s:ConstructAndExecuteCmd(direction, reload, commitCount, extraArgs, filePath, range) "{{{
-    if a:reload "run the same command again with any extra args
-        if exists('b:Git_Command')
-            "substitute in the potentially new commit count taking account of a potential filePath
-            let newcmd = b:Git_Command
-            if a:filePath != ''
-                let newcmd = substitute(newcmd, " -- " . a:filePath . "$", "", "")
-            endif
-            let newcmd = substitute(newcmd, " -\\d\\+$", " -" . a:commitCount, "")
-            if a:filePath != ''
-                let newcmd .= ' -- ' . a:filePath
-            endif
-            silent let res = Gitv_OpenGitCommand(newcmd, a:direction, 1)
-            return res
-        endif
-    else
+fu! s:ConstructAndExecuteCmd(direction, commitCount, extraArgs, filePath, range) "{{{
         let cmd  = "log " . a:extraArgs 
         let cmd .= " --no-color --decorate=full --pretty=format:\"%d %s__SEP__%ar__SEP__%an__SEP__[%h]\" --graph -" 
         let cmd .= a:commitCount
@@ -252,8 +237,6 @@ fu! s:ConstructAndExecuteCmd(direction, reload, commitCount, extraArgs, filePath
         endif
         silent let res = Gitv_OpenGitCommand(cmd, a:direction)
         return res
-    endif
-    return 0
 endf "}}}
 fu! s:SetupBuffer(commitCount, extraArgs, filePath) "{{{
     silent set filetype=gitv
