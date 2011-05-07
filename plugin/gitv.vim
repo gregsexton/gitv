@@ -249,50 +249,83 @@ fu! s:ConstructAndExecuteCmd(direction, commitCount, extraArgs, filePath, range)
 endf
 "Range Commands: {{{
 fu! s:ConstructRangeBuffer(commitCount, extraArgs, filePath, range) "{{{
+    "TODO: document warning that for large repo and large selection of lines this may be slow
     silent setlocal modifiable
     silent setlocal noreadonly
     %delete
 
+    "necessary as order is important; can't just iterate over keys(slices)
     let hashCmd = "log --no-color --pretty=format:%H -- " . a:filePath
     let [result, cmd] = s:RunGitCommand(hashCmd, 0)
     let hashes = split(result, '\n')
 
-    "TODO: use extraargs is outputting final dispaly
+    let slices = s:GetFileSlices(a:range, a:filePath)
+
+    "TODO: use extraargs when outputting final display
     "TODO: limit to commitCount
     let modHashes = []
     for i in range(len(hashes))
         let hash1 = hashes[i]
         let hash2 = get(hashes, i+1, "")
-        if hash2 == "" || s:CompareFilesAtCommits(hash1, hash2, a:filePath, a:range)
-            "include hash1 as it is the origin, must have made a change!
+        if (hash2 == "" && has_key(slices, hash1)) || s:CompareFileAtCommits(slices, hash1, hash2)
             let modHashes = add(modHashes, hash1)
         endif
     endfor
 
-    call append(0, modHashes) "system converts eols to \n regardless of os.
+    let output = s:GetFinalOutputForHashes(modHashes)
+    call append(0, output)
 
     silent setlocal nomodifiable
     silent setlocal readonly
+    return 1
 endf "}}}
-fu! s:CompareFilesAtCommits(c1sha, c2sha, filePath, lineRange) "{{{
+fu! s:GetFileSlices(range, filePath) "{{{
+    "this returns a dictionary, indexed by commit sha, of all slices of range lines of filePath 
+    "NOTE: this could get massive for a large repo and large range
+    "TODO: test on windows!!
+    "TODO: cd, --git-dir, g:Gitv_GitExecutable
+    let range     = a:range[0] . ',' . a:range[1]
+    let sliceCmd  = "for hash in `git log --no-color --pretty=format:%H -- " . a:filePath . '`; '
+    let sliceCmd .= "do "
+    let sliceCmd .= 'echo "****${hash}"; '
+    let sliceCmd .= "git --no-pager blame -s -L " . range . " ${hash} " . a:filePath . "; "
+    let sliceCmd .= "done"
+
+    let [result, cmd] = s:RunGitCommand(sliceCmd, 1)
+    let slicesLst     = split(result, '\(^\|\n\)\zs\*\{4}')
+    let slices        = {}
+
+    for slice in slicesLst
+        let key = matchstr(slice, '^.\{-}\ze\n')
+        let val = matchstr(slice, '\n\zs.*')
+        if val !~? '^fatal: file .\+ has only \d\+ lines'
+            let slices[key] = val
+        endif
+    endfor
+
+    return slices
+endfu "}}}
+fu! s:CompareFileAtCommits(slices, c1sha, c2sha) "{{{
     "returns 1 if lineRange for filePath in commits: c1sha and c2sha are different
     "else returns 0
-    let rangeBegin = a:lineRange[0] - 1
-    let rangeEnd   = a:lineRange[1] - 1
+    if has_key(a:slices, a:c1sha) && has_key(a:slices, a:c2sha)
+        return a:slices[a:c1sha] != a:slices[a:c2sha]
+    else
+        return 0
+    endif
+endfu "}}}
+fu! s:GetFinalOutputForHashes(hashes) "{{{
+    if len(a:hashes) > 0
+        let cmd  = 'for hash in ' . join(a:hashes, " ") . '; '
+        let cmd .= "do "
+        let cmd .= 'git log --no-color --decorate=full --pretty=format:"%d %s__SEP__%ar__SEP__%an__SEP__[%h]%n" --graph -1 ${hash}; '
+        let cmd .= 'done'
 
-    "TODO:
-    "these two commands slow it down: output size doesn't matter so much just shelling out
-    "easy optimization: cache these results as done twice for n-1 objects
-    "still won't be fast enough
-    let [c1File, cmd] = s:RunGitCommand("cat-file blob ".a:c1sha.":".a:filePath, 0)
-    let [c2File, cmd] = s:RunGitCommand("cat-file blob ".a:c2sha.":".a:filePath, 0)
-
-    let c1list = split(c1File, '\n')
-    let c2list = split(c2File, '\n')
-    let c1Section = join(c1list[rangeBegin : rangeEnd])
-    let c2Section = join(c2list[rangeBegin : rangeEnd])
-
-    return c1Section == c2Section ? 0 : 1
+        let [result, cmd] = s:RunGitCommand(cmd, 1)
+        return split(result, '\n')
+    else
+        return ""
+    endif
 endfu "}}}
 "}}} "}}}
 fu! s:SetupBuffer(commitCount, extraArgs, filePath) "{{{
