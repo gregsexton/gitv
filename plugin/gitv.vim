@@ -282,7 +282,7 @@ endf "}}}
 fu! s:GetFileSlices(range, filePath) "{{{
     "this returns a dictionary, indexed by commit sha, of all slices of range lines of filePath 
     "NOTE: this could get massive for a large repo and large range
-    "TODO: test on windows!!
+    "TODO: test on windows and csh!!
     "TODO: cd, --git-dir, g:Gitv_GitExecutable
     let range     = a:range[0] . ',' . a:range[1]
     let sliceCmd  = "for hash in `git log --no-color --pretty=format:%H -- " . a:filePath . '`; '
@@ -316,6 +316,7 @@ fu! s:CompareFileAtCommits(slices, c1sha, c2sha) "{{{
 endfu "}}}
 fu! s:GetFinalOutputForHashes(hashes) "{{{
     if len(a:hashes) > 0
+        "TODO: cd, --git-dir, g:Gitv_GitExecutable
         let cmd  = 'for hash in ' . join(a:hashes, " ") . '; '
         let cmd .= "do "
         let cmd .= 'git log --no-color --decorate=full --pretty=format:"%d %s__SEP__%ar__SEP__%an__SEP__[%h]%n" --graph -1 ${hash}; '
@@ -514,6 +515,16 @@ endf "}}}
 fu! s:GetRange() "{{{
     return exists('b:Gitv_FileModeRange') ? b:Gitv_FileModeRange : []
 endfu "}}}
+fu! s:FoldToRevealOnlyRange(rangeStart, rangeEnd) "{{{
+    setlocal foldmethod=manual
+    normal zE
+    if a:rangeStart > 1
+        exec "1," . (a:rangeStart-1) . "fold"
+    endif
+    if a:rangeEnd < line('$')
+        exec (a:rangeEnd+1) . ",$fold"
+    endif
+endfu "}}}
 fu! s:OpenRelativeFilePath(sha, geditForm) "{{{
     let relPath = s:GetRelativeFilePath()
     if relPath == ''
@@ -522,6 +533,10 @@ fu! s:OpenRelativeFilePath(sha, geditForm) "{{{
     let cmd = a:geditForm . " " . a:sha . ":" . relPath
     let cmd = 'call s:RecordBufferExecAndWipe("'.cmd.'", '.(a:geditForm=='Gedit').')'
     call s:MoveIntoPreviewAndExecute(cmd, 1)
+    let range = s:GetRange()
+    if range != []
+        call s:MoveIntoPreviewAndExecute('call s:FoldToRevealOnlyRange('.range[0].', '.range[1].')', 0)
+    endif
 endf "}}} }}}
 "Mapped Functions:"{{{
 "Operations: "{{{
