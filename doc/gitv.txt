@@ -340,7 +340,11 @@ I use the following mappings to make working with |gitv| easier.
 >
     nmap <leader>gv :Gitv --all<cr>
     nmap <leader>gV :Gitv! --all<cr>
+    vmap <leader>gV :Gitv! --all<cr>
 <
+The vmap equivalent for file mode is to make dealing with ranges easier. It
+allows you to visually select a range of lines to view the commit history for
+that section of the file.
 
 The following abbreviation makes running arbitrary git commands much easier.
 >
