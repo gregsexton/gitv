@@ -229,6 +229,7 @@ fu! s:LoadGitv(direction, reload, commitCount, extraArgs, filePath, range) "{{{
     return 1
 endf "}}}
 fu! s:ConstructAndExecuteCmd(direction, commitCount, extraArgs, filePath, range) "{{{
+    if a:range == [] "no range, setup and execute the command
         let cmd  = "log " . a:extraArgs 
         let cmd .= " --no-color --decorate=full --pretty=format:\"%d %s__SEP__%ar__SEP__%an__SEP__[%h]\" --graph -" 
         let cmd .= a:commitCount
@@ -237,7 +238,63 @@ fu! s:ConstructAndExecuteCmd(direction, commitCount, extraArgs, filePath, range)
         endif
         silent let res = Gitv_OpenGitCommand(cmd, a:direction)
         return res
+    else "range applies, setup a trivial buffer and then modify it with custom logic
+        let cmd = "--version" "arbitrary command intended to setup the buffer
+                              "and act as a check everything is ok
+        silent let res = Gitv_OpenGitCommand(cmd, a:direction)
+        if !res | return res | endif
+        silent let res = s:ConstructRangeBuffer(a:commitCount, a:extraArgs, a:filePath, a:range)
+        return res
+    endif
+endf
+"Range Commands: {{{
+fu! s:ConstructRangeBuffer(commitCount, extraArgs, filePath, range) "{{{
+    silent setlocal modifiable
+    silent setlocal noreadonly
+    %delete
+
+    let hashCmd = "log --no-color --pretty=format:%H -- " . a:filePath
+    let [result, cmd] = s:RunGitCommand(hashCmd, 0)
+    let hashes = split(result, '\n')
+
+    "TODO: use extraargs is outputting final dispaly
+    "TODO: limit to commitCount
+    let modHashes = []
+    for i in range(len(hashes))
+        let hash1 = hashes[i]
+        let hash2 = get(hashes, i+1, "")
+        if hash2 == "" || s:CompareFilesAtCommits(hash1, hash2, a:filePath, a:range)
+            "include hash1 as it is the origin, must have made a change!
+            let modHashes = add(modHashes, hash1)
+        endif
+    endfor
+
+    call append(0, modHashes) "system converts eols to \n regardless of os.
+
+    silent setlocal nomodifiable
+    silent setlocal readonly
 endf "}}}
+fu! s:CompareFilesAtCommits(c1sha, c2sha, filePath, lineRange) "{{{
+    "returns 1 if lineRange for filePath in commits: c1sha and c2sha are different
+    "else returns 0
+    let rangeBegin = a:lineRange[0] - 1
+    let rangeEnd   = a:lineRange[1] - 1
+
+    "TODO:
+    "these two commands slow it down: output size doesn't matter so much just shelling out
+    "easy optimization: cache these results as done twice for n-1 objects
+    "still won't be fast enough
+    let [c1File, cmd] = s:RunGitCommand("cat-file blob ".a:c1sha.":".a:filePath, 0)
+    let [c2File, cmd] = s:RunGitCommand("cat-file blob ".a:c2sha.":".a:filePath, 0)
+
+    let c1list = split(c1File, '\n')
+    let c2list = split(c2File, '\n')
+    let c1Section = join(c1list[rangeBegin : rangeEnd])
+    let c2Section = join(c2list[rangeBegin : rangeEnd])
+
+    return c1Section == c2Section ? 0 : 1
+endfu "}}}
+"}}} "}}}
 fu! s:SetupBuffer(commitCount, extraArgs, filePath) "{{{
     silent set filetype=gitv
     let b:Gitv_CommitCount = a:commitCount
