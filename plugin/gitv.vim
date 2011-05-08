@@ -246,7 +246,7 @@ fu! s:ConstructAndExecuteCmd(direction, commitCount, extraArgs, filePath, range)
         silent let res = s:ConstructRangeBuffer(a:commitCount, a:extraArgs, a:filePath, a:range)
         return res
     endif
-endf
+endf "}}}
 "Range Commands: {{{
 fu! s:ConstructRangeBuffer(commitCount, extraArgs, filePath, range) "{{{
     "TODO: document warning that for large repo and large selection of lines this may be slow
@@ -327,8 +327,7 @@ fu! s:GetFinalOutputForHashes(hashes) "{{{
     else
         return ""
     endif
-endfu "}}}
-"}}} "}}}
+endfu "}}} }}}
 fu! s:SetupBuffer(commitCount, extraArgs, filePath) "{{{
     silent set filetype=gitv
     let b:Gitv_CommitCount = a:commitCount
