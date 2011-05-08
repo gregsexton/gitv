@@ -288,7 +288,6 @@ fu! s:GetFileSlices(range, filePath) "{{{
     let sliceCmd  = "for hash in `git log --no-color --pretty=format:%H -- " . a:filePath . '`; '
     let sliceCmd .= "do "
     let sliceCmd .= 'echo "****${hash}"; '
-    "TODO: need to shellescape range
     let sliceCmd .= "git --no-pager blame -s -L " . shellescape(range) . " ${hash} " . a:filePath . "; "
     let sliceCmd .= "done"
 
@@ -313,6 +312,9 @@ endfu "}}}
 fu! s:CompareFileAtCommits(slices, c1sha, c2sha) "{{{
     "returns 1 if lineRange for filePath in commits: c1sha and c2sha are different
     "else returns 0
+    if has_key(a:slices, a:c1sha) && !has_key(a:slices, a:c2sha)
+        return 1
+    endif
     if has_key(a:slices, a:c1sha) && has_key(a:slices, a:c2sha)
         return a:slices[a:c1sha] != a:slices[a:c2sha]
     else
@@ -336,8 +338,10 @@ endfu "}}}
 fu! s:GetRegexRange(rangeStart, rangeEnd) "{{{
     let rangeS = getline(a:rangeStart)
     let rangeS = escape(rangeS, '.^$*') "TODO: what about backslashes?
+    let rangeS = matchstr(rangeS, '\v^\s*\zs.{-}\ze\s*$') "trim whitespace
     let rangeE = getline(a:rangeEnd)
     let rangeE = escape(rangeE, '.^$*') "TODO: what about backslashes?
+    let rangeE = matchstr(rangeE, '\v^\s*\zs.{-}\ze\s*$') "trim whitespace
     return ['/'.rangeS.'/', '/'.rangeE.'/'] "TODO: what about forward slashes?
 endfu "}}} }}}
 fu! s:SetupBuffer(commitCount, extraArgs, filePath) "{{{
