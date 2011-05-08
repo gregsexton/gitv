@@ -220,7 +220,7 @@ fu! s:LoadGitv(direction, reload, commitCount, extraArgs, filePath, range) "{{{
     if !s:ConstructAndExecuteCmd(a:direction, a:commitCount, a:extraArgs, a:filePath, a:range)
         return 0
     endif
-    call s:SetupBuffer(a:commitCount, a:extraArgs, a:filePath)
+    call s:SetupBuffer(a:commitCount, a:extraArgs, a:filePath, a:range)
     exec exists('jumpTo') ? jumpTo : '1'
     call s:SetupMappings() "redefines some of the mappings made by Gitv_OpenGitCommand
     call s:ResizeWindow(a:filePath!='')
@@ -344,7 +344,7 @@ fu! s:GetRegexRange(rangeStart, rangeEnd) "{{{
     let rangeE = matchstr(rangeE, '\v^\s*\zs.{-}\ze\s*$') "trim whitespace
     return ['/'.rangeS.'/', '/'.rangeE.'/'] "TODO: what about forward slashes?
 endfu "}}} }}}
-fu! s:SetupBuffer(commitCount, extraArgs, filePath) "{{{
+fu! s:SetupBuffer(commitCount, extraArgs, filePath, range) "{{{
     silent set filetype=gitv
     let b:Gitv_CommitCount = a:commitCount
     let b:Gitv_ExtraArgs   = a:extraArgs
@@ -357,9 +357,7 @@ fu! s:SetupBuffer(commitCount, extraArgs, filePath) "{{{
     silent %s/\s\+$//e
     call s:AddLoadMore()
     call s:AddLocalNodes(a:filePath)
-    if a:filePath != ''
-        call append(0, '-- ['.a:filePath.'] --')
-    endif
+    call s:AddFileModeSpecific(a:filePath, a:range)
     silent setlocal nomodifiable
     silent setlocal readonly
     silent setlocal cursorline
@@ -379,6 +377,16 @@ fu! s:AddLocalNodes(filePath) "{{{
 endfu "}}}
 fu! s:AddLoadMore() "{{{
     call append(line('$'), '-- Load More --')
+endfu "}}}
+fu! s:AddFileModeSpecific(filePath, range) "{{{
+    if a:filePath != ''
+        call append(0, '-- ['.a:filePath.'] --')
+        if a:range != []
+            call append(1, '-- Showing range:')
+            call append(2, '-- ' . a:range[0])
+            call append(3, '-- ' . a:range[1])
+        endif
+    endif
 endfu "}}}
 fu! s:SetupMappings() "{{{
     "operations
@@ -530,6 +538,10 @@ endf "}}}
 fu! s:GetRange() "{{{
     return exists('b:Gitv_FileModeRange') ? b:Gitv_FileModeRange : []
 endfu "}}}
+fu! s:SetRange(idx, value) "{{{
+    "idx - {0,1}, 0 for beginning, 1 for end.
+    let b:Gitv_FileModeRange[a:idx] = a:value
+endfu "}}}
 fu! s:FoldToRevealOnlyRange(rangeStart, rangeEnd) "{{{
     setlocal foldmethod=manual
     normal zE
@@ -570,6 +582,12 @@ fu! s:OpenGitvCommit(geditForm, forceOpenFugitive) "{{{
         call s:OpenWorkingDiff(a:geditForm, 1)
         return
     endif
+    if s:IsFileMode() && getline('.') =~ '^-- /.*/$'
+        if s:EditRange(matchstr(getline('.'), '^-- /\zs.*\ze/$'))
+            normal u
+        endif
+        return
+    endif
     let sha = s:GetGitvSha(line('.'))
     if sha == ""
         return
@@ -606,6 +624,21 @@ fu! s:OpenWorkingDiff(geditForm, staged)
     endif
     let cmd = 'call s:RecordBufferExecAndWipe("'.cmd.'", '.(winCmd=='').')'
     call s:MoveIntoPreviewAndExecute(cmd, 1)
+endfu
+fu! s:EditRange(rangeDelimiter)
+    let range = s:GetRange()
+    let rangeDelimWithSlashes = '/'.a:rangeDelimiter.'/'
+    let idx = rangeDelimWithSlashes == range[0] ? 0 : rangeDelimWithSlashes == range[1] ? 1 : -1
+    if idx == -1
+        return 0
+    endif
+    let value = input("Enter new range regex: ", a:rangeDelimiter)
+    let value = '/'.value.'/'
+    if value == range[idx]
+        return 0 "no need to update
+    endif
+    call s:SetRange(idx, value)
+    return 1
 endfu "}}}
 fu! s:CheckOutGitvCommit() "{{{
     let allrefs = s:GetGitvRefs()

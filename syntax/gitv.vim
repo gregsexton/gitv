@@ -33,6 +33,10 @@ syn match gitvRefRemote /r:\zs.\{-}\ze\(, \|)\)/ contained containedin=gitvRef
 
 syn match gitvLoadMore /^-- Load More --$/
 syn match gitvWorkingCopy /^-- \[.*\] --$/ contained containedin=gitvSubject
+
+syn match gitvRange /^-- Showing range:$/
+syn match gitvRangeFromTo /^-- \/.*\/$/
+
 syn match gitvLocalUncommit /^\*  Local uncommitted changes, not checked in to index\.$/
 syn match gitvLocalCommited /^\*  Local changes checked in to index but not committed\.$/
 syn match gitvLocalCommitedNode /\*/ contained containedin=gitvLocalCommited
@@ -52,6 +56,8 @@ hi def link gitvDate              Statement
 hi def link gitvSubject           Normal
 hi def link gitvLoadMore          Question
 hi def link gitvWorkingCopy       Question
+hi def link gitvRange             ModeMsg
+hi def link gitvRangeFromTo       Function
 
 hi def link gitvAddedMarks        diffAdded
 hi def link gitvRemovedMarks      diffRemoved
