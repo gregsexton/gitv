@@ -199,7 +199,7 @@ endf "}}}
 fu! s:OpenFileMode(extraArgs, rangeStart, rangeEnd) "{{{
     let relPath = fugitive#buffer().path()
     pclose!
-    let range = a:rangeStart != a:rangeEnd ? [a:rangeStart, a:rangeEnd] : []
+    let range = a:rangeStart != a:rangeEnd ? s:GetRegexRange(a:rangeStart, a:rangeEnd) : []
     if !s:LoadGitv(&previewheight . "new gitv".'-'.g:Gitv_InstanceCounter, 0, g:Gitv_CommitStep, a:extraArgs, relPath, range)
         return 0
     endif
@@ -282,13 +282,14 @@ endf "}}}
 fu! s:GetFileSlices(range, filePath) "{{{
     "this returns a dictionary, indexed by commit sha, of all slices of range lines of filePath 
     "NOTE: this could get massive for a large repo and large range
-    "TODO: test on windows and csh!!
+    "TODO: test on windows and zsh/csh!!
     "TODO: cd, --git-dir, g:Gitv_GitExecutable
     let range     = a:range[0] . ',' . a:range[1]
     let sliceCmd  = "for hash in `git log --no-color --pretty=format:%H -- " . a:filePath . '`; '
     let sliceCmd .= "do "
     let sliceCmd .= 'echo "****${hash}"; '
-    let sliceCmd .= "git --no-pager blame -s -L " . range . " ${hash} " . a:filePath . "; "
+    "TODO: need to shellescape range
+    let sliceCmd .= "git --no-pager blame -s -L " . shellescape(range) . " ${hash} " . a:filePath . "; "
     let sliceCmd .= "done"
 
     let [result, cmd] = s:RunGitCommand(sliceCmd, 1)
@@ -298,8 +299,12 @@ fu! s:GetFileSlices(range, filePath) "{{{
     for slice in slicesLst
         let key = matchstr(slice, '^.\{-}\ze\n')
         let val = matchstr(slice, '\n\zs.*')
-        if val !~? '^fatal: file .\+ has only \d\+ lines'
-            let slices[key] = val
+        if val !~? '^fatal: .*$'
+            "remove the commit sha and line number to stop them affecting the comparisons
+            let lines = split(val, '\n')
+            call map(lines, "matchstr(v:val, '\\x\\{-} \\d\\+) \\zs.*')")
+            let finalVal = join(lines)
+            let slices[key] = finalVal
         endif
     endfor
 
@@ -327,6 +332,13 @@ fu! s:GetFinalOutputForHashes(hashes) "{{{
     else
         return ""
     endif
+endfu "}}}
+fu! s:GetRegexRange(rangeStart, rangeEnd) "{{{
+    let rangeS = getline(a:rangeStart)
+    let rangeS = escape(rangeS, '.^$*') "TODO: what about backslashes?
+    let rangeE = getline(a:rangeEnd)
+    let rangeE = escape(rangeE, '.^$*') "TODO: what about backslashes?
+    return ['/'.rangeS.'/', '/'.rangeE.'/'] "TODO: what about forward slashes?
 endfu "}}} }}}
 fu! s:SetupBuffer(commitCount, extraArgs, filePath) "{{{
     silent set filetype=gitv
@@ -517,12 +529,8 @@ endfu "}}}
 fu! s:FoldToRevealOnlyRange(rangeStart, rangeEnd) "{{{
     setlocal foldmethod=manual
     normal zE
-    if a:rangeStart > 1
-        exec "1," . (a:rangeStart-1) . "fold"
-    endif
-    if a:rangeEnd < line('$')
-        exec (a:rangeEnd+1) . ",$fold"
-    endif
+    exec '1,'.a:rangeStart.'-1fold'
+    exec a:rangeEnd.'+1,$fold'
 endfu "}}}
 fu! s:OpenRelativeFilePath(sha, geditForm) "{{{
     let relPath = s:GetRelativeFilePath()
@@ -534,7 +542,9 @@ fu! s:OpenRelativeFilePath(sha, geditForm) "{{{
     call s:MoveIntoPreviewAndExecute(cmd, 1)
     let range = s:GetRange()
     if range != []
-        call s:MoveIntoPreviewAndExecute('call s:FoldToRevealOnlyRange('.range[0].', '.range[1].')', 0)
+        let rangeS = escape(range[0], '"')
+        let rangeE = escape(range[1], '"')
+        call s:MoveIntoPreviewAndExecute('call s:FoldToRevealOnlyRange("'.rangeS.'", "'.rangeE.'")', 0)
     endif
 endf "}}} }}}
 "Mapped Functions:"{{{
