@@ -230,8 +230,8 @@ fu! s:LoadGitv(direction, reload, commitCount, extraArgs, filePath, range) "{{{
 endf "}}}
 fu! s:ConstructAndExecuteCmd(direction, commitCount, extraArgs, filePath, range) "{{{
     if a:range == [] "no range, setup and execute the command
-        let cmd  = "log " . a:extraArgs 
-        let cmd .= " --no-color --decorate=full --pretty=format:\"%d %s__SEP__%ar__SEP__%an__SEP__[%h]\" --graph -" 
+        let cmd  = "log " . a:extraArgs
+        let cmd .= " --no-color --decorate=full --pretty=format:\"%d %s__SEP__%ar__SEP__%an__SEP__[%h]\" --graph -"
         let cmd .= a:commitCount
         if a:filePath != ''
             let cmd .= ' -- ' . a:filePath
@@ -255,9 +255,9 @@ fu! s:ConstructRangeBuffer(commitCount, extraArgs, filePath, range) "{{{
     %delete
 
     "necessary as order is important; can't just iterate over keys(slices)
-    let hashCmd = "log --no-color --pretty=format:%H -- " . a:filePath
+    let hashCmd       = "log --no-color --pretty=format:%H -- " . a:filePath
     let [result, cmd] = s:RunGitCommand(hashCmd, 0)
-    let hashes = split(result, '\n')
+    let hashes        = split(result, '\n')
 
     let slices = s:GetFileSlices(a:range, a:filePath)
 
@@ -280,7 +280,7 @@ fu! s:ConstructRangeBuffer(commitCount, extraArgs, filePath, range) "{{{
     return 1
 endf "}}}
 fu! s:GetFileSlices(range, filePath) "{{{
-    "this returns a dictionary, indexed by commit sha, of all slices of range lines of filePath 
+    "this returns a dictionary, indexed by commit sha, of all slices of range lines of filePath
     "NOTE: this could get massive for a large repo and large range
     "TODO: test on windows and zsh/csh!!
     "TODO: cd, --git-dir, g:Gitv_GitExecutable
@@ -506,8 +506,8 @@ fu! s:IsHorizontal() "{{{
     return horizGlobal || horizBuffer
 endf "}}}
 fu! s:AutoHorizontal() "{{{
-    return exists('g:Gitv_OpenHorizontal') && 
-                \ type(g:Gitv_OpenHorizontal) == type("") && 
+    return exists('g:Gitv_OpenHorizontal') &&
+                \ type(g:Gitv_OpenHorizontal) == type("") &&
                 \ g:Gitv_OpenHorizontal ==? 'auto'
 endf "}}}
 fu! s:IsFileMode() "{{{
@@ -655,7 +655,7 @@ fu! s:DiffGitvCommit() range "{{{
         call s:OpenRelativeFilePath(shafirst, "Gedit")
     endif
     call s:MoveIntoPreviewAndExecute("Gdiff " . shalast, a:firstline != a:lastline)
-endf "}}} 
+endf "}}}
 fu! s:StatGitvCommit() range "{{{
     let shafirst = s:GetGitvSha(a:firstline)
     let shalast  = s:GetGitvSha(a:lastline)
