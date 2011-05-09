@@ -314,7 +314,7 @@ fu! s:SetupMappings() "{{{
     nmap <buffer> <silent> P :call <SID>JumpToHead()<cr>
 endf "}}}
 fu! s:SetupBufferCommands(fileMode) "{{{
-    silent command! -buffer -nargs=* -complete=customlist,s:fugitive_GitComplete Git call <sid>MoveIntoPreviewAndExecute("Git <args>",1)|normal u
+    silent command! -buffer -nargs=* -complete=customlist,s:fugitive_GitComplete Git call <sid>MoveIntoPreviewAndExecute("unsilent Git <args>",1)|normal u
 endfu "}}}
 fu! s:ResizeWindow(fileMode) "{{{
     if a:fileMode "window height determined by &previewheight
