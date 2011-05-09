@@ -40,6 +40,10 @@ if !exists('g:Gitv_TruncateCommitSubjects')
     let g:Gitv_TruncateCommitSubjects = 0
 endif
 
+if !exists('g:Gitv_OpenPreviewOnLaunch')
+    let g:Gitv_OpenPreviewOnLaunch = 1
+endif
+
 "this counts up each time gitv is opened to ensure a unique file name
 let g:Gitv_InstanceCounter = 0
 
@@ -194,7 +198,11 @@ fu! s:OpenBrowserMode(extraArgs) "{{{
     endif
     call s:SetupBufferCommands(0)
     "open the first commit
-    silent call s:OpenGitvCommit("Gedit", 0)
+    if g:Gitv_OpenPreviewOnLaunch
+        silent call s:OpenGitvCommit("Gedit", 0)
+    else
+        call s:MoveIntoPreviewAndExecute('bwipeout', 0)
+    endif
 endf "}}}
 fu! s:OpenFileMode(extraArgs) "{{{
     let relPath = fugitive#buffer().path()

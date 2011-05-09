@@ -326,6 +326,15 @@ these refs. This is due to gitv being unable to recognise that they are refs.
 >
     g:Gitv_TruncateCommitSubjects = 0
 <
+
+4.7 Open Preview On Launch
+
+If set to 1 then the preview window is displayed when launching gitv in
+browser mode. If set to 0 then no preview window is displayed until a commit
+is opened. This option has no effect in file mode.
+>
+    g:Gitv_OpenPreviewOnLaunch = 1
+<
 ==============================================================================
 5. Changelog                                                *gitv-changelog*
 
