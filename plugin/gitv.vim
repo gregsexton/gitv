@@ -290,8 +290,9 @@ fu! s:GetFileSlices(range, filePath) "{{{
     let sliceCmd .= 'echo "****${hash}"; '
     let sliceCmd .= "git --no-pager blame -s -L " . range . " ${hash} " . a:filePath . "; "
     let sliceCmd .= "done"
+    let finalCmd  = "bash -c " . shellescape(sliceCmd)
 
-    let [result, cmd] = s:RunGitCommand(sliceCmd, 1)
+    let [result, cmd] = s:RunGitCommand(finalCmd, 1)
     let slicesLst     = split(result, '\(^\|\n\)\zs\*\{4}')
     let slices        = {}
 
@@ -317,12 +318,13 @@ endfu "}}}
 fu! s:GetFinalOutputForHashes(hashes) "{{{
     if len(a:hashes) > 0
         "TODO: cd, --git-dir, g:Gitv_GitExecutable
-        let cmd  = 'for hash in ' . join(a:hashes, " ") . '; '
-        let cmd .= "do "
-        let cmd .= 'git log --no-color --decorate=full --pretty=format:"%d %s__SEP__%ar__SEP__%an__SEP__[%h]%n" --graph -1 ${hash}; '
-        let cmd .= 'done'
+        let cmd       = 'for hash in ' . join(a:hashes, " ") . '; '
+        let cmd      .= "do "
+        let cmd      .= 'git log --no-color --decorate=full --pretty=format:"%d %s__SEP__%ar__SEP__%an__SEP__[%h]%n" --graph -1 ${hash}; '
+        let cmd      .= 'done'
+        let finalCmd  = "bash -c " . shellescape(cmd)
 
-        let [result, cmd] = s:RunGitCommand(cmd, 1)
+        let [result, cmd] = s:RunGitCommand(finalCmd, 1)
         return split(result, '\n')
     else
         return ""
