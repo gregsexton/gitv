@@ -30,6 +30,7 @@ syn match  gitvGraphEdge0 /^\(\(|\|\/\|\\\|\*\)\s\?\)/  nextgroup=gitvGraphEdge1
 syn match gitvRef /\s*(.\{-})/ nextgroup=gitvSubject skipwhite
 syn match gitvRefTag /t:\zs.\{-}\ze\(, \|)\)/ contained containedin=gitvRef
 syn match gitvRefRemote /r:\zs.\{-}\ze\(, \|)\)/ contained containedin=gitvRef
+syn match gitvRefHead /HEAD/ contained containedin=gitvRef
 
 syn match gitvLoadMore /^-- Load More --$/
 syn match gitvWorkingCopy /^-- \[.*\] --$/ contained containedin=gitvSubject
@@ -48,6 +49,7 @@ hi def link gitvHash              Number
 hi def link gitvRef               Directory
 hi def link gitvRefTag            String
 hi def link gitvRefRemote         Statement
+hi def link gitvRefHead           Special
 hi def link gitvDate              Statement
 hi def link gitvSubject           Normal
 hi def link gitvLoadMore          Question
