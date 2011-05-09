@@ -249,7 +249,6 @@ fu! s:ConstructAndExecuteCmd(direction, commitCount, extraArgs, filePath, range)
 endf "}}}
 "Range Commands: {{{
 fu! s:ConstructRangeBuffer(commitCount, extraArgs, filePath, range) "{{{
-    "TODO: document warning that for large repo and large selection of lines this may be slow
     silent setlocal modifiable
     silent setlocal noreadonly
     %delete
@@ -261,8 +260,6 @@ fu! s:ConstructRangeBuffer(commitCount, extraArgs, filePath, range) "{{{
 
     let slices = s:GetFileSlices(a:range, a:filePath)
 
-    "TODO: use extraargs when outputting final display
-    "TODO: limit to commitCount
     let modHashes = []
     for i in range(len(hashes))
         let hash1 = hashes[i]
@@ -282,7 +279,6 @@ endf "}}}
 fu! s:GetFileSlices(range, filePath) "{{{
     "this returns a dictionary, indexed by commit sha, of all slices of range lines of filePath
     "NOTE: this could get massive for a large repo and large range
-    "TODO: test on windows and zsh/csh!!
     "TODO: cd, --git-dir, g:Gitv_GitExecutable
     let range     = a:range[0] . ',' . a:range[1]
     let sliceCmd  = "for hash in `git log --no-color --pretty=format:%H -- " . a:filePath . '`; '
@@ -337,12 +333,12 @@ fu! s:GetFinalOutputForHashes(hashes) "{{{
 endfu "}}}
 fu! s:GetRegexRange(rangeStart, rangeEnd) "{{{
     let rangeS = getline(a:rangeStart)
-    let rangeS = escape(rangeS, '.^$*') "TODO: what about backslashes?
+    let rangeS = escape(rangeS, '.^$*\/')
     let rangeS = matchstr(rangeS, '\v^\s*\zs.{-}\ze\s*$') "trim whitespace
     let rangeE = getline(a:rangeEnd)
-    let rangeE = escape(rangeE, '.^$*') "TODO: what about backslashes?
+    let rangeE = escape(rangeE, '.^$*\/')
     let rangeE = matchstr(rangeE, '\v^\s*\zs.{-}\ze\s*$') "trim whitespace
-    return ['/'.rangeS.'/', '/'.rangeE.'/'] "TODO: what about forward slashes?
+    return ['/'.rangeS.'/', '/'.rangeE.'/']
 endfu "}}} }}}
 fu! s:SetupBuffer(commitCount, extraArgs, filePath, range) "{{{
     silent set filetype=gitv
@@ -545,8 +541,10 @@ endfu "}}}
 fu! s:FoldToRevealOnlyRange(rangeStart, rangeEnd) "{{{
     setlocal foldmethod=manual
     normal zE
-    exec '1,'.a:rangeStart.'-1fold'
-    exec a:rangeEnd.'+1,$fold'
+    let rangeS = '/'.escape(matchstr(a:rangeStart, '/\zs.*\ze/'), '/\').'/'
+    let rangeE = '/'.escape(matchstr(a:rangeEnd, '/\zs.*\ze/'), '/\').'/'
+    exec '1,'.rangeS.'-1fold'
+    exec rangeE.'+1,$fold'
 endfu "}}}
 fu! s:OpenRelativeFilePath(sha, geditForm) "{{{
     let relPath = s:GetRelativeFilePath()
