@@ -126,25 +126,32 @@ fu! s:RunGitCommand(command, verbatim) "{{{
     "switches to the buffer repository before running the command and switches back after.
     if !a:verbatim
         "switches to the buffer repository before running the command and switches back after.
-        let dir        = s:GetRepoDir()
-        let workingDir = fnamemodify(dir,':h')
-        if workingDir == ''
-            return 0
-        endif
-
-        let cd = exists('*haslocaldir') && haslocaldir() ? 'lcd ' : 'cd '
-        let bufferDir = getcwd()
-        try
-            execute cd.'`=workingDir`'
-            let finalCmd = g:Gitv_GitExecutable.' --git-dir="' .dir. '" ' . a:command
-            let result   = system(finalCmd)
-        finally
-            execute cd.'`=bufferDir`'
-        endtry
+        let cmd                = g:Gitv_GitExecutable.' --git-dir="{DIR}" '. a:command
+        let [result, finalCmd] = s:RunCommandRelativeToGitRepo(cmd)
     else
         let result   = system(a:command)
         let finalCmd = a:command
     endif
+    return [result, finalCmd]
+endfu "}}}
+fu! s:RunCommandRelativeToGitRepo(command) "{{{
+    "this runs the command verbatim but first changing to the root git dir
+    "it also replaces any occurance of '{DIR}' in the command with the root git dir.
+    let dir        = s:GetRepoDir()
+    let workingDir = fnamemodify(dir,':h')
+    if workingDir == ''
+        return 0
+    endif
+
+    let cd = exists('*haslocaldir') && haslocaldir() ? 'lcd ' : 'cd '
+    let bufferDir = getcwd()
+    try
+        execute cd.'`=workingDir`'
+        let finalCmd = substitute(a:command, '{DIR}', dir, 'g')
+        let result   = system(finalCmd)
+    finally
+        execute cd.'`=bufferDir`'
+    endtry
     return [result, finalCmd]
 endfu "}}}
 fu! s:GetRepoDir() "{{{
@@ -279,15 +286,15 @@ endf "}}}
 fu! s:GetFileSlices(range, filePath) "{{{
     "this returns a dictionary, indexed by commit sha, of all slices of range lines of filePath
     "NOTE: this could get massive for a large repo and large range
-    "TODO: cd, --git-dir, g:Gitv_GitExecutable
     let range     = a:range[0] . ',' . a:range[1]
-    let sliceCmd  = "for hash in `git log --no-color --pretty=format:%H -- " . a:filePath . '`; '
+    let git       = g:Gitv_GitExecutable
+    let sliceCmd  = "for hash in `".git." --git-dir={DIR} log --no-color --pretty=format:%H -- " . a:filePath . '`; '
     let sliceCmd .= "do "
     let sliceCmd .= 'echo "****${hash}"; '
-    let sliceCmd .= "git --no-pager blame -s -L " . shellescape(range) . " ${hash} " . a:filePath . "; "
+    let sliceCmd .= git." --git-dir={DIR} --no-pager blame -s -L " . shellescape(range) . " ${hash} " . a:filePath . "; "
     let sliceCmd .= "done"
 
-    let [result, cmd] = s:RunGitCommand(sliceCmd, 1)
+    let [result, cmd] = s:RunCommandRelativeToGitRepo(finalCmd)
     let slicesLst     = split(result, '\(^\|\n\)\zs\*\{4}')
     let slices        = {}
 
@@ -319,13 +326,14 @@ fu! s:CompareFileAtCommits(slices, c1sha, c2sha) "{{{
 endfu "}}}
 fu! s:GetFinalOutputForHashes(hashes) "{{{
     if len(a:hashes) > 0
-        "TODO: cd, --git-dir, g:Gitv_GitExecutable
-        let cmd  = 'for hash in ' . join(a:hashes, " ") . '; '
-        let cmd .= "do "
-        let cmd .= 'git log --no-color --decorate=full --pretty=format:"%d %s__SEP__%ar__SEP__%an__SEP__[%h]%n" --graph -1 ${hash}; '
-        let cmd .= 'done'
+        let git       = g:Gitv_GitExecutable
+        let cmd       = 'for hash in ' . join(a:hashes, " ") . '; '
+        let cmd      .= "do "
+        let cmd      .= git.' --git-dir={DIR} log --no-color --decorate=full --pretty=format:"%d %s__SEP__%ar__SEP__%an__SEP__[%h]%n" --graph -1 ${hash}; '
+        let cmd      .= 'done'
+        let finalCmd  = "bash -c " . shellescape(cmd)
 
-        let [result, cmd] = s:RunGitCommand(cmd, 1)
+        let [result, cmd] = s:RunCommandRelativeToGitRepo(finalCmd)
         return split(result, '\n')
     else
         return ""
