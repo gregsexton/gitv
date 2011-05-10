@@ -281,19 +281,19 @@ fu! s:SetupBuffer(commitCount, extraArgs, filePath) "{{{
 endf "}}}
 fu! s:AddLocalNodes(filePath) "{{{
     let suffix = a:filePath == '' ? '' : ' -- '.a:filePath
-    let gitCmd = "diff --no-color --cached" . suffix
+    let gitCmd = "diff --no-color" . suffix
     let [result, cmd] = s:RunGitCommand(gitCmd, 0)
     let headLine = search('^\(\(|\|\/\|\\\|\*\)\s\?\)*\s*([^)]*HEAD', 'cnw')
     if result != ""
-	let line = s:AlignWithRefs(headLine, s:localCommitedMsg)
-        call append(headLine-1, substitute(line, '*', '+', ''))
-        let headLine += 1
-    endif
-    let gitCmd = "diff --no-color" . suffix
-    let [result, cmd] = s:RunGitCommand(gitCmd, 0)
-    if result != ""
 	let line = s:AlignWithRefs(headLine, s:localUncommitedMsg)
         call append(headLine-1, substitute(line, '*', '=', ''))
+        let headLine += 1
+    endif
+    let gitCmd = "diff --no-color --cached" . suffix
+    let [result, cmd] = s:RunGitCommand(gitCmd, 0)
+    if result != ""
+	let line = s:AlignWithRefs(headLine, s:localCommitedMsg)
+        call append(headLine-1, substitute(line, '*', '+', ''))
     endif
 endfu
 fu! s:AlignWithRefs(targetLine, targetStr)
