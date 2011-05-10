@@ -47,8 +47,8 @@ endif
 "this counts up each time gitv is opened to ensure a unique file name
 let g:Gitv_InstanceCounter = 0
 
-let s:localUncommitedMsg = '*  Local uncommitted changes, not checked in to index.'
-let s:localCommitedMsg   = '*  Local changes checked in to index but not committed.'
+let s:localUncommitedMsg = 'Local uncommitted changes, not checked in to index.'
+let s:localCommitedMsg   = 'Local changes checked in to index but not committed.'
 
 command! -nargs=* -bang Gitv call s:OpenGitv(shellescape(<q-args>), <bang>0)
 cabbrev gitv Gitv
@@ -248,8 +248,8 @@ fu! s:ConstructAndExecuteCmd(direction, reload, commitCount, extraArgs, filePath
             return res
         endif
     else
-        let cmd  = "log " . a:extraArgs 
-        let cmd .= " --no-color --decorate=full --pretty=format:\"%d %s__SEP__%ar__SEP__%an__SEP__[%h]\" --graph -" 
+        let cmd  = "log " . a:extraArgs
+        let cmd .= " --no-color --decorate=full --pretty=format:\"%d %s__SEP__%ar__SEP__%an__SEP__[%h]\" --graph -"
         let cmd .= a:commitCount
         if a:filePath != ''
             let cmd .= ' -- ' . a:filePath
@@ -283,14 +283,30 @@ fu! s:AddLocalNodes(filePath) "{{{
     let suffix = a:filePath == '' ? '' : ' -- '.a:filePath
     let gitCmd = "diff --no-color --cached" . suffix
     let [result, cmd] = s:RunGitCommand(gitCmd, 0)
+    let headLine = search('^\(\(|\|\/\|\\\|\*\)\s\?\)*\s*([^)]*HEAD', 'cnw')
     if result != ""
-        call append(0, s:localCommitedMsg)
+	let line = s:AlignWithRefs(headLine, s:localCommitedMsg)
+        call append(headLine-1, substitute(line, '*', '+', ''))
+        let headLine += 1
     endif
     let gitCmd = "diff --no-color" . suffix
     let [result, cmd] = s:RunGitCommand(gitCmd, 0)
     if result != ""
-        call append(0, s:localUncommitedMsg)
+        call append(headLine-1, s:AlignWithRefs(headLine, s:localUncommitedMsg))
     endif
+endfu
+fu! s:AlignWithRefs(targetLine, targetStr)
+    "returns the targetStr prefixed with enough whitespace to align with
+    "the first asterisk on targetLine
+    if a:targetLine == 0
+	return '*  '.a:targetStr
+    endif
+    let line = getline(a:targetLine)
+    let idx = stridx(line, '(')
+    if idx == -1
+	return '*  '.a:targetStr
+    endif
+    return strpart(line, 0, idx) . a:targetStr
 endfu "}}}
 fu! s:AddLoadMore() "{{{
     call append(line('$'), '-- Load More --')
@@ -425,8 +441,8 @@ fu! s:IsHorizontal() "{{{
     return horizGlobal || horizBuffer
 endf "}}}
 fu! s:AutoHorizontal() "{{{
-    return exists('g:Gitv_OpenHorizontal') && 
-                \ type(g:Gitv_OpenHorizontal) == type("") && 
+    return exists('g:Gitv_OpenHorizontal') &&
+                \ type(g:Gitv_OpenHorizontal) == type("") &&
                 \ g:Gitv_OpenHorizontal ==? 'auto'
 endf "}}}
 fu! s:IsFileMode() "{{{
@@ -559,7 +575,7 @@ fu! s:DiffGitvCommit() range "{{{
         call s:OpenRelativeFilePath(shafirst, "Gedit")
     endif
     call s:MoveIntoPreviewAndExecute("Gdiff " . shalast, a:firstline != a:lastline)
-endf "}}} 
+endf "}}}
 fu! s:StatGitvCommit() range "{{{
     let shafirst = s:GetGitvSha(a:firstline)
     let shalast  = s:GetGitvSha(a:lastline)
