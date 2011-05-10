@@ -346,6 +346,8 @@ fu! s:GetRegexRange(rangeStart, rangeEnd) "{{{
     let rangeE = getline(a:rangeEnd)
     let rangeE = escape(rangeE, '.^$*\/')
     let rangeE = matchstr(rangeE, '\v^\s*\zs.{-}\ze\s*$') "trim whitespace
+    let rangeS = rangeS =~ '^\s*$' ? '^[:blank:]*$' : rangeS
+    let rangeE = rangeE =~ '^\s*$' ? '^[:blank:]*$' : rangeE
     return ['/'.rangeS.'/', '/'.rangeE.'/']
 endfu "}}} }}}
 fu! s:SetupBuffer(commitCount, extraArgs, filePath, range) "{{{
