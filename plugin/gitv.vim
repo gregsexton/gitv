@@ -292,7 +292,8 @@ fu! s:AddLocalNodes(filePath) "{{{
     let gitCmd = "diff --no-color" . suffix
     let [result, cmd] = s:RunGitCommand(gitCmd, 0)
     if result != ""
-        call append(headLine-1, s:AlignWithRefs(headLine, s:localUncommitedMsg))
+	let line = s:AlignWithRefs(headLine, s:localUncommitedMsg)
+        call append(headLine-1, substitute(line, '*', '=', ''))
     endif
 endfu
 fu! s:AlignWithRefs(targetLine, targetStr)
