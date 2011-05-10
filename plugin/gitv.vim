@@ -479,11 +479,11 @@ fu! s:OpenGitvCommit(geditForm, forceOpenFugitive) "{{{
         call s:OpenWorkingCopy(a:geditForm)
         return
     endif
-    if getline('.') == s:localUncommitedMsg
+    if getline('.') =~ s:localUncommitedMsg.'$'
         call s:OpenWorkingDiff(a:geditForm, 0)
         return
     endif
-    if getline('.') == s:localCommitedMsg
+    if getline('.') =~ s:localCommitedMsg.'$'
         call s:OpenWorkingDiff(a:geditForm, 1)
         return
     endif
