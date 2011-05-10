@@ -618,7 +618,7 @@ fu! s:Align(seperator, filePath) range "{{{
             let newline = []
             for i in range(len(tokens))
                 let token = tokens[i]
-                call add(newline, token . repeat(' ', maxLens[i]-strlen(token)+1))
+                call add(newline, token . repeat(' ', maxLens[i]-strwidth(token)+1))
             endfor
             call add(newlines, newline)
         else
@@ -638,7 +638,7 @@ fu! s:TruncateLines(lines, filePath) "{{{
     call map(a:lines, "s:TruncateHelp(v:val, a:filePath)")
 endfu "}}}
 fu! s:TruncateHelp(line, filePath) "{{{
-    let length = strlen(join(a:line))
+    let length = strwidth(join(a:line))
     let maxWidth = s:IsHorizontal() ? &columns : &columns/2
     let maxWidth = a:filePath != '' ? winwidth(0) : maxWidth
     if length > maxWidth
@@ -660,7 +660,7 @@ fu! s:MaxLengths(colls) "{{{
     let lengths = []
     for x in a:colls
         for y in range(len(x))
-            let length = strlen(x[y])
+            let length = strwidth(x[y])
             if length > get(lengths, y, 0)
                 if len(lengths)-1 < y
                     call add(lengths, length)
