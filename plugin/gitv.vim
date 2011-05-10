@@ -201,7 +201,7 @@ fu! s:OpenBrowserMode(extraArgs) "{{{
     if g:Gitv_OpenPreviewOnLaunch
         silent call s:OpenGitvCommit("Gedit", 0)
     else
-        call s:MoveIntoPreviewAndExecute('bwipeout', 0)
+        call s:MoveIntoPreviewAndExecute('bdelete', 0)
     endif
 endf "}}}
 fu! s:OpenFileMode(extraArgs) "{{{
@@ -368,7 +368,7 @@ fu! s:RecordBufferExecAndWipe(cmd, wipe) "{{{
     if a:wipe
         "safe guard against wiping out buffer you're in
         if bufnr('%') != buf && bufexists(buf)
-            exec 'bwipeout ' . buf
+            exec 'bdelete ' . buf
         endif
     endif
 endfu "}}}
