@@ -40,11 +40,15 @@ if !exists('g:Gitv_TruncateCommitSubjects')
     let g:Gitv_TruncateCommitSubjects = 0
 endif
 
+if !exists('g:Gitv_OpenPreviewOnLaunch')
+    let g:Gitv_OpenPreviewOnLaunch = 1
+endif
+
 "this counts up each time gitv is opened to ensure a unique file name
 let g:Gitv_InstanceCounter = 0
 
-let s:localUncommitedMsg = '*  Local uncommitted changes, not checked in to index.'
-let s:localCommitedMsg   = '*  Local changes checked in to index but not committed.'
+let s:localUncommitedMsg = 'Local uncommitted changes, not checked in to index.'
+let s:localCommitedMsg   = 'Local changes checked in to index but not committed.'
 
 command! -nargs=* -range -bang Gitv call s:OpenGitv(shellescape(<q-args>), <bang>0, <line1>, <line2>)
 cabbrev gitv Gitv
@@ -201,7 +205,11 @@ fu! s:OpenBrowserMode(extraArgs) "{{{
     endif
     call s:SetupBufferCommands(0)
     "open the first commit
-    silent call s:OpenGitvCommit("Gedit", 0)
+    if g:Gitv_OpenPreviewOnLaunch
+        silent call s:OpenGitvCommit("Gedit", 0)
+    else
+        call s:MoveIntoPreviewAndExecute('bdelete', 0)
+    endif
 endf "}}}
 fu! s:OpenFileMode(extraArgs, rangeStart, rangeEnd) "{{{
     let relPath = fugitive#buffer().path()
@@ -371,16 +379,33 @@ fu! s:SetupBuffer(commitCount, extraArgs, filePath, range) "{{{
 endf "}}}
 fu! s:AddLocalNodes(filePath) "{{{
     let suffix = a:filePath == '' ? '' : ' -- '.a:filePath
+    let gitCmd = "diff --no-color" . suffix
+    let [result, cmd] = s:RunGitCommand(gitCmd, 0)
+    let headLine = search('^\(\(|\|\/\|\\\|\*\)\s\?\)*\s*([^)]*HEAD', 'cnw')
+    if result != ""
+	let line = s:AlignWithRefs(headLine, s:localUncommitedMsg)
+        call append(headLine-1, substitute(line, '*', '=', ''))
+        let headLine += 1
+    endif
     let gitCmd = "diff --no-color --cached" . suffix
     let [result, cmd] = s:RunGitCommand(gitCmd, 0)
     if result != ""
-        call append(0, s:localCommitedMsg)
+	let line = s:AlignWithRefs(headLine, s:localCommitedMsg)
+        call append(headLine-1, substitute(line, '*', '+', ''))
     endif
-    let gitCmd = "diff --no-color" . suffix
-    let [result, cmd] = s:RunGitCommand(gitCmd, 0)
-    if result != ""
-        call append(0, s:localUncommitedMsg)
+endfu
+fu! s:AlignWithRefs(targetLine, targetStr)
+    "returns the targetStr prefixed with enough whitespace to align with
+    "the first asterisk on targetLine
+    if a:targetLine == 0
+	return '*  '.a:targetStr
     endif
+    let line = getline(a:targetLine)
+    let idx = stridx(line, '(')
+    if idx == -1
+	return '*  '.a:targetStr
+    endif
+    return strpart(line, 0, idx) . a:targetStr
 endfu "}}}
 fu! s:AddLoadMore() "{{{
     call append(line('$'), '-- Load More --')
@@ -422,7 +447,7 @@ fu! s:SetupMappings() "{{{
     nmap <buffer> <silent> P :call <SID>JumpToHead()<cr>
 endf "}}}
 fu! s:SetupBufferCommands(fileMode) "{{{
-    silent command! -buffer -nargs=* -complete=customlist,s:fugitive_GitComplete Git call <sid>MoveIntoPreviewAndExecute("Git <args>",1)|normal u
+    silent command! -buffer -nargs=* -complete=customlist,s:fugitive_GitComplete Git call <sid>MoveIntoPreviewAndExecute("unsilent Git <args>",1)|normal u
 endfu "}}}
 fu! s:ResizeWindow(fileMode) "{{{
     if a:fileMode "window height determined by &previewheight
@@ -468,7 +493,7 @@ fu! s:RecordBufferExecAndWipe(cmd, wipe) "{{{
     if a:wipe
         "safe guard against wiping out buffer you're in
         if bufnr('%') != buf && bufexists(buf)
-            exec 'bwipeout ' . buf
+            exec 'bdelete ' . buf
         endif
     endif
 endfu "}}}
@@ -583,11 +608,11 @@ fu! s:OpenGitvCommit(geditForm, forceOpenFugitive) "{{{
         call s:OpenWorkingCopy(a:geditForm)
         return
     endif
-    if getline('.') == s:localUncommitedMsg
+    if getline('.') =~ s:localUncommitedMsg.'$'
         call s:OpenWorkingDiff(a:geditForm, 0)
         return
     endif
-    if getline('.') == s:localCommitedMsg
+    if getline('.') =~ s:localCommitedMsg.'$'
         call s:OpenWorkingDiff(a:geditForm, 1)
         return
     endif
@@ -760,7 +785,7 @@ fu! s:Align(seperator, filePath) range "{{{
             let newline = []
             for i in range(len(tokens))
                 let token = tokens[i]
-                call add(newline, token . repeat(' ', maxLens[i]-strlen(token)+1))
+                call add(newline, token . repeat(' ', maxLens[i]-strwidth(token)+1))
             endfor
             call add(newlines, newline)
         else
@@ -780,7 +805,7 @@ fu! s:TruncateLines(lines, filePath) "{{{
     call map(a:lines, "s:TruncateHelp(v:val, a:filePath)")
 endfu "}}}
 fu! s:TruncateHelp(line, filePath) "{{{
-    let length = strlen(join(a:line))
+    let length = strwidth(join(a:line))
     let maxWidth = s:IsHorizontal() ? &columns : &columns/2
     let maxWidth = a:filePath != '' ? winwidth(0) : maxWidth
     if length > maxWidth
@@ -802,7 +827,7 @@ fu! s:MaxLengths(colls) "{{{
     let lengths = []
     for x in a:colls
         for y in range(len(x))
-            let length = strlen(x[y])
+            let length = strwidth(x[y])
             if length > get(lengths, y, 0)
                 if len(lengths)-1 < y
                     call add(lengths, length)
