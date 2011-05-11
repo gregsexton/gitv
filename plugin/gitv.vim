@@ -269,11 +269,11 @@ fu! s:ConstructRangeBuffer(commitCount, extraArgs, filePath, range) "{{{
     %delete
 
     "necessary as order is important; can't just iterate over keys(slices)
-    let hashCmd       = "log --no-color --pretty=format:%H -- " . a:filePath
+    let hashCmd       = "log --no-color --pretty=format:%H -".a:commitCount." -- " . a:filePath
     let [result, cmd] = s:RunGitCommand(hashCmd, 0)
     let hashes        = split(result, '\n')
 
-    let slices = s:GetFileSlices(a:range, a:filePath)
+    let slices = s:GetFileSlices(a:range, a:filePath, a:commitCount)
 
     let modHashes = []
     for i in range(len(hashes))
@@ -291,12 +291,12 @@ fu! s:ConstructRangeBuffer(commitCount, extraArgs, filePath, range) "{{{
     silent setlocal readonly
     return 1
 endf "}}}
-fu! s:GetFileSlices(range, filePath) "{{{
+fu! s:GetFileSlices(range, filePath, commitCount) "{{{
     "this returns a dictionary, indexed by commit sha, of all slices of range lines of filePath
     "NOTE: this could get massive for a large repo and large range
     let range     = a:range[0] . ',' . a:range[1]
     let git       = g:Gitv_GitExecutable
-    let sliceCmd  = "for hash in `".git." --git-dir=\"{DIR}\" log --no-color --pretty=format:%H -- " . a:filePath . '`; '
+    let sliceCmd  = "for hash in `".git." --git-dir=\"{DIR}\" log --no-color --pretty=format:%H -".a:commitCount."-- " . a:filePath . '`; '
     let sliceCmd .= "do "
     let sliceCmd .= 'echo "****${hash}"; '
     let sliceCmd .= git." --git-dir=\"{DIR}\" --no-pager blame -s -L " . shellescape(range) . " ${hash} " . a:filePath . "; "
@@ -372,7 +372,7 @@ fu! s:SetupBuffer(commitCount, extraArgs, filePath, range) "{{{
     silent %s/\s\+$//e
     call s:AddLoadMore()
     call s:AddLocalNodes(a:filePath)
-    call s:AddFileModeSpecific(a:filePath, a:range)
+    call s:AddFileModeSpecific(a:filePath, a:range, a:commitCount)
     silent setlocal nomodifiable
     silent setlocal readonly
     silent setlocal cursorline
@@ -411,11 +411,11 @@ endfu "}}}
 fu! s:AddLoadMore() "{{{
     call append(line('$'), '-- Load More --')
 endfu "}}}
-fu! s:AddFileModeSpecific(filePath, range) "{{{
+fu! s:AddFileModeSpecific(filePath, range, commitCount) "{{{
     if a:filePath != ''
         call append(0, '-- ['.a:filePath.'] --')
         if a:range != []
-            call append(1, '-- Showing range:')
+            call append(1, '-- Showing (up to '.a:commitCount.') commits affecting lines in the range:')
             call append(2, '-- ' . a:range[0])
             call append(3, '-- ' . a:range[1])
         endif

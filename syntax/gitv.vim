@@ -36,7 +36,7 @@ syn match gitvRefHead /HEAD/ contained containedin=gitvRef
 syn match gitvLoadMore /^-- Load More --$/
 syn match gitvWorkingCopy /^-- \[.*\] --$/
 
-syn match gitvRange /^-- Showing range:$/
+syn match gitvRange /^-- Showing .* in the range:$/
 syn match gitvRangeFromTo /^-- \/.*\/$/
 
 syn match gitvLocalUncommit /Local uncommitted changes, not checked in to index\.$/ contained containedin=gitvSubject
