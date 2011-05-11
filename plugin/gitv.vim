@@ -269,11 +269,12 @@ fu! s:ConstructRangeBuffer(commitCount, extraArgs, filePath, range) "{{{
     %delete
 
     "necessary as order is important; can't just iterate over keys(slices)
-    let hashCmd       = "log --no-color --pretty=format:%H -".a:commitCount." -- " . a:filePath
+    let hashCmd       = "log " . a:extraArgs 
+    let hashCmd      .= " --no-color --pretty=format:%H -".a:commitCount." -- " . a:filePath
     let [result, cmd] = s:RunGitCommand(hashCmd, 0)
     let hashes        = split(result, '\n')
 
-    let slices = s:GetFileSlices(a:range, a:filePath, a:commitCount)
+    let slices = s:GetFileSlices(a:range, a:filePath, a:commitCount, a:extraArgs)
 
     let modHashes = []
     for i in range(len(hashes))
@@ -291,13 +292,14 @@ fu! s:ConstructRangeBuffer(commitCount, extraArgs, filePath, range) "{{{
     silent setlocal readonly
     return 1
 endf "}}}
-fu! s:GetFileSlices(range, filePath, commitCount) "{{{
+fu! s:GetFileSlices(range, filePath, commitCount, extraArgs) "{{{
     "this returns a dictionary, indexed by commit sha, of all slices of range lines of filePath
     "NOTE: this could get massive for a large repo and large range
     let range     = a:range[0] . ',' . a:range[1]
     let range     = substitute(range, "'", "'\\\\''", 'g') "force unix style escaping even on windows
     let git       = g:Gitv_GitExecutable
-    let sliceCmd  = "for hash in `".git." --git-dir=\"{DIR}\" log --no-color --pretty=format:%H -".a:commitCount."-- " . a:filePath . '`; '
+    let sliceCmd  = "for hash in `".git." --git-dir=\"{DIR}\" log " . a:extraArgs
+    let sliceCmd .= " --no-color --pretty=format:%H -".a:commitCount."-- " . a:filePath . '`; '
     let sliceCmd .= "do "
     let sliceCmd .= 'echo "****${hash}"; '
     let sliceCmd .= git." --git-dir=\"{DIR}\" --no-pager blame -s -L '" . range . "' ${hash} " . a:filePath . "; "
