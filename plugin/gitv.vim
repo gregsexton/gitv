@@ -382,6 +382,7 @@ fu! s:AddLocalNodes(filePath) "{{{
     let gitCmd = "diff --no-color" . suffix
     let [result, cmd] = s:RunGitCommand(gitCmd, 0)
     let headLine = search('^\(\(|\|\/\|\\\|\*\)\s\?\)*\s*([^)]*HEAD', 'cnw')
+    let headLine = headLine == 0 ? 1 : headLine
     if result != ""
 	let line = s:AlignWithRefs(headLine, s:localUncommitedMsg)
         call append(headLine-1, substitute(line, '*', '=', ''))
