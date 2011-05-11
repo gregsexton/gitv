@@ -295,11 +295,12 @@ fu! s:GetFileSlices(range, filePath, commitCount) "{{{
     "this returns a dictionary, indexed by commit sha, of all slices of range lines of filePath
     "NOTE: this could get massive for a large repo and large range
     let range     = a:range[0] . ',' . a:range[1]
+    let range     = substitute(range, "'", "'\\\\''", 'g') "force unix style escaping even on windows
     let git       = g:Gitv_GitExecutable
     let sliceCmd  = "for hash in `".git." --git-dir=\"{DIR}\" log --no-color --pretty=format:%H -".a:commitCount."-- " . a:filePath . '`; '
     let sliceCmd .= "do "
     let sliceCmd .= 'echo "****${hash}"; '
-    let sliceCmd .= git." --git-dir=\"{DIR}\" --no-pager blame -s -L " . shellescape(range) . " ${hash} " . a:filePath . "; "
+    let sliceCmd .= git." --git-dir=\"{DIR}\" --no-pager blame -s -L '" . range . "' ${hash} " . a:filePath . "; "
     let sliceCmd .= "done"
     let finalCmd  = "bash -c " . shellescape(sliceCmd)
 
