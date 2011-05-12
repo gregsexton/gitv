@@ -55,13 +55,20 @@ types. You will also need the |fugitive| plugin installed and working for
 
 |gitv| defines the following command.
 
-:Gitv[!] [args]   Invoking this command on a buffer that belongs to a git
+:[range]Gitv[!] [args]
+
+                  Invoking this command on a buffer that belongs to a git
                   repository causes the gitv browser to open. '!' causes gitv
                   to open in file mode rather than browser mode. Any [args]
                   supplied are passed on to the gitv viewer and can be used to
                   narrow the commits that are shown. If this command is run
                   on a buffer not belonging to a git repository a message
                   stating 'Not a git repository.' is displayed.
+
+                  When used with a [range] this has no effect in browser mode.
+                  In file mode it narrows the commits shown to only those
+                  affecting lines in the range. See section 3.8 for more
+                  details.
 
 The following abbreviation is also defined so that you can type :gitv without
 capitalisation.
@@ -254,6 +261,44 @@ unexpected places.
 Folding of branches is supported in the browser window. Initially all folds
 are always open and will open on a reload. You can collapse any branch by
 using Vim's built in fold operators. See |folding| for more details.
+
+3.8 Using with a range of lines
+
+If a range is passed to the :Gitv command it will have no effect in browser
+mode. In file mode however, only commits that affect at least one line in the
+range will be displayed. This is useful, for example, to view the commit
+history for a function and all of the changes made to it.
+
+If a range of less than two lines is used then gitv opens in regular file
+mode.
+
+Selecting a commit by pressing <cr> on it will show the file as it was in that
+commit with all lines not in the range folded away. This allows you to quickly
+and easily move from commit to commit viewing the evolution of the range of
+lines. Pressing <c-cr> will show you the commit details so that you can see
+any other changes it may have made.
+
+The range that Git looks at is specified by the first and last line in the
+range passed to :Gitv. These lines are escaped appropriately and passed to Git
+to use as a regular expression. If you wish to modify either regex delimiter
+this can be done by pressing <cr> on the appropriate line near the top of the
+file mode buffer. Vim will prompt you to modify the regex. If you press enter
+without modification, nothing happens. If you modify the regex (Git supports
+POSIX regular expressions) gitv will automatically update.
+
+You may also pass arguments to the :Gitv! command when using a range. This
+filters the commits that are to be compared for changes in the range. For
+example you could pass the name of a branch to only look at changes in commits
+on that branch.
+
+Note: This feature requires the bash shell to be installed on your system and
+in your path. This should already be the case for the majority of users.
+
+Note: Using a range searches back through the commit history looking at each
+section of lines for where changes occurred. It will only look at the last
+g:Gitv_CommitStep number, if you don't get any matches you could try pressing
+<cr> on the 'load more' line. This command may be slow if you choose a large
+range and have a large g:Gitv_CommitStep.
 
 ==============================================================================
 4. Configuration Options                               *gitv-config-options*
