@@ -276,17 +276,21 @@ fu! s:ConstructRangeBuffer(commitCount, extraArgs, filePath, range) "{{{
 
     let slices = s:GetFileSlices(a:range, a:filePath, a:commitCount, a:extraArgs)
 
-    let modHashes = []
-    for i in range(len(hashes))
-        let hash1 = hashes[i]
-        let hash2 = get(hashes, i+1, "")
-        if (hash2 == "" && has_key(slices, hash1)) || s:CompareFileAtCommits(slices, hash1, hash2)
-            let modHashes = add(modHashes, hash1)
-        endif
-    endfor
+    if s:AllSlicesBlank(slices)
+        call append(0, 'No commits matched the range. Try altering the search.')
+    else
+        let modHashes = []
+        for i in range(len(hashes))
+            let hash1 = hashes[i]
+            let hash2 = get(hashes, i+1, "")
+            if (hash2 == "" && has_key(slices, hash1)) || s:CompareFileAtCommits(slices, hash1, hash2)
+                let modHashes = add(modHashes, hash1)
+            endif
+        endfor
 
-    let output = s:GetFinalOutputForHashes(modHashes)
-    call append(0, output)
+        let output = s:GetFinalOutputForHashes(modHashes)
+        call append(0, output)
+    endif
 
     silent setlocal nomodifiable
     silent setlocal readonly
@@ -323,6 +327,14 @@ fu! s:GetFileSlices(range, filePath, commitCount, extraArgs) "{{{
     endfor
 
     return slices
+endfu "}}}
+fu! s:AllSlicesBlank(slices) "{{{
+    for i in keys(a:slices)
+        if a:slices[i] != ''
+            return 0
+        endif
+    endfor
+    return 1
 endfu "}}}
 fu! s:CompareFileAtCommits(slices, c1sha, c2sha) "{{{
     "returns 1 if lineRange for filePath in commits: c1sha and c2sha are different
