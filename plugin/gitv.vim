@@ -365,10 +365,10 @@ fu! s:GetFinalOutputForHashes(hashes) "{{{
 endfu "}}}
 fu! s:GetRegexRange(rangeStart, rangeEnd) "{{{
     let rangeS = getline(a:rangeStart)
-    let rangeS = escape(rangeS, '.^$*\/')
+    let rangeS = escape(rangeS, '.^$*\/[]')
     let rangeS = matchstr(rangeS, '\v^\s*\zs.{-}\ze\s*$') "trim whitespace
     let rangeE = getline(a:rangeEnd)
-    let rangeE = escape(rangeE, '.^$*\/')
+    let rangeE = escape(rangeE, '.^$*\/[]')
     let rangeE = matchstr(rangeE, '\v^\s*\zs.{-}\ze\s*$') "trim whitespace
     let rangeS = rangeS =~ '^\s*$' ? '^[:blank:]*$' : rangeS
     let rangeE = rangeE =~ '^\s*$' ? '^[:blank:]*$' : rangeE
@@ -593,8 +593,8 @@ endfu "}}}
 fu! s:FoldToRevealOnlyRange(rangeStart, rangeEnd) "{{{
     setlocal foldmethod=manual
     normal zE
-    let rangeS = '/'.escape(matchstr(a:rangeStart, '/\zs.*\ze/'), '/\').'/'
-    let rangeE = '/'.escape(matchstr(a:rangeEnd, '/\zs.*\ze/'), '/\').'/'
+    let rangeS = '/'.escape(matchstr(a:rangeStart, '/\zs.*\ze/'), '[]/\').'/'
+    let rangeE = '/'.escape(matchstr(a:rangeEnd, '/\zs.*\ze/'), '[]/\').'/'
     exec '1,'.rangeS.'-1fold'
     exec rangeE.'+1,$fold'
 endfu "}}}
