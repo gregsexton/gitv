@@ -593,8 +593,8 @@ endfu "}}}
 fu! s:FoldToRevealOnlyRange(rangeStart, rangeEnd) "{{{
     setlocal foldmethod=manual
     normal zE
-    let rangeS = '/'.escape(matchstr(a:rangeStart, '/\zs.*\ze/'), '[]/\').'/'
-    let rangeE = '/'.escape(matchstr(a:rangeEnd, '/\zs.*\ze/'), '[]/\').'/'
+    let rangeS = '/'.escape(matchstr(a:rangeStart, '/\zs.*\ze/'), '~[]/\.^$*').'/'
+    let rangeE = '/'.escape(matchstr(a:rangeEnd, '/\zs.*\ze/'), '~[]/\.^$*').'/'
     exec '1,'.rangeS.'-1fold'
     exec rangeE.'+1,$fold'
 endfu "}}}
