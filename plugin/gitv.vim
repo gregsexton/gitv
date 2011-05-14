@@ -50,7 +50,7 @@ let g:Gitv_InstanceCounter = 0
 let s:localUncommitedMsg = 'Local uncommitted changes, not checked in to index.'
 let s:localCommitedMsg   = 'Local changes checked in to index but not committed.'
 
-command! -nargs=* -bang Gitv call s:OpenGitv(shellescape(<q-args>), <bang>0)
+command! -nargs=* -range -bang Gitv call s:OpenGitv(shellescape(<q-args>), <bang>0, <line1>, <line2>)
 cabbrev gitv Gitv
 
 "Public API:"{{{
@@ -130,25 +130,32 @@ fu! s:RunGitCommand(command, verbatim) "{{{
     "switches to the buffer repository before running the command and switches back after.
     if !a:verbatim
         "switches to the buffer repository before running the command and switches back after.
-        let dir        = s:GetRepoDir()
-        let workingDir = fnamemodify(dir,':h')
-        if workingDir == ''
-            return 0
-        endif
-
-        let cd = exists('*haslocaldir') && haslocaldir() ? 'lcd ' : 'cd '
-        let bufferDir = getcwd()
-        try
-            execute cd.'`=workingDir`'
-            let finalCmd = g:Gitv_GitExecutable.' --git-dir="' .dir. '" ' . a:command
-            let result   = system(finalCmd)
-        finally
-            execute cd.'`=bufferDir`'
-        endtry
+        let cmd                = g:Gitv_GitExecutable.' --git-dir="{DIR}" '. a:command
+        let [result, finalCmd] = s:RunCommandRelativeToGitRepo(cmd)
     else
         let result   = system(a:command)
         let finalCmd = a:command
     endif
+    return [result, finalCmd]
+endfu "}}}
+fu! s:RunCommandRelativeToGitRepo(command) "{{{
+    "this runs the command verbatim but first changing to the root git dir
+    "it also replaces any occurance of '{DIR}' in the command with the root git dir.
+    let dir        = s:GetRepoDir()
+    let workingDir = fnamemodify(dir,':h')
+    if workingDir == ''
+        return 0
+    endif
+
+    let cd = exists('*haslocaldir') && haslocaldir() ? 'lcd ' : 'cd '
+    let bufferDir = getcwd()
+    try
+        execute cd.'`=workingDir`'
+        let finalCmd = substitute(a:command, '{DIR}', dir, 'g')
+        let result   = system(finalCmd)
+    finally
+        execute cd.'`=bufferDir`'
+    endtry
     return [result, finalCmd]
 endfu "}}}
 fu! s:GetRepoDir() "{{{
@@ -159,7 +166,7 @@ fu! s:GetRepoDir() "{{{
     return dir
 endfu "}}} }}}
 "Open And Update Gitv:"{{{
-fu! s:OpenGitv(extraArgs, fileMode) "{{{
+fu! s:OpenGitv(extraArgs, fileMode, rangeStart, rangeEnd) "{{{
     let sanatizedArgs = a:extraArgs   == "''" ? '' : a:extraArgs
     let sanatizedArgs = sanatizedArgs == '""' ? '' : sanatizedArgs
     let g:Gitv_InstanceCounter += 1
@@ -168,7 +175,7 @@ fu! s:OpenGitv(extraArgs, fileMode) "{{{
     endif
     try
         if a:fileMode
-            call s:OpenFileMode(sanatizedArgs)
+            call s:OpenFileMode(sanatizedArgs, a:rangeStart, a:rangeEnd)
         else
             call s:OpenBrowserMode(sanatizedArgs)
         endif
@@ -193,7 +200,7 @@ fu! s:OpenBrowserMode(extraArgs) "{{{
     else
         let direction = 'vnew gitv'.'-'.g:Gitv_InstanceCounter
     endif
-    if !s:LoadGitv(direction, 0, g:Gitv_CommitStep, a:extraArgs, '')
+    if !s:LoadGitv(direction, 0, g:Gitv_CommitStep, a:extraArgs, '', [])
         return 0
     endif
     call s:SetupBufferCommands(0)
@@ -204,27 +211,31 @@ fu! s:OpenBrowserMode(extraArgs) "{{{
         call s:MoveIntoPreviewAndExecute('bdelete', 0)
     endif
 endf "}}}
-fu! s:OpenFileMode(extraArgs) "{{{
+fu! s:OpenFileMode(extraArgs, rangeStart, rangeEnd) "{{{
     let relPath = fugitive#buffer().path()
     pclose!
-    if !s:LoadGitv(&previewheight . "new gitv".'-'.g:Gitv_InstanceCounter, 0, g:Gitv_CommitStep, a:extraArgs, relPath)
+    let range = a:rangeStart != a:rangeEnd ? s:GetRegexRange(a:rangeStart, a:rangeEnd) : []
+    if !s:LoadGitv(&previewheight . "new gitv".'-'.g:Gitv_InstanceCounter, 0, g:Gitv_CommitStep, a:extraArgs, relPath, range)
         return 0
     endif
     set previewwindow
     set winfixheight
     let b:Gitv_FileMode = 1
     let b:Gitv_FileModeRelPath = relPath
+    let b:Gitv_FileModeRange = range
     call s:SetupBufferCommands(1)
 endf "}}}
-fu! s:LoadGitv(direction, reload, commitCount, extraArgs, filePath) "{{{
+fu! s:LoadGitv(direction, reload, commitCount, extraArgs, filePath, range) "{{{
     if a:reload
         let jumpTo = line('.') "this is for repositioning the cursor after reload
     endif
 
-    if !s:ConstructAndExecuteCmd(a:direction, a:reload, a:commitCount, a:extraArgs, a:filePath)
+    "precondition: a:range should be of the form [a, b] or []
+    "   where a,b are integers && a<b
+    if !s:ConstructAndExecuteCmd(a:direction, a:commitCount, a:extraArgs, a:filePath, a:range)
         return 0
     endif
-    call s:SetupBuffer(a:commitCount, a:extraArgs, a:filePath)
+    call s:SetupBuffer(a:commitCount, a:extraArgs, a:filePath, a:range)
     exec exists('jumpTo') ? jumpTo : '1'
     call s:SetupMappings() "redefines some of the mappings made by Gitv_OpenGitCommand
     call s:ResizeWindow(a:filePath!='')
@@ -232,22 +243,8 @@ fu! s:LoadGitv(direction, reload, commitCount, extraArgs, filePath) "{{{
     echom "Loaded up to " . a:commitCount . " commits."
     return 1
 endf "}}}
-fu! s:ConstructAndExecuteCmd(direction, reload, commitCount, extraArgs, filePath) "{{{
-    if a:reload "run the same command again with any extra args
-        if exists('b:Git_Command')
-            "substitute in the potentially new commit count taking account of a potential filePath
-            let newcmd = b:Git_Command
-            if a:filePath != ''
-                let newcmd = substitute(newcmd, " -- " . a:filePath . "$", "", "")
-            endif
-            let newcmd = substitute(newcmd, " -\\d\\+$", " -" . a:commitCount, "")
-            if a:filePath != ''
-                let newcmd .= ' -- ' . a:filePath
-            endif
-            silent let res = Gitv_OpenGitCommand(newcmd, a:direction, 1)
-            return res
-        endif
-    else
+fu! s:ConstructAndExecuteCmd(direction, commitCount, extraArgs, filePath, range) "{{{
+    if a:range == [] "no range, setup and execute the command
         let cmd  = "log " . a:extraArgs
         let cmd .= " --no-color --decorate=full --pretty=format:\"%d %s__SEP__%ar__SEP__%an__SEP__[%h]\" --graph -"
         let cmd .= a:commitCount
@@ -256,10 +253,128 @@ fu! s:ConstructAndExecuteCmd(direction, reload, commitCount, extraArgs, filePath
         endif
         silent let res = Gitv_OpenGitCommand(cmd, a:direction)
         return res
+    else "range applies, setup a trivial buffer and then modify it with custom logic
+        let cmd = "--version" "arbitrary command intended to setup the buffer
+                              "and act as a check everything is ok
+        silent let res = Gitv_OpenGitCommand(cmd, a:direction)
+        if !res | return res | endif
+        silent let res = s:ConstructRangeBuffer(a:commitCount, a:extraArgs, a:filePath, a:range)
+        return res
     endif
-    return 0
 endf "}}}
-fu! s:SetupBuffer(commitCount, extraArgs, filePath) "{{{
+"Range Commands: {{{
+fu! s:ConstructRangeBuffer(commitCount, extraArgs, filePath, range) "{{{
+    silent setlocal modifiable
+    silent setlocal noreadonly
+    %delete
+
+    "necessary as order is important; can't just iterate over keys(slices)
+    let hashCmd       = "log " . a:extraArgs 
+    let hashCmd      .= " --no-color --pretty=format:%H -".a:commitCount." -- " . a:filePath
+    let [result, cmd] = s:RunGitCommand(hashCmd, 0)
+    let hashes        = split(result, '\n')
+
+    let slices = s:GetFileSlices(a:range, a:filePath, a:commitCount, a:extraArgs)
+
+    if s:AllSlicesBlank(slices)
+        call append(0, 'No commits matched the range. Try altering the search.')
+    else
+        let modHashes = []
+        for i in range(len(hashes))
+            let hash1 = hashes[i]
+            let hash2 = get(hashes, i+1, "")
+            if (hash2 == "" && has_key(slices, hash1)) || s:CompareFileAtCommits(slices, hash1, hash2)
+                let modHashes = add(modHashes, hash1)
+            endif
+        endfor
+
+        let output = s:GetFinalOutputForHashes(modHashes)
+        call append(0, output)
+    endif
+
+    silent setlocal nomodifiable
+    silent setlocal readonly
+    return 1
+endf "}}}
+fu! s:GetFileSlices(range, filePath, commitCount, extraArgs) "{{{
+    "this returns a dictionary, indexed by commit sha, of all slices of range lines of filePath
+    "NOTE: this could get massive for a large repo and large range
+    let range     = a:range[0] . ',' . a:range[1]
+    let range     = substitute(range, "'", "'\\\\''", 'g') "force unix style escaping even on windows
+    let git       = g:Gitv_GitExecutable
+    let sliceCmd  = "for hash in `".git." --git-dir=\"{DIR}\" log " . a:extraArgs
+    let sliceCmd .= " --no-color --pretty=format:%H -".a:commitCount."-- " . a:filePath . '`; '
+    let sliceCmd .= "do "
+    let sliceCmd .= 'echo "****${hash}"; '
+    let sliceCmd .= git." --git-dir=\"{DIR}\" --no-pager blame -s -L '" . range . "' ${hash} " . a:filePath . "; "
+    let sliceCmd .= "done"
+    let finalCmd  = "bash -c " . shellescape(sliceCmd)
+
+    let [result, cmd] = s:RunCommandRelativeToGitRepo(finalCmd)
+    let slicesLst     = split(result, '\(^\|\n\)\zs\*\{4}')
+    let slices        = {}
+
+    for slice in slicesLst
+        let key = matchstr(slice, '^.\{-}\ze\n')
+        let val = matchstr(slice, '\n\zs.*')
+        if val !~? '^fatal: .*$'
+            "remove the commit sha and line number to stop them affecting the comparisons
+            let lines = split(val, '\n')
+            call map(lines, "matchstr(v:val, '\\x\\{-} \\d\\+) \\zs.*')")
+            let finalVal = join(lines)
+            let slices[key] = finalVal
+        endif
+    endfor
+
+    return slices
+endfu "}}}
+fu! s:AllSlicesBlank(slices) "{{{
+    for i in keys(a:slices)
+        if a:slices[i] != ''
+            return 0
+        endif
+    endfor
+    return 1
+endfu "}}}
+fu! s:CompareFileAtCommits(slices, c1sha, c2sha) "{{{
+    "returns 1 if lineRange for filePath in commits: c1sha and c2sha are different
+    "else returns 0
+    if has_key(a:slices, a:c1sha) && !has_key(a:slices, a:c2sha)
+        return 1
+    endif
+    if has_key(a:slices, a:c1sha) && has_key(a:slices, a:c2sha)
+        return a:slices[a:c1sha] != a:slices[a:c2sha]
+    else
+        return 0
+    endif
+endfu "}}}
+fu! s:GetFinalOutputForHashes(hashes) "{{{
+    if len(a:hashes) > 0
+        let git       = g:Gitv_GitExecutable
+        let cmd       = 'for hash in ' . join(a:hashes, " ") . '; '
+        let cmd      .= "do "
+        let cmd      .= git.' --git-dir="{DIR}" log --no-color --decorate=full --pretty=format:"%d %s__SEP__%ar__SEP__%an__SEP__[%h]%n" --graph -1 ${hash}; '
+        let cmd      .= 'done'
+        let finalCmd  = "bash -c " . shellescape(cmd)
+
+        let [result, cmd] = s:RunCommandRelativeToGitRepo(finalCmd)
+        return split(result, '\n')
+    else
+        return ""
+    endif
+endfu "}}}
+fu! s:GetRegexRange(rangeStart, rangeEnd) "{{{
+    let rangeS = getline(a:rangeStart)
+    let rangeS = escape(rangeS, '.^$*\/[]')
+    let rangeS = matchstr(rangeS, '\v^\s*\zs.{-}\ze\s*$') "trim whitespace
+    let rangeE = getline(a:rangeEnd)
+    let rangeE = escape(rangeE, '.^$*\/[]')
+    let rangeE = matchstr(rangeE, '\v^\s*\zs.{-}\ze\s*$') "trim whitespace
+    let rangeS = rangeS =~ '^\s*$' ? '^[:blank:]*$' : rangeS
+    let rangeE = rangeE =~ '^\s*$' ? '^[:blank:]*$' : rangeE
+    return ['/'.rangeS.'/', '/'.rangeE.'/']
+endfu "}}} }}}
+fu! s:SetupBuffer(commitCount, extraArgs, filePath, range) "{{{
     silent set filetype=gitv
     let b:Gitv_CommitCount = a:commitCount
     let b:Gitv_ExtraArgs   = a:extraArgs
@@ -272,9 +387,7 @@ fu! s:SetupBuffer(commitCount, extraArgs, filePath) "{{{
     silent %s/\s\+$//e
     call s:AddLoadMore()
     call s:AddLocalNodes(a:filePath)
-    if a:filePath != ''
-        call append(0, '-- ['.a:filePath.'] --')
-    endif
+    call s:AddFileModeSpecific(a:filePath, a:range, a:commitCount)
     silent setlocal nomodifiable
     silent setlocal readonly
     silent setlocal cursorline
@@ -313,6 +426,16 @@ endfu "}}}
 fu! s:AddLoadMore() "{{{
     call append(line('$'), '-- Load More --')
 endfu "}}}
+fu! s:AddFileModeSpecific(filePath, range, commitCount) "{{{
+    if a:filePath != ''
+        call append(0, '-- ['.a:filePath.'] --')
+        if a:range != []
+            call append(1, '-- Showing (up to '.a:commitCount.') commits affecting lines in the range:')
+            call append(2, '-- ' . a:range[0])
+            call append(3, '-- ' . a:range[1])
+        endif
+    endif
+endfu "}}}
 fu! s:SetupMappings() "{{{
     "operations
     nmap <buffer> <silent> <cr> :call <SID>OpenGitvCommit("Gedit", 0)<cr>
@@ -323,7 +446,7 @@ fu! s:SetupMappings() "{{{
     nmap <buffer> <silent> <c-cr> :call <SID>OpenGitvCommit("Gedit", 1)<cr>
 
     nmap <buffer> <silent> q :call <SID>CloseGitv()<cr>
-    nmap <buffer> <silent> u :call <SID>LoadGitv('', 1, b:Gitv_CommitCount, b:Gitv_ExtraArgs, <SID>GetRelativeFilePath())<cr>
+    nmap <buffer> <silent> u :call <SID>LoadGitv('', 1, b:Gitv_CommitCount, b:Gitv_ExtraArgs, <SID>GetRelativeFilePath(), <SID>GetRange())<cr>
     nmap <buffer> <silent> co :call <SID>CheckOutGitvCommit()<cr>
 
     nmap <buffer> <silent> D :call <SID>DiffGitvCommit()<cr>
@@ -460,6 +583,21 @@ endf "}}}
 fu! s:GetRelativeFilePath() "{{{
     return exists('b:Gitv_FileModeRelPath') ? b:Gitv_FileModeRelPath : ''
 endf "}}}
+fu! s:GetRange() "{{{
+    return exists('b:Gitv_FileModeRange') ? b:Gitv_FileModeRange : []
+endfu "}}}
+fu! s:SetRange(idx, value) "{{{
+    "idx - {0,1}, 0 for beginning, 1 for end.
+    let b:Gitv_FileModeRange[a:idx] = a:value
+endfu "}}}
+fu! s:FoldToRevealOnlyRange(rangeStart, rangeEnd) "{{{
+    setlocal foldmethod=manual
+    normal zE
+    let rangeS = '/'.escape(matchstr(a:rangeStart, '/\zs.*\ze/'), '~[]/\.^$*').'/'
+    let rangeE = '/'.escape(matchstr(a:rangeEnd, '/\zs.*\ze/'), '~[]/\.^$*').'/'
+    exec '1,'.rangeS.'-1fold'
+    exec rangeE.'+1,$fold'
+endfu "}}}
 fu! s:OpenRelativeFilePath(sha, geditForm) "{{{
     let relPath = s:GetRelativeFilePath()
     if relPath == ''
@@ -468,12 +606,18 @@ fu! s:OpenRelativeFilePath(sha, geditForm) "{{{
     let cmd = a:geditForm . " " . a:sha . ":" . relPath
     let cmd = 'call s:RecordBufferExecAndWipe("'.cmd.'", '.(a:geditForm=='Gedit').')'
     call s:MoveIntoPreviewAndExecute(cmd, 1)
+    let range = s:GetRange()
+    if range != []
+        let rangeS = escape(range[0], '"')
+        let rangeE = escape(range[1], '"')
+        call s:MoveIntoPreviewAndExecute('call s:FoldToRevealOnlyRange("'.rangeS.'", "'.rangeE.'")', 0)
+    endif
 endf "}}} }}}
 "Mapped Functions:"{{{
 "Operations: "{{{
 fu! s:OpenGitvCommit(geditForm, forceOpenFugitive) "{{{
     if getline('.') == "-- Load More --"
-        call s:LoadGitv('', 1, b:Gitv_CommitCount+g:Gitv_CommitStep, b:Gitv_ExtraArgs, s:GetRelativeFilePath())
+        call s:LoadGitv('', 1, b:Gitv_CommitCount+g:Gitv_CommitStep, b:Gitv_ExtraArgs, s:GetRelativeFilePath(), s:GetRange())
         return
     endif
     if s:IsFileMode() && getline('.') =~ "^-- \\[.*\\] --$"
@@ -486,6 +630,12 @@ fu! s:OpenGitvCommit(geditForm, forceOpenFugitive) "{{{
     endif
     if getline('.') =~ s:localCommitedMsg.'$'
         call s:OpenWorkingDiff(a:geditForm, 1)
+        return
+    endif
+    if s:IsFileMode() && getline('.') =~ '^-- /.*/$'
+        if s:EditRange(matchstr(getline('.'), '^-- /\zs.*\ze/$'))
+            normal u
+        endif
         return
     endif
     let sha = s:GetGitvSha(line('.'))
@@ -524,6 +674,21 @@ fu! s:OpenWorkingDiff(geditForm, staged)
     endif
     let cmd = 'call s:RecordBufferExecAndWipe("'.cmd.'", '.(winCmd=='').')'
     call s:MoveIntoPreviewAndExecute(cmd, 1)
+endfu
+fu! s:EditRange(rangeDelimiter)
+    let range = s:GetRange()
+    let rangeDelimWithSlashes = '/'.a:rangeDelimiter.'/'
+    let idx = rangeDelimWithSlashes == range[0] ? 0 : rangeDelimWithSlashes == range[1] ? 1 : -1
+    if idx == -1
+        return 0
+    endif
+    let value = input("Enter new range regex: ", a:rangeDelimiter)
+    let value = '/'.value.'/'
+    if value == range[idx]
+        return 0 "no need to update
+    endif
+    call s:SetRange(idx, value)
+    return 1
 endfu "}}}
 fu! s:CheckOutGitvCommit() "{{{
     let allrefs = s:GetGitvRefs()

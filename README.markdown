@@ -1,9 +1,22 @@
 #Readme
 
-Currently this is a v1.0 release of this plugin. Please help me
-find and remove any bugs by adding any problems you have to the
-issues tracker of this repository. Suggestions, pull requests and
-patches are also all very welcome.
+This repository represents the latest bleeding-edge changes to gitv.
+Please help me find and remove any bugs by adding any problems you have
+to the issues tracker of this repository. Suggestions, pull requests and
+patches are also all very welcome. To download the latest stable release
+see the [gitv page on vim.org](http://www.vim.org/scripts/script.php?script_id=3574).
+
+__Update:__ I have added an exciting new feature that allows you to pass
+a range to gitv. This has no effect in browser mode. In file mode
+however, only commits that affect at least one line in the range will be
+displayed. This is useful, for example, to view the commit history for a
+function and all of the changes made to it. You can easily watch the
+function 'evolve' as you move from commit to commit. For more
+information see the gitv documentation. If you have any problems with
+this new feature be sure to add them to the issues tracker.
+
+You can see screenshots of the new range feature in action
+[here](http://www.gregsexton.org/2011/05/gitv-range/).
 
 ##Introduction
 

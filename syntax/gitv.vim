@@ -35,6 +35,10 @@ syn match gitvRefHead /HEAD/ contained containedin=gitvRef
 
 syn match gitvLoadMore /^-- Load More --$/
 syn match gitvWorkingCopy /^-- \[.*\] --$/
+
+syn match gitvRange /^-- Showing .* in the range:$/
+syn match gitvRangeFromTo /^-- \/.*\/$/
+
 syn match gitvLocalUncommit /Local uncommitted changes, not checked in to index\.$/ contained containedin=gitvSubject
 syn match gitvLocalCommited /Local changes checked in to index but not committed\.$/ contained containedin=gitvSubject
 syn match gitvLocalCommitedNode /+/ contained containedin=gitvGraphEdge0,gitvGraphEdge1,gitvGraphEdge2,gitvGraphEdge3,gitvGraphEdge4,gitvGraphEdge5,gitvGraphEdge6,gitvGraphEdge7,gitvGraphEdge8,gitvGraphEdge9
@@ -55,6 +59,8 @@ hi def link gitvDate              Statement
 hi def link gitvSubject           Normal
 hi def link gitvLoadMore          Question
 hi def link gitvWorkingCopy       Question
+hi def link gitvRange             ModeMsg
+hi def link gitvRangeFromTo       Function
 
 hi def link gitvAddedMarks        diffAdded
 hi def link gitvRemovedMarks      diffRemoved
