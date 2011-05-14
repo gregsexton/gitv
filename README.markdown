@@ -15,6 +15,9 @@ function 'evolve' as you move from commit to commit. For more
 information see the gitv documentation. If you have any problems with
 this new feature be sure to add them to the issues tracker.
 
+You can see screenshots of the new range feature in action
+[here](http://www.gregsexton.org/2011/05/gitv-range/).
+
 ##Introduction
 
 gitv is a 'gitk clone' plugin for the text editor Vim. The goal is
