@@ -750,7 +750,7 @@ fu! s:StatGitvCommit() range "{{{
     if shafirst == "" || shalast == ""
         return
     endif
-    let cmd  = 'diff '.shafirst
+    let cmd  = 'diff --no-color '.shafirst
     if shafirst != shalast
         let cmd .= ' '.shalast
     endif
