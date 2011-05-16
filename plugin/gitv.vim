@@ -967,6 +967,17 @@ fu! s:JumpToHead() "{{{
 endf "}}}
 "}}} }}}
 "Align And Truncate Functions: "{{{
+if exists("*strwidth") "{{{
+  "introduced in Vim 7.3
+  fu! s:StringWidth(string)
+    return strwidth(a:string)
+  endfu
+else
+  fu! s:StringWidth(string)
+    return len(split(a:string,'\zs'))
+  endfu
+end
+"}}}
 fu! s:Align(seperator, filePath) range "{{{
     let lines = getline(a:firstline, a:lastline)
     call map(lines, 'split(v:val, a:seperator)')
@@ -981,7 +992,7 @@ fu! s:Align(seperator, filePath) range "{{{
             let newline = []
             for i in range(len(tokens))
                 let token = tokens[i]
-                call add(newline, token . repeat(' ', maxLens[i]-strwidth(token)+1))
+                call add(newline, token . repeat(' ', maxLens[i]-s:StringWidth(token)+1))
             endfor
             call add(newlines, newline)
         else
@@ -1001,7 +1012,7 @@ fu! s:TruncateLines(lines, filePath) "{{{
     call map(a:lines, "s:TruncateHelp(v:val, a:filePath)")
 endfu "}}}
 fu! s:TruncateHelp(line, filePath) "{{{
-    let length = strwidth(join(a:line))
+    let length = s:StringWidth(join(a:line))
     let maxWidth = s:IsHorizontal() ? &columns : &columns/2
     let maxWidth = a:filePath != '' ? winwidth(0) : maxWidth
     if length > maxWidth
@@ -1023,7 +1034,7 @@ fu! s:MaxLengths(colls) "{{{
     let lengths = []
     for x in a:colls
         for y in range(len(x))
-            let length = strwidth(x[y])
+            let length = s:StringWidth(x[y])
             if length > get(lengths, y, 0)
                 if len(lengths)-1 < y
                     call add(lengths, length)
