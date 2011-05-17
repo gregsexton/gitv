@@ -44,6 +44,10 @@ if !exists('g:Gitv_OpenPreviewOnLaunch')
     let g:Gitv_OpenPreviewOnLaunch = 1
 endif
 
+if !exists('g:Gitv_PromptToDeleteMergeBranch')
+    let g:Gitv_PromptToDeleteMergeBranch = 0
+endif
+
 "this counts up each time gitv is opened to ensure a unique file name
 let g:Gitv_InstanceCounter = 0
 
@@ -455,6 +459,9 @@ fu! s:SetupMappings() "{{{
     nmap <buffer> <silent> S :call <SID>StatGitvCommit()<cr>
     vmap <buffer> <silent> S :call <SID>StatGitvCommit()<cr>
 
+    "TODO: find a different mapping
+    vmap <buffer> <silent> M :call <SID>MergeBranches()<cr>
+
     "movement
     nmap <buffer> <silent> x :call <SID>JumpToBranch(0)<cr>
     nmap <buffer> <silent> X :call <SID>JumpToBranch(1)<cr>
@@ -496,8 +503,8 @@ fu! s:GetGitvSha(lineNumber) "{{{
     let sha = matchstr(l, "\\[\\zs[0-9a-f]\\{7}\\ze\\]$")
     return sha
 endf "}}}
-fu! s:GetGitvRefs() "{{{
-    let l = getline('.')
+fu! s:GetGitvRefs(line) "{{{
+    let l = getline(a:line)
     let refstr = matchstr(l, "^\\(\\(|\\|\\/\\|\\\\\\|\\*\\)\\s\\?\\)*\\s\\+(\\zs.\\{-}\\ze)")
     let refs = split(refstr, ', ')
     return refs
@@ -692,7 +699,7 @@ fu! s:EditRange(rangeDelimiter)
     return 1
 endfu "}}}
 fu! s:CheckOutGitvCommit() "{{{
-    let allrefs = s:GetGitvRefs()
+    let allrefs = s:GetGitvRefs('.')
     let sha = s:GetGitvSha(line('.'))
     if sha == ""
         return
@@ -744,6 +751,48 @@ fu! s:DiffGitvCommit() range "{{{
     endif
     call s:MoveIntoPreviewAndExecute("Gdiff " . shalast, a:firstline != a:lastline)
 endf "}}}
+fu! s:MergeBranches() range "{{{
+    if a:firstline == a:lastline
+        echom 'Already up to date.'
+        return
+    endif
+    let refs = s:GetGitvRefs(a:firstline)
+    let refs += s:GetGitvRefs(a:lastline)
+    let refstr = join(refs, "\n")
+    let target = confirm("Choose target branch to merge into:", refstr . "\nCancel")
+    if target == 0 || get(refs, target-1, '')=='' | return | endif
+    let target = refs[target-1]
+
+    let merge = confirm("Choose branch to merge in to ".target.":", refstr . "\nCancel")
+    if merge == 0 || get(refs, merge-1, '')==''| return | endif
+    let merge = refs[merge-1]
+
+    let choices = "&Yes\n&No\n&Cancel"
+    let ff = confirm("Use fast-forward, if possible, to merge ". merge . ' in to ' . target .'?', choices)
+    if ff == 0 || ff == 3 | return | endif
+    let ff = ff == 1 ? ff : 0
+
+    if ff
+        echom 'Merging ' . merge . ' in to ' . target . ' with fast-forward.'
+    else
+        echom 'Merging ' . merge . ' in to ' . target . ' without fast-forward.'
+    endif
+    call s:PerformMerge(target, merge, ff)
+endfu
+fu! s:PerformMerge(target, mergeBranch, ff) abort
+    exec 'Git checkout ' . a:target
+    exec 'Git merge ' . (a:ff ? '--ff ' : '--no-ff ') . a:mergeBranch
+
+    if g:Gitv_PromptToDeleteMergeBranch
+        let choices = "&Yes\n&No\n&Cancel"
+        let delBranch = confirm("Delete merge branch: " . a:mergeBranch . '?', choices)
+        if delBranch == 0 || delBranch == 3 | return | endif
+        let delBranch = delBranch == 1 ? delBranch : 0
+        if delBranch
+            exec 'Git branch -d ' . a:mergeBranch
+        endif
+    endif
+endfu "}}}
 fu! s:StatGitvCommit() range "{{{
     let shafirst = s:GetGitvSha(a:firstline)
     let shalast  = s:GetGitvSha(a:lastline)
