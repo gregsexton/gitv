@@ -758,24 +758,28 @@ fu! s:MergeBranches() range "{{{
     endif
     let refs = s:GetGitvRefs(a:firstline)
     let refs += s:GetGitvRefs(a:lastline)
-    let refstr = join(refs, "\n")
-    let target = confirm("Choose target branch to merge into:", refstr . "\nCancel")
+    call filter(refs, 'v:val !=? "HEAD"')
+    if len(refs) < 2
+        echom 'Not enough refs found to perform a merge.'
+        return
+    endif
+    let target = confirm("Choose target branch to merge into:", join(refs, "\n") . "\nCancel")
     if target == 0 || get(refs, target-1, '')=='' | return | endif
-    let target = refs[target-1]
+    let target = remove(refs, target-1)
 
-    let merge = confirm("Choose branch to merge in to ".target.":", refstr . "\nCancel")
+    let merge = confirm("Choose branch to merge in to '".target."':", join(refs, "\n") . "\nCancel")
     if merge == 0 || get(refs, merge-1, '')==''| return | endif
     let merge = refs[merge-1]
 
     let choices = "&Yes\n&No\n&Cancel"
-    let ff = confirm("Use fast-forward, if possible, to merge ". merge . ' in to ' . target .'?', choices)
+    let ff = confirm("Use fast-forward, if possible, to merge '". merge . "' in to '" . target ."'?", choices)
     if ff == 0 || ff == 3 | return | endif
     let ff = ff == 1 ? ff : 0
 
     if ff
-        echom 'Merging ' . merge . ' in to ' . target . ' with fast-forward.'
+        echom "Merging '" . merge . "' in to '" . target . "' with fast-forward."
     else
-        echom 'Merging ' . merge . ' in to ' . target . ' without fast-forward.'
+        echom "Merging '" . merge . "' in to '" . target . "' without fast-forward."
     endif
     call s:PerformMerge(target, merge, ff)
 endfu
@@ -785,7 +789,7 @@ fu! s:PerformMerge(target, mergeBranch, ff) abort
 
     if g:Gitv_PromptToDeleteMergeBranch
         let choices = "&Yes\n&No\n&Cancel"
-        let delBranch = confirm("Delete merge branch: " . a:mergeBranch . '?', choices)
+        let delBranch = confirm("Delete merge branch: '" . a:mergeBranch . "'?", choices)
         if delBranch == 0 || delBranch == 3 | return | endif
         let delBranch = delBranch == 1 ? delBranch : 0
         if delBranch
