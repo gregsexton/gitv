@@ -509,14 +509,14 @@ fu! s:GetGitvRefs(line) "{{{
     let refs = split(refstr, ', ')
     return refs
 endf "}}}
-fu! GetConfirmString(list, ...) "{{{
+fu! s:GetConfirmString(list, ...) "{{{ {{{
     "returns a string to be used with confirm out of the choices in a:list
     "any extra arguments are appended to the list of choices
     "attempts to assign unique shortcut keys to every choice
     "NOTE: choices must not be single letters and duplicates will be removed.
     let totalList = a:list + a:000
-    let G = ConfirmStringBipartiteGraph(totalList)
-    let matches = MaxBipartiteMatching(G)
+    let G = s:ConfirmStringBipartiteGraph(totalList)
+    let matches = s:MaxBipartiteMatching(G)
     let choices = []
     for choice in totalList
         let shortcutChar = get(matches, choice, '')
@@ -525,22 +525,22 @@ fu! GetConfirmString(list, ...) "{{{
         endif
     endfor
     return join(choices, "\n")
-endfu
+endfu "}}}
 let s:SOURCE_NODE = '__SOURCE__'
 let s:SINK_NODE = '__SINK__'
-fu! MaxBipartiteMatching(G)
-    let f = InitialiseFlow(a:G)
-    let path = GetPathInResidual(a:G, f, s:SOURCE_NODE, s:SINK_NODE)
+fu! s:MaxBipartiteMatching(G) "{{{
+    let f = s:InitialiseFlow(a:G)
+    let path = s:GetPathInResidual(a:G, f, s:SOURCE_NODE, s:SINK_NODE)
     while path != []
         let pathCost = 100000 "max path cost should be 1 so this is effectively infinite
-        for [u, v] in Partition(path)
-            let pathCost = min([pathCost, GetEdge(a:G, u, v) - GetEdge(f, u, v)])
+        for [u, v] in s:Partition(path)
+            let pathCost = min([pathCost, s:GetEdge(a:G, u, v) - s:GetEdge(f, u, v)])
         endfor
-        for [u, v] in Partition(path)
-            let f[u][v] = GetEdge(f, u, v) + pathCost
-            let f[v][u] = -GetEdge(f, u, v)
+        for [u, v] in s:Partition(path)
+            let f[u][v] = s:GetEdge(f, u, v) + pathCost
+            let f[v][u] = -s:GetEdge(f, u, v)
         endfor
-        let path = GetPathInResidual(a:G, f, s:SOURCE_NODE, s:SINK_NODE)
+        let path = s:GetPathInResidual(a:G, f, s:SOURCE_NODE, s:SINK_NODE)
     endwhile
     "f holds max flow for each edge, due to construction: include edge iff flow is 1
     let returnDict = {}
@@ -552,8 +552,8 @@ fu! MaxBipartiteMatching(G)
         endfor
     endfor
     return returnDict
-endfu
-fu! Partition(path)
+endfu "}}}
+fu! s:Partition(path) "{{{
     "returns a list of [u,v] for the path
     if len(a:path) < 2 | return a:path | endif
     let parts = []
@@ -561,8 +561,8 @@ fu! Partition(path)
         let parts = add(parts, [a:path[i], a:path[i+1]])
     endfor
     return parts
-endfu
-fu! InitialiseFlow(G)
+endfu "}}}
+fu! s:InitialiseFlow(G) "{{{
     let f = {}
     for u in keys(a:G)
         let f[u] = {}
@@ -573,27 +573,27 @@ fu! InitialiseFlow(G)
         endfor
     endfor
     return f
-endfu
-fu! GetPathInResidual(G, f, s, t)
+endfu "}}}
+fu! s:GetPathInResidual(G, f, s, t) "{{{
     "setup residual network
     let Gf = deepcopy(a:f, 1)
     for u in keys(a:f)
         for v in keys(a:f[u])
-            let Gf[u][v] = GetEdge(a:G, u, v) - a:f[u][v]
+            let Gf[u][v] = s:GetEdge(a:G, u, v) - a:f[u][v]
         endfor
     endfor
-    return BFS(Gf, a:s, a:t)
-endfu
-fu! BFS(G, s, t)
+    return s:BFS(Gf, a:s, a:t)
+endfu "}}}
+fu! s:BFS(G, s, t) "{{{
     "BFS for t from s -- returns path
-    return BFSHelp(a:G, a:s, a:t, [], [], {})
-endfu
-fu! BFSHelp(G, s, t, q, acc, visited)
+    return s:BFSHelp(a:G, a:s, a:t, [], [], {})
+endfu "}}}
+fu! s:BFSHelp(G, s, t, q, acc, visited) "{{{
     if a:s == a:t
         return a:acc + [a:t]
     endif
     let a:visited[a:s] = 1
-    let children = GetEdges(a:G, a:s)
+    let children = s:GetEdges(a:G, a:s)
     call filter(children, '!get(a:visited, v:val, 0)')
     if empty(a:q) && empty(children) | return [] | endif
 
@@ -603,20 +603,20 @@ fu! BFSHelp(G, s, t, q, acc, visited)
         let newAcc = newq[0][0]
         let newq = newq[0][1] + newq[1:]
     endif
-    return BFSHelp(a:G, newq[0], a:t, newq[1:], newAcc, a:visited)
-endfu
-fu! GetEdge(G, u, v)
+    return s:BFSHelp(a:G, newq[0], a:t, newq[1:], newAcc, a:visited)
+endfu "}}}
+fu! s:GetEdge(G, u, v) "{{{
     "returns 0 if edge does not exist
     return get(get(a:G, a:u, {}), a:v, 0)
-endfu
-fu! GetEdges(G, u)
+endfu "}}}
+fu! s:GetEdges(G, u) "{{{
     let e = []
     for k in keys(get(a:G, a:u, {}))
         let e += a:G[a:u][k] > 0 ? [k] : []
     endfor
     return e
-endfu
-fu! ConfirmStringBipartiteGraph(list)
+endfu "}}}
+fu! s:ConfirmStringBipartiteGraph(list) "{{{
     let G = {}
     let G[s:SOURCE_NODE] = {}
     for word in a:list
@@ -630,7 +630,7 @@ fu! ConfirmStringBipartiteGraph(list)
         endfor
     endfor
     return G
-endfu "}}}
+endfu "}}} }}}
 fu! s:RecordBufferExecAndWipe(cmd, wipe) "{{{
     "this should be used to replace the buffer in a window
     let buf = bufnr('%')
