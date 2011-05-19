@@ -521,7 +521,7 @@ fu! s:GetConfirmString(list, ...) "{{{ {{{
     for choice in totalList
         let shortcutChar = get(matches, choice, '')
         if shortcutChar != ''
-            call add(choices, substitute(choice, shortcutChar, '\&\0', ''))
+            call add(choices, substitute(choice, '\c'.shortcutChar, '\&\0', ''))
         endif
     endfor
     return join(choices, "\n")
@@ -535,7 +535,7 @@ fu! s:ConfirmStringBipartiteGraph(list) "{{{
         let G[word] = {}
         let G[s:SOURCE_NODE][word] = 1
         for i in range(len(word))
-            let char = word[i]
+            let char = tolower(word[i])
             let G[word][char] = 1
             if !has_key(G, char) | let G[char] = {} | endif
             let G[char][s:SINK_NODE] = 1
@@ -827,8 +827,8 @@ fu! s:CheckOutGitvCommit() "{{{
         return
     endif
     let refs   = allrefs + [sha]
-    let refstr = s:GetConfirmString(refs)
-    let choice = confirm("Checkout commit:", refstr . "\nCancel")
+    let refstr = s:GetConfirmString(refs, 'Cancel')
+    let choice = confirm("Checkout commit:", refstr)
     if choice == 0
         return
     endif
