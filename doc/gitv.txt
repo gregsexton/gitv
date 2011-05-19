@@ -207,6 +207,18 @@ Where appropriate the differences in action is described for the two modes.
                         normal mode. However, it only shows what has changed in
                         the range of commits that are highlighted.
 
+    visual      m       Merges the commit in either the top or bottom line of
+                        the selection in to the commit specified by the other
+                        end of the selection. This uses prompts to guide you
+                        through the merging and should be fairly intuitive. It
+                        will also confirm if you wish to perform a
+                        fast-forward merge or not.
+
+                        gitv doesn't allow you to merge arbitrary commits. The
+                        lines at the top and bottom of the selection must
+                        contain refs in the form of tags, remotes or local
+                        branches.
+
 Here is a list of extra key mappings that can be used to efficiently move
 around a repository history in the browser window.
 
@@ -379,6 +391,15 @@ browser mode. If set to 0 then no preview window is displayed until a commit
 is opened. This option has no effect in file mode.
 >
     g:Gitv_OpenPreviewOnLaunch = 1
+<
+
+4.8 Prompt to Delete Merge Branch
+
+If set to 1 then, when performing a merge using gitv, you will be prompted if
+you wish to delete the topic branch. If you often merge a branch into another
+and rarely wish to delete branches, set this to 0. The default is 0.
+>
+    let g:Gitv_PromptToDeleteMergeBranch = 0
 <
 ==============================================================================
 5. Changelog                                                *gitv-changelog*
