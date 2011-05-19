@@ -528,6 +528,21 @@ fu! s:GetConfirmString(list, ...) "{{{ {{{
 endfu "}}}
 let s:SOURCE_NODE = '__SOURCE__'
 let s:SINK_NODE = '__SINK__'
+fu! s:ConfirmStringBipartiteGraph(list) "{{{
+    let G = {}
+    let G[s:SOURCE_NODE] = {}
+    for word in a:list
+        let G[word] = {}
+        let G[s:SOURCE_NODE][word] = 1
+        for i in range(len(word))
+            let char = word[i]
+            let G[word][char] = 1
+            if !has_key(G, char) | let G[char] = {} | endif
+            let G[char][s:SINK_NODE] = 1
+        endfor
+    endfor
+    return G
+endfu "}}}
 fu! s:MaxBipartiteMatching(G) "{{{
     let f = s:InitialiseFlow(a:G)
     let path = s:GetPathInResidual(a:G, f, s:SOURCE_NODE, s:SINK_NODE)
@@ -553,15 +568,6 @@ fu! s:MaxBipartiteMatching(G) "{{{
     endfor
     return returnDict
 endfu "}}}
-fu! s:Partition(path) "{{{
-    "returns a list of [u,v] for the path
-    if len(a:path) < 2 | return a:path | endif
-    let parts = []
-    for i in range(len(a:path)-1)
-        let parts = add(parts, [a:path[i], a:path[i+1]])
-    endfor
-    return parts
-endfu "}}}
 fu! s:InitialiseFlow(G) "{{{
     let f = {}
     for u in keys(a:G)
@@ -583,6 +589,15 @@ fu! s:GetPathInResidual(G, f, s, t) "{{{
         endfor
     endfor
     return s:BFS(Gf, a:s, a:t)
+endfu "}}}
+fu! s:Partition(path) "{{{
+    "returns a list of [u,v] for the path
+    if len(a:path) < 2 | return a:path | endif
+    let parts = []
+    for i in range(len(a:path)-1)
+        let parts = add(parts, [a:path[i], a:path[i+1]])
+    endfor
+    return parts
 endfu "}}}
 fu! s:BFS(G, s, t) "{{{
     "BFS for t from s -- returns path
@@ -615,21 +630,6 @@ fu! s:GetEdges(G, u) "{{{
         let e += a:G[a:u][k] > 0 ? [k] : []
     endfor
     return e
-endfu "}}}
-fu! s:ConfirmStringBipartiteGraph(list) "{{{
-    let G = {}
-    let G[s:SOURCE_NODE] = {}
-    for word in a:list
-        let G[word] = {}
-        let G[s:SOURCE_NODE][word] = 1
-        for i in range(len(word))
-            let char = word[i]
-            let G[word][char] = 1
-            if !has_key(G, char) | let G[char] = {} | endif
-            let G[char][s:SINK_NODE] = 1
-        endfor
-    endfor
-    return G
 endfu "}}} }}}
 fu! s:RecordBufferExecAndWipe(cmd, wipe) "{{{
     "this should be used to replace the buffer in a window
