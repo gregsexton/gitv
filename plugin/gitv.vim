@@ -44,6 +44,10 @@ if !exists('g:Gitv_OpenPreviewOnLaunch')
     let g:Gitv_OpenPreviewOnLaunch = 1
 endif
 
+if !exists('g:Gitv_PromptToDeleteMergeBranch')
+    let g:Gitv_PromptToDeleteMergeBranch = 0
+endif
+
 "this counts up each time gitv is opened to ensure a unique file name
 let g:Gitv_InstanceCounter = 0
 
@@ -269,7 +273,7 @@ fu! s:ConstructRangeBuffer(commitCount, extraArgs, filePath, range) "{{{
     %delete
 
     "necessary as order is important; can't just iterate over keys(slices)
-    let hashCmd       = "log " . a:extraArgs 
+    let hashCmd       = "log " . a:extraArgs
     let hashCmd      .= " --no-color --pretty=format:%H -".a:commitCount." -- " . a:filePath
     let [result, cmd] = s:RunGitCommand(hashCmd, 0)
     let hashes        = split(result, '\n')
@@ -455,6 +459,8 @@ fu! s:SetupMappings() "{{{
     nmap <buffer> <silent> S :call <SID>StatGitvCommit()<cr>
     vmap <buffer> <silent> S :call <SID>StatGitvCommit()<cr>
 
+    vmap <buffer> <silent> m :call <SID>MergeBranches()<cr>
+
     "movement
     nmap <buffer> <silent> x :call <SID>JumpToBranch(0)<cr>
     nmap <buffer> <silent> X :call <SID>JumpToBranch(1)<cr>
@@ -496,12 +502,134 @@ fu! s:GetGitvSha(lineNumber) "{{{
     let sha = matchstr(l, "\\[\\zs[0-9a-f]\\{7}\\ze\\]$")
     return sha
 endf "}}}
-fu! s:GetGitvRefs() "{{{
-    let l = getline('.')
+fu! s:GetGitvRefs(line) "{{{
+    let l = getline(a:line)
     let refstr = matchstr(l, "^\\(\\(|\\|\\/\\|\\\\\\|\\*\\)\\s\\?\\)*\\s\\+(\\zs.\\{-}\\ze)")
     let refs = split(refstr, ', ')
     return refs
 endf "}}}
+fu! s:GetConfirmString(list, ...) "{{{ {{{
+    "returns a string to be used with confirm out of the choices in a:list
+    "any extra arguments are appended to the list of choices
+    "attempts to assign unique shortcut keys to every choice
+    "NOTE: choices must not be single letters and duplicates will be removed.
+    let totalList = a:list + a:000
+    let G = s:ConfirmStringBipartiteGraph(totalList)
+    let matches = s:MaxBipartiteMatching(G)
+    let choices = []
+    for choice in totalList
+        let shortcutChar = get(matches, choice, '')
+        if shortcutChar != ''
+            call add(choices, substitute(choice, '\c'.shortcutChar, '\&\0', ''))
+        endif
+    endfor
+    return join(choices, "\n")
+endfu "}}}
+let s:SOURCE_NODE = '__SOURCE__'
+let s:SINK_NODE = '__SINK__'
+fu! s:ConfirmStringBipartiteGraph(list) "{{{
+    let G = {}
+    let G[s:SOURCE_NODE] = {}
+    for word in a:list
+        let G[word] = {}
+        let G[s:SOURCE_NODE][word] = 1
+        for i in range(len(word))
+            let char = tolower(word[i])
+            let G[word][char] = 1
+            if !has_key(G, char) | let G[char] = {} | endif
+            let G[char][s:SINK_NODE] = 1
+        endfor
+    endfor
+    return G
+endfu "}}}
+fu! s:MaxBipartiteMatching(G) "{{{
+    let f = s:InitialiseFlow(a:G)
+    let path = s:GetPathInResidual(a:G, f, s:SOURCE_NODE, s:SINK_NODE)
+    while path != []
+        let pathCost = 100000 "max path cost should be 1 so this is effectively infinite
+        for [u, v] in s:Partition(path)
+            let pathCost = min([pathCost, s:GetEdge(a:G, u, v) - s:GetEdge(f, u, v)])
+        endfor
+        for [u, v] in s:Partition(path)
+            let f[u][v] = s:GetEdge(f, u, v) + pathCost
+            let f[v][u] = -s:GetEdge(f, u, v)
+        endfor
+        let path = s:GetPathInResidual(a:G, f, s:SOURCE_NODE, s:SINK_NODE)
+    endwhile
+    "f holds max flow for each edge, due to construction: include edge iff flow is 1
+    let returnDict = {}
+    for n1 in keys(f)
+        for [n2, val] in items(f[n1])
+            if val == 1
+                let returnDict[n1] = n2
+            endif
+        endfor
+    endfor
+    return returnDict
+endfu "}}}
+fu! s:InitialiseFlow(G) "{{{
+    let f = {}
+    for u in keys(a:G)
+        let f[u] = {}
+        for v in keys(a:G[u])
+            let f[u][v] = 0
+            if !has_key(f, v) | let f[v] = {} | endif
+            let f[v][u] = 0
+        endfor
+    endfor
+    return f
+endfu "}}}
+fu! s:GetPathInResidual(G, f, s, t) "{{{
+    "setup residual network
+    let Gf = deepcopy(a:f, 1)
+    for u in keys(a:f)
+        for v in keys(a:f[u])
+            let Gf[u][v] = s:GetEdge(a:G, u, v) - a:f[u][v]
+        endfor
+    endfor
+    return s:BFS(Gf, a:s, a:t)
+endfu "}}}
+fu! s:Partition(path) "{{{
+    "returns a list of [u,v] for the path
+    if len(a:path) < 2 | return a:path | endif
+    let parts = []
+    for i in range(len(a:path)-1)
+        let parts = add(parts, [a:path[i], a:path[i+1]])
+    endfor
+    return parts
+endfu "}}}
+fu! s:BFS(G, s, t) "{{{
+    "BFS for t from s -- returns path
+    return s:BFSHelp(a:G, a:s, a:t, [], [], {})
+endfu "}}}
+fu! s:BFSHelp(G, s, t, q, acc, visited) "{{{
+    if a:s == a:t
+        return a:acc + [a:t]
+    endif
+    let a:visited[a:s] = 1
+    let children = s:GetEdges(a:G, a:s)
+    call filter(children, '!get(a:visited, v:val, 0)')
+    if empty(a:q) && empty(children) | return [] | endif
+
+    let newq = empty(children) ? a:q : a:q + [[a:acc+[a:s], children]]
+    let newAcc = a:acc
+    if type(newq[0]) == type([])
+        let newAcc = newq[0][0]
+        let newq = newq[0][1] + newq[1:]
+    endif
+    return s:BFSHelp(a:G, newq[0], a:t, newq[1:], newAcc, a:visited)
+endfu "}}}
+fu! s:GetEdge(G, u, v) "{{{
+    "returns 0 if edge does not exist
+    return get(get(a:G, a:u, {}), a:v, 0)
+endfu "}}}
+fu! s:GetEdges(G, u) "{{{
+    let e = []
+    for k in keys(get(a:G, a:u, {}))
+        let e += a:G[a:u][k] > 0 ? [k] : []
+    endfor
+    return e
+endfu "}}} }}}
 fu! s:RecordBufferExecAndWipe(cmd, wipe) "{{{
     "this should be used to replace the buffer in a window
     let buf = bufnr('%')
@@ -692,14 +820,14 @@ fu! s:EditRange(rangeDelimiter)
     return 1
 endfu "}}}
 fu! s:CheckOutGitvCommit() "{{{
-    let allrefs = s:GetGitvRefs()
+    let allrefs = s:GetGitvRefs('.')
     let sha = s:GetGitvSha(line('.'))
     if sha == ""
         return
     endif
     let refs   = allrefs + [sha]
-    let refstr = join(refs, "\n")
-    let choice = confirm("Checkout commit:", refstr . "\nCancel")
+    let refstr = s:GetConfirmString(refs, 'Cancel')
+    let choice = confirm("Checkout commit:", refstr)
     if choice == 0
         return
     endif
@@ -744,6 +872,54 @@ fu! s:DiffGitvCommit() range "{{{
     endif
     call s:MoveIntoPreviewAndExecute("Gdiff " . shalast, a:firstline != a:lastline)
 endf "}}}
+fu! s:MergeBranches() range "{{{
+    if a:firstline == a:lastline
+        echom 'Already up to date.'
+        return
+    endif
+    let refs = s:GetGitvRefs(a:firstline)
+    let refs += s:GetGitvRefs(a:lastline)
+    call filter(refs, 'v:val !=? "HEAD"')
+    if len(refs) < 2
+        echom 'Not enough refs found to perform a merge.'
+        return
+    endif
+    let target = confirm("Choose target branch to merge into:", s:GetConfirmString(refs, "Cancel"))
+    if target == 0 || get(refs, target-1, '')=='' | return | endif
+    let target = remove(refs, target-1)
+    let target = substitute(target, "^[tr]:", "", "")
+
+    let merge = confirm("Choose branch to merge in to '".target."':", s:GetConfirmString(refs, "Cancel"))
+    if merge == 0 || get(refs, merge-1, '')==''| return | endif
+    let merge = refs[merge-1]
+    let merge = substitute(merge, "^[tr]:", "", "")
+
+    let choices = "&Yes\n&No\n&Cancel"
+    let ff = confirm("Use fast-forward, if possible, to merge '". merge . "' in to '" . target ."'?", choices)
+    if ff == 0 || ff == 3 | return | endif
+    let ff = ff == 1 ? ff : 0
+
+    if ff
+        echom "Merging '" . merge . "' in to '" . target . "' with fast-forward."
+    else
+        echom "Merging '" . merge . "' in to '" . target . "' without fast-forward."
+    endif
+    call s:PerformMerge(target, merge, ff)
+endfu
+fu! s:PerformMerge(target, mergeBranch, ff) abort
+    exec 'Git checkout ' . a:target
+    exec 'Git merge ' . (a:ff ? '--ff ' : '--no-ff ') . a:mergeBranch
+
+    if g:Gitv_PromptToDeleteMergeBranch
+        let choices = "&Yes\n&No\n&Cancel"
+        let delBranch = confirm("Delete merge branch: '" . a:mergeBranch . "'?", choices)
+        if delBranch == 0 || delBranch == 3 | return | endif
+        let delBranch = delBranch == 1 ? delBranch : 0
+        if delBranch
+            exec 'Git branch -d ' . a:mergeBranch
+        endif
+    endif
+endfu "}}}
 fu! s:StatGitvCommit() range "{{{
     let shafirst = s:GetGitvSha(a:firstline)
     let shalast  = s:GetGitvSha(a:lastline)
