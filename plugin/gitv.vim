@@ -888,10 +888,12 @@ fu! s:MergeBranches() range "{{{
     let target = confirm("Choose target branch to merge into:", s:GetConfirmString(refs, "Cancel"))
     if target == 0 || get(refs, target-1, '')=='' | return | endif
     let target = remove(refs, target-1)
+    let target = substitute(target, "^[tr]:", "", "")
 
     let merge = confirm("Choose branch to merge in to '".target."':", s:GetConfirmString(refs, "Cancel"))
     if merge == 0 || get(refs, merge-1, '')==''| return | endif
     let merge = refs[merge-1]
+    let merge = substitute(merge, "^[tr]:", "", "")
 
     let choices = "&Yes\n&No\n&Cancel"
     let ff = confirm("Use fast-forward, if possible, to merge '". merge . "' in to '" . target ."'?", choices)
