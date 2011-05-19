@@ -459,8 +459,7 @@ fu! s:SetupMappings() "{{{
     nmap <buffer> <silent> S :call <SID>StatGitvCommit()<cr>
     vmap <buffer> <silent> S :call <SID>StatGitvCommit()<cr>
 
-    "TODO: find a different mapping
-    vmap <buffer> <silent> M :call <SID>MergeBranches()<cr>
+    vmap <buffer> <silent> m :call <SID>MergeBranches()<cr>
 
     "movement
     nmap <buffer> <silent> x :call <SID>JumpToBranch(0)<cr>
