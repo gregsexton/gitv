@@ -219,6 +219,10 @@ Where appropriate the differences in action is described for the two modes.
                         contain refs in the form of tags, remotes or local
                         branches.
 
+    normal      git     Enters command mode with ":Git " already typed for
+                        you. Just a convenient shortcut for executing git
+                        commands and watching them affect the repository.
+
 Here is a list of extra key mappings that can be used to efficiently move
 around a repository history in the browser window.
 

@@ -467,6 +467,9 @@ fu! s:SetupMappings() "{{{
     nmap <buffer> <silent> r :call <SID>JumpToRef(0)<cr>
     nmap <buffer> <silent> R :call <SID>JumpToRef(1)<cr>
     nmap <buffer> <silent> P :call <SID>JumpToHead()<cr>
+
+    "misc
+    nmap <buffer> git :Git 
 endf "}}}
 fu! s:SetupBufferCommands(fileMode) "{{{
     silent command! -buffer -nargs=* -complete=customlist,s:fugitive_GitComplete Git call <sid>MoveIntoPreviewAndExecute("unsilent Git <args>",1)|normal u
