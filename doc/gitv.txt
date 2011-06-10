@@ -139,7 +139,7 @@ Where appropriate the differences in action is described for the two modes.
 
     normal      <cr>    Opens a commit. In browser mode this will show the
                         commit header information including the commit
-                        message. It will also dispaly a full diff showing all the
+                        message. It will also display a full diff showing all the
                         changes to files.
 
                         Tip: if you press <cr> on anything sensible you can
