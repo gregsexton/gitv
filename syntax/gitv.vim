@@ -13,7 +13,7 @@ endif
 
 syn match gitvSubject /.*/ 
 
-syn match gitvDate /\(\d\+ years\?, \)\?\d\+ \%(second\|seconds\|minute\|minutes\|hour\|hours\|day\|days\|week\|weeks\|month\|months\|year\) ago/ contained containedin=gitvSubject
+syn match gitvDate /\(\d\+ years\?, \)\?\d\+ \%(second\|minute\|hour\|day\|week\|month\|year\)s\? ago/ contained containedin=gitvSubject
 syn match gitvHash /\[[0-9a-f]\{7}\]$/ contained containedin=gitvSubject
 
 syn match  gitvGraphEdge9 /_\?\(|\|-\(-\|\.\)\|\/|\?\|\\\|\*\|+\|=\)\s\?/ nextgroup=gitvGraphEdge0,gitvRef,gitvSubject skipwhite
