@@ -640,7 +640,9 @@ fu! s:RecordBufferExecAndWipe(cmd, wipe) "{{{
     if a:wipe
         "safe guard against wiping out buffer you're in
         if bufnr('%') != buf && bufexists(buf)
-            exec 'bdelete ' . buf
+            " ignore errors from bdelete -- the user won't care if it's
+            " already deleted
+            exec 'silent! bdelete ' . buf
         endif
     endif
 endfu "}}}
