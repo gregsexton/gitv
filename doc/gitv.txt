@@ -71,7 +71,9 @@ types. You will also need the |fugitive| plugin installed and working for
                   details.
 
 The following abbreviation is also defined so that you can type :gitv without
-capitalisation.
+capitalisation. The abbreviation is defined in such a way that this
+substitution is only performed when 'gitv' is the first word on the command
+line.
 >
     cabbrev gitv Gitv
 <

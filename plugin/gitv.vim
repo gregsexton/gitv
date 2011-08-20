@@ -13,12 +13,14 @@ let s:savecpo = &cpo
 set cpo&vim
 
 "configurable options:
-"g:Gitv_CommitStep             - int
-"g:Gitv_OpenHorizontal         - {0,1,'AUTO'}
-"g:Gitv_GitExecutable          - string
-"g:Gitv_WipeAllOnClose         - int
-"g:Gitv_WrapLines              - {0,1}
-"g:Gitv_TruncateCommitSubjects - {0,1}
+"g:Gitv_CommitStep                - int
+"g:Gitv_OpenHorizontal            - {0,1,'AUTO'}
+"g:Gitv_GitExecutable             - string
+"g:Gitv_WipeAllOnClose            - int
+"g:Gitv_WrapLines                 - {0,1}
+"g:Gitv_TruncateCommitSubjects    - {0,1}
+"g:Gitv_OpenPreviewOnLaunch       - {0,1}
+"g:Gitv_PromptToDeleteMergeBranch - {0,1}
 
 if !exists("g:Gitv_CommitStep")
     let g:Gitv_CommitStep = &lines
@@ -55,7 +57,7 @@ let s:localUncommitedMsg = 'Local uncommitted changes, not checked in to index.'
 let s:localCommitedMsg   = 'Local changes checked in to index but not committed.'
 
 command! -nargs=* -range -bang Gitv call s:OpenGitv(shellescape(<q-args>), <bang>0, <line1>, <line2>)
-cabbrev gitv Gitv
+cabbrev gitv <c-r>=(getcmdtype()==':' && getcmdpos()==1 ? 'Gitv' : 'gitv')<CR>
 
 "Public API:"{{{
 fu! Gitv_OpenGitCommand(command, windowCmd, ...) "{{{
