@@ -528,6 +528,7 @@ fu! s:GetConfirmString(list, ...) "{{{ {{{
     endfor
     return join(choices, "\n")
 endfu "}}}
+"Max Bipartite Matching Functions: "{{{
 let s:SOURCE_NODE = '__SOURCE__'
 let s:SINK_NODE = '__SINK__'
 fu! s:ConfirmStringBipartiteGraph(list) "{{{
@@ -632,7 +633,7 @@ fu! s:GetEdges(G, u) "{{{
         let e += a:G[a:u][k] > 0 ? [k] : []
     endfor
     return e
-endfu "}}} }}}
+endfu "}}} }}} }}}
 fu! s:RecordBufferExecAndWipe(cmd, wipe) "{{{
     "this should be used to replace the buffer in a window
     let buf = bufnr('%')
