@@ -978,8 +978,7 @@ else
   fu! s:StringWidth(string)
     return len(split(a:string,'\zs'))
   endfu
-end
-"}}}
+end "}}}
 fu! s:Align(seperator, filePath) range "{{{
     let lines = getline(a:firstline, a:lastline)
     call map(lines, 'split(v:val, a:seperator)')
