@@ -410,6 +410,12 @@ and rarely wish to delete branches, set this to 0. The default is 0.
 ==============================================================================
 5. Changelog                                                *gitv-changelog*
 
+1.1         Nodes displaying local changes are inserted above HEAD ref.
+            Added range feature.
+            Merging branches is possible in gitv.
+            strwidth bugfix (thanks Adam Reeve).
+            Prevent bdelete errors (thanks pydave).
+
 1.0         First release. I hope you enjoy gitv!
 
 ==============================================================================
