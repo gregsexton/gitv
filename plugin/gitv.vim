@@ -114,7 +114,9 @@ fu! Gitv_OpenGitCommand(command, windowCmd, ...) "{{{
         silent setlocal noswapfile
         silent setlocal bufhidden=wipe
         silent setlocal nonumber
-        silent setlocal norelativenumber
+        if exists('+relativenumber')
+            silent setlocal norelativenumber
+        endif
         if g:Gitv_WrapLines
             silent setlocal wrap
         else
