@@ -450,8 +450,14 @@ fu! s:SetupMappings() "{{{
     nnoremap <buffer> <silent> o :call <SID>OpenGitvCommit("Gsplit", 0)<cr>
     nnoremap <buffer> <silent> O :call <SID>OpenGitvCommit("Gtabedit", 0)<cr>
     nnoremap <buffer> <silent> s :call <SID>OpenGitvCommit("Gvsplit", 0)<cr>
+    "fuzzyfinder style key mappings
+    nnoremap <buffer> <silent> <c-j> :call <SID>OpenGitvCommit("Gsplit", 0)<cr>
+    nnoremap <buffer> <silent> <c-k> :call <SID>OpenGitvCommit("Gvsplit", 0)<cr>
+    nnoremap <buffer> <silent> <c-l> :call <SID>OpenGitvCommit("Gtabedit", 0)<cr>
     "force opening the fugitive buffer for the commit
     nnoremap <buffer> <silent> <c-cr> :call <SID>OpenGitvCommit("Gedit", 1)<cr>
+    "for the terminal
+    nnoremap <buffer> <silent> i :call <SID>OpenGitvCommit("Gedit", 1)<cr>
 
     nnoremap <buffer> <silent> q :call <SID>CloseGitv()<cr>
     nnoremap <buffer> <silent> u :call <SID>LoadGitv('', 1, b:Gitv_CommitCount, b:Gitv_ExtraArgs, <SID>GetRelativeFilePath(), <SID>GetRange())<cr>

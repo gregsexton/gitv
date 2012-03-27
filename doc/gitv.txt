@@ -163,11 +163,14 @@ Where appropriate the differences in action is described for the two modes.
                         current working copy of the focused file.
 
     normal      o       The same as <cr> but opens in a new |split|.
+                <c-j>
     normal      O       The same as <cr> but opens in a new |tab|.
+                <c-l>
     normal      s       The same as <cr> but opens in a new |vsplit|.
+                <c-k>
 
-    normal      <c-cr>  This performs the same thing as <cr> in browser mode.
-                        In file mode it opens the commit details rather than
+    normal      i       This performs the same thing as <cr> in browser mode.
+                <c-cr>  In file mode it opens the commit details rather than
                         the focused file.
 
     normal      q       Quits gitv. In browser mode this will close the entire
