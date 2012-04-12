@@ -410,6 +410,16 @@ and rarely wish to delete branches, set this to 0. The default is 0.
 >
     let g:Gitv_PromptToDeleteMergeBranch = 0
 <
+
+4.9 Do not map the control key.
+
+If this is set then no mappings that use the control key will be created. The
+control key mappings are all alternatives and so can be disabled without
+losing functionality. The default is to create the mappings.
+>
+    let g:Gitv_DoNotMapCtrlKey = 1
+>
+
 ==============================================================================
 5. Changelog                                                *gitv-changelog*
 
