@@ -865,6 +865,11 @@ fu! s:CloseGitv() "{{{
     if s:IsFileMode()
         q
     else
+        "only tab: quit vim
+        if tabpagenr() == tabpagenr('$') && tabpagenr() == 1
+            qa
+        endif
+
         if g:Gitv_WipeAllOnClose
             silent windo setlocal bufhidden=wipe
         endif
