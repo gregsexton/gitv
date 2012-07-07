@@ -79,7 +79,7 @@ fu! Gitv_OpenGitCommand(command, windowCmd, ...) "{{{
         if a:windowCmd == ''
             silent setlocal modifiable
             silent setlocal noreadonly
-            1,$ d
+            1,$ d _
         else
             let goBackTo       = winnr()
             let dir            = s:GetRepoDir()
