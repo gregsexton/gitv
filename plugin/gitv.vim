@@ -952,6 +952,7 @@ fu! s:MergeToCurrent()
         return
     endif
     let target = refs[0]
+    let target = substitute(target, "^[tr]:", "", "")
 
     let choices = "&Yes\n&No\n&Cancel"
     let ff = confirm("Use fast-forward, if possible, to merge '". target . "' in to 'HEAD'?", choices)
