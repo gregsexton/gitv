@@ -472,6 +472,7 @@ fu! s:SetupMappings() "{{{
     vnoremap <buffer> <silent> S :call <SID>StatGitvCommit()<cr>
 
     vnoremap <buffer> <silent> m :call <SID>MergeBranches()<cr>
+    nnoremap <buffer> <silent> <leader>m :call <SID>MergeToCurrent()<cr>
 
     "movement
     nnoremap <buffer> <silent> x :call <SID>JumpToBranch(0)<cr>
@@ -481,7 +482,7 @@ fu! s:SetupMappings() "{{{
     nnoremap <buffer> <silent> P :call <SID>JumpToHead()<cr>
 
     "misc
-    nnoremap <buffer> git :Git 
+    nnoremap <buffer> git :Git<space>
 endf "}}}
 fu! s:SetupBufferCommands(fileMode) "{{{
     silent command! -buffer -nargs=* -complete=customlist,s:fugitive_GitComplete Git call <sid>MoveIntoPreviewAndExecute("unsilent Git <args>",1)|normal u
@@ -942,6 +943,22 @@ fu! s:PerformMerge(target, mergeBranch, ff) abort
             exec 'Git branch -d ' . a:mergeBranch
         endif
     endif
+endfu
+fu! s:MergeToCurrent()
+    let refs = s:GetGitvRefs(".")
+    call filter(refs, 'v:val !=? "HEAD"')
+    if len(refs) < 1
+        echoerr 'No ref found to perform a merge.'
+        return
+    endif
+    let target = refs[0]
+
+    let choices = "&Yes\n&No\n&Cancel"
+    let ff = confirm("Use fast-forward, if possible, to merge '". target . "' in to 'HEAD'?", choices)
+    if ff == 0 || ff == 3 | return | endif
+    let ff = ff == 1 ? ff : 0
+
+    call s:PerformMerge("HEAD", target, ff)
 endfu "}}}
 fu! s:StatGitvCommit() range "{{{
     let shafirst = s:GetGitvSha(a:firstline)
