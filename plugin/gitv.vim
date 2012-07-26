@@ -446,6 +446,8 @@ fu! s:AddFileModeSpecific(filePath, range, commitCount) "{{{
 endfu "}}}
 fu! s:SetupMappings() "{{{
     "operations
+    nnoremap <buffer> <silent> <C-n> <C-n>:call <SID>OpenGitvCommit("Gedit", 0)<cr>
+    nnoremap <buffer> <silent> <C-p> <C-p>:call <SID>OpenGitvCommit("Gedit", 0)<cr>
     nnoremap <buffer> <silent> <cr> :call <SID>OpenGitvCommit("Gedit", 0)<cr>
     nnoremap <buffer> <silent> o :call <SID>OpenGitvCommit("Gsplit", 0)<cr>
     nnoremap <buffer> <silent> O :call <SID>OpenGitvCommit("Gtabedit", 0)<cr>
@@ -483,6 +485,8 @@ fu! s:SetupMappings() "{{{
 
     "misc
     nnoremap <buffer> git :Git<space>
+    " yank the commit hash
+    nnoremap <buffer> yc mc0f[w"+yw`c
 endf "}}}
 fu! s:SetupBufferCommands(fileMode) "{{{
     silent command! -buffer -nargs=* -complete=customlist,s:fugitive_GitComplete Git call <sid>MoveIntoPreviewAndExecute("unsilent Git <args>",1)|normal u
