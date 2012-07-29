@@ -163,6 +163,14 @@ modes.
                           Pressing <cr> on the top line in file mode opens the
                           current working copy of the focused file.
 
+    normal      <c-n>     In either browser or file mode, this moves down to
+                          the next commit and opens it. This allows you to
+                          quickly move from commit to commit and view either
+                          the commit details or the file itself, depending on
+                          the mode, in one action.
+
+    normal      <c-p>     The same as <c-n> but move back a commit.
+
     normal      o         The same as <cr> but opens in a new |split|.
                 <c-j>
     normal      O         The same as <cr> but opens in a new |tab|.
