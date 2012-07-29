@@ -241,6 +241,12 @@ modes.
                           you. Just a convenient shortcut for executing git
                           commands and watching them affect the repository.
 
+    normal      yc        Copy the sha on the current line in either mode.
+                          This also copies it to the '+' register so that it
+                          can be pasted externally. If there is no commit on
+                          the current line the behaviour (although harmless)
+                          is undefined.
+
 Here is a list of extra key mappings that can be used to efficiently move
 around a repository history in the browser window.
 
