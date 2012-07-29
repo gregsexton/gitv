@@ -486,7 +486,7 @@ fu! s:SetupMappings() "{{{
     "misc
     nnoremap <buffer> git :Git<space>
     " yank the commit hash
-    nnoremap <buffer> <silent> yc m'0f[w"+yw`'
+    nnoremap <buffer> <silent> yc m'$F[w"+yw`'
 endf "}}}
 fu! s:SetupBufferCommands(fileMode) "{{{
     silent command! -buffer -nargs=* -complete=customlist,s:fugitive_GitComplete Git call <sid>MoveIntoPreviewAndExecute("unsilent Git <args>",1)|normal u
