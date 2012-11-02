@@ -188,6 +188,9 @@ modes.
                           regardless of any windows you may have opened as well
                           as the gitv windows.
 
+    normal      a         Switches the '--all' argument and updates the browser
+                          window.
+
     normal      u         Forces an update of the content of the browser window.
 
     normal      co        Performs a 'git checkout' of the commit the cursor is
