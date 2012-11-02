@@ -251,6 +251,15 @@ fu! s:LoadGitv(direction, reload, commitCount, extraArgs, filePath, range) "{{{
     echom "Loaded up to " . a:commitCount . " commits."
     return 1
 endf "}}}
+fu! s:ToggleArg(args, toggle)
+    if matchstr(a:args, a:toggle) == ''
+      let NewArgs = a:args . ' ' . a:toggle
+    else
+      let NewArgs = substitute(a:args, ' ' . a:toggle, '', '')
+    endif
+    let b:Gitv_ExtraArgs = NewArgs
+    return NewArgs
+endf "}}}
 fu! s:ConstructAndExecuteCmd(direction, commitCount, extraArgs, filePath, range) "{{{
     if a:range == [] "no range, setup and execute the command
         let cmd  = "log " . a:extraArgs
@@ -465,6 +474,7 @@ fu! s:SetupMappings() "{{{
 
     nnoremap <buffer> <silent> q :call <SID>CloseGitv()<cr>
     nnoremap <buffer> <silent> u :call <SID>LoadGitv('', 1, b:Gitv_CommitCount, b:Gitv_ExtraArgs, <SID>GetRelativeFilePath(), <SID>GetRange())<cr>
+    nnoremap <buffer> <silent> a :call <SID>LoadGitv('', 0, b:Gitv_CommitCount, <SID>ToggleArg(b:Gitv_ExtraArgs, '--all'), <SID>GetRelativeFilePath(), <SID>GetRange())<cr>
     nnoremap <buffer> <silent> co :call <SID>CheckOutGitvCommit()<cr>
 
     nnoremap <buffer> <silent> D :call <SID>DiffGitvCommit()<cr>
