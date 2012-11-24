@@ -251,7 +251,7 @@ fu! s:LoadGitv(direction, reload, commitCount, extraArgs, filePath, range) "{{{
     echom "Loaded up to " . a:commitCount . " commits."
     return 1
 endf "}}}
-fu! s:ToggleArg(args, toggle)
+fu! s:ToggleArg(args, toggle) "{{{
     if matchstr(a:args, a:toggle) == ''
       let NewArgs = a:args . ' ' . a:toggle
     else
