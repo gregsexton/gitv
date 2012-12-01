@@ -455,8 +455,8 @@ fu! s:AddFileModeSpecific(filePath, range, commitCount) "{{{
 endfu "}}}
 fu! s:SetupMappings() "{{{
     "operations
-    nnoremap <buffer> <silent> <C-n> <C-n>:call <SID>OpenGitvCommit("Gedit", 0)<cr>
-    nnoremap <buffer> <silent> <C-p> <C-p>:call <SID>OpenGitvCommit("Gedit", 0)<cr>
+    nnoremap <buffer> <silent> <C-n> :<C-U>call <SID>JumpToCommit(0)<cr>
+    nnoremap <buffer> <silent> <C-p> :<C-U>call <SID>JumpToCommit(1)<cr>
     nnoremap <buffer> <silent> <cr> :call <SID>OpenGitvCommit("Gedit", 0)<cr>
     nnoremap <buffer> <silent> o :call <SID>OpenGitvCommit("Gsplit", 0)<cr>
     nnoremap <buffer> <silent> O :call <SID>OpenGitvCommit("Gtabedit", 0)<cr>
@@ -1016,6 +1016,21 @@ fu! s:JumpToRef(backward) "{{{
 endf "}}}
 fu! s:JumpToHead() "{{{
     silent! /^\(\(|\|\/\|\\\|\*\)\s\?\)\+\s\+\zs(HEAD/
+endf "}}}
+fu! s:JumpToCommit(backwards) "{{{
+    let flags = 'W'
+    if a:backwards
+        let flags += 'b'
+    endif
+
+    let c = v:count1
+    while c > 0
+        let c-=1
+        call search( '^[|\/\\ ]*\zs\*', flags )
+    endwhile
+
+    redraw
+    call s:OpenGitvCommit("Gedit", 0)
 endf "}}}
 "}}} }}}
 "Align And Truncate Functions: "{{{
