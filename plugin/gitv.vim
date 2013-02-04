@@ -496,7 +496,11 @@ fu! s:SetupMappings() "{{{
     "misc
     nnoremap <buffer> git :Git<space>
     " yank the commit hash
-    nnoremap <buffer> <silent> yc m'$F[w"+yw`'
+    if !has('unix') || has('xterm_clipboard')
+        nnoremap <buffer> <silent> yc m'$F[w"+yw`'
+    else
+        nnoremap <buffer> <silent> yc m'$F[wyw`'
+    endif
 endf "}}}
 fu! s:SetupBufferCommands(fileMode) "{{{
     silent command! -buffer -nargs=* -complete=customlist,s:fugitive_GitComplete Git call <sid>MoveIntoPreviewAndExecute("unsilent Git <args>",1)|normal u
