@@ -201,7 +201,7 @@ endfu "}}}
 fu! s:OpenBrowserMode(extraArgs) "{{{
     "this throws an exception if not a git repo which is caught immediately
     let fubuffer = fugitive#buffer()
-    silent Gtabedit HEAD
+    silent Gtabedit HEAD:
 
     if s:IsHorizontal()
         let direction = 'new gitv'.'-'.g:Gitv_InstanceCounter
