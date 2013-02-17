@@ -15,7 +15,6 @@ set cpo&vim
 "configurable options:
 "g:Gitv_CommitStep                - int
 "g:Gitv_OpenHorizontal            - {0,1,'AUTO'}
-"g:Gitv_GitExecutable             - string
 "g:Gitv_WipeAllOnClose            - int
 "g:Gitv_WrapLines                 - {0,1}
 "g:Gitv_TruncateCommitSubjects    - {0,1}
@@ -24,10 +23,6 @@ set cpo&vim
 
 if !exists("g:Gitv_CommitStep")
     let g:Gitv_CommitStep = &lines
-endif
-
-if !exists('g:Gitv_GitExecutable')
-    let g:Gitv_GitExecutable = 'git'
 endif
 
 if !exists('g:Gitv_WipeAllOnClose')
@@ -82,8 +77,8 @@ fu! Gitv_OpenGitCommand(command, windowCmd, ...) "{{{
             1,$ d _
         else
             let goBackTo       = winnr()
-            let dir            = s:GetRepoDir()
-            let workingDir     = fnamemodify(dir,':h')
+            let dir            = fugitive#buffer().repo().dir()
+            let workingDir     = fugitive#buffer().repo().tree()
             let cd             = exists('*haslocaldir') && haslocaldir() ? 'lcd ' : 'cd '
             let bufferDir      = getcwd()
             let tempSplitBelow = &splitbelow
@@ -138,7 +133,7 @@ fu! s:RunGitCommand(command, verbatim) "{{{
     "switches to the buffer repository before running the command and switches back after.
     if !a:verbatim
         "switches to the buffer repository before running the command and switches back after.
-        let cmd                = g:Gitv_GitExecutable.' --git-dir="{DIR}" '. a:command
+        let cmd                = fugitive#buffer().repo().git_command() .' '. a:command
         let [result, finalCmd] = s:RunCommandRelativeToGitRepo(cmd)
     else
         let result   = system(a:command)
@@ -146,32 +141,21 @@ fu! s:RunGitCommand(command, verbatim) "{{{
     endif
     return [result, finalCmd]
 endfu "}}}
-fu! s:RunCommandRelativeToGitRepo(command) "{{{
-    "this runs the command verbatim but first changing to the root git dir
-    "it also replaces any occurance of '{DIR}' in the command with the root git dir.
-    let dir        = s:GetRepoDir()
-    let workingDir = fnamemodify(dir,':h')
-    if workingDir == ''
-        return 0
-    endif
+fu! s:RunCommandRelativeToGitRepo(command) abort "{{{
+    " Runs the command verbatim but first changing to the root git dir.
+    " Input commands should include a --git-dir argument to git (see
+    " fugitive#buffer().repo().git_command()).
+    let workingDir = fugitive#buffer().repo().tree()
 
     let cd = exists('*haslocaldir') && haslocaldir() ? 'lcd ' : 'cd '
     let bufferDir = getcwd()
     try
         execute cd.'`=workingDir`'
-        let finalCmd = substitute(a:command, '{DIR}', dir, 'g')
-        let result   = system(finalCmd)
+        let result   = system(a:command)
     finally
         execute cd.'`=bufferDir`'
     endtry
-    return [result, finalCmd]
-endfu "}}}
-fu! s:GetRepoDir() "{{{
-    let dir = fugitive#buffer().repo().dir()
-    if dir == ''
-        echom "No git repository could be found."
-    endif
-    return dir
+    return [result, a:command]
 endfu "}}} }}}
 "Open And Update Gitv:"{{{
 fu! s:OpenGitv(extraArgs, fileMode, rangeStart, rangeEnd) "{{{
@@ -201,7 +185,7 @@ endfu "}}}
 fu! s:OpenBrowserMode(extraArgs) "{{{
     "this throws an exception if not a git repo which is caught immediately
     let fubuffer = fugitive#buffer()
-    silent Gtabedit HEAD
+    silent Gtabedit HEAD:
 
     if s:IsHorizontal()
         let direction = 'new gitv'.'-'.g:Gitv_InstanceCounter
@@ -318,12 +302,12 @@ fu! s:GetFileSlices(range, filePath, commitCount, extraArgs) "{{{
     "NOTE: this could get massive for a large repo and large range
     let range     = a:range[0] . ',' . a:range[1]
     let range     = substitute(range, "'", "'\\\\''", 'g') "force unix style escaping even on windows
-    let git       = g:Gitv_GitExecutable
-    let sliceCmd  = "for hash in `".git." --git-dir=\"{DIR}\" log " . a:extraArgs
+    let git       = fugitive#buffer().repo().git_command()
+    let sliceCmd  = "for hash in `".git." log " . a:extraArgs
     let sliceCmd .= " --no-color --pretty=format:%H -".a:commitCount."-- " . a:filePath . '`; '
     let sliceCmd .= "do "
     let sliceCmd .= 'echo "****${hash}"; '
-    let sliceCmd .= git." --git-dir=\"{DIR}\" --no-pager blame -s -L '" . range . "' ${hash} " . a:filePath . "; "
+    let sliceCmd .= git." --no-pager blame -s -L '" . range . "' ${hash} " . a:filePath . "; "
     let sliceCmd .= "done"
     let finalCmd  = "bash -c " . shellescape(sliceCmd)
 
@@ -367,10 +351,10 @@ fu! s:CompareFileAtCommits(slices, c1sha, c2sha) "{{{
 endfu "}}}
 fu! s:GetFinalOutputForHashes(hashes) "{{{
     if len(a:hashes) > 0
-        let git       = g:Gitv_GitExecutable
+        let git       = fugitive#buffer().repo().git_command()
         let cmd       = 'for hash in ' . join(a:hashes, " ") . '; '
         let cmd      .= "do "
-        let cmd      .= git.' --git-dir="{DIR}" log --no-color --decorate=full --pretty=format:"%d %s__SEP__%ar__SEP__%an__SEP__[%h]%n" --graph -1 ${hash}; '
+        let cmd      .= git.' log --no-color --decorate=full --pretty=format:"%d %s__SEP__%ar__SEP__%an__SEP__[%h]%n" --graph -1 ${hash}; '
         let cmd      .= 'done'
         let finalCmd  = "bash -c " . shellescape(cmd)
 
