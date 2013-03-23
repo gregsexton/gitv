@@ -439,13 +439,13 @@ fu! s:AddFileModeSpecific(filePath, range, commitCount) "{{{
 endfu "}}}
 fu! s:SetupMappings() "{{{
     "operations
-    nnoremap <buffer> <silent> <C-n> :<C-U>call <SID>JumpToCommit(0)<cr>
-    nnoremap <buffer> <silent> <C-p> :<C-U>call <SID>JumpToCommit(1)<cr>
     nnoremap <buffer> <silent> <cr> :call <SID>OpenGitvCommit("Gedit", 0)<cr>
     nnoremap <buffer> <silent> o :call <SID>OpenGitvCommit("Gsplit", 0)<cr>
     nnoremap <buffer> <silent> O :call <SID>OpenGitvCommit("Gtabedit", 0)<cr>
     nnoremap <buffer> <silent> s :call <SID>OpenGitvCommit("Gvsplit", 0)<cr>
     if(!exists("g:Gitv_DoNotMapCtrlKey"))
+        nnoremap <buffer> <silent> <C-n> :<C-U>call <SID>JumpToCommit(0)<cr>
+        nnoremap <buffer> <silent> <C-p> :<C-U>call <SID>JumpToCommit(1)<cr>
         "fuzzyfinder style key mappings
         nnoremap <buffer> <silent> <c-j> :call <SID>OpenGitvCommit("Gsplit", 0)<cr>
         nnoremap <buffer> <silent> <c-k> :call <SID>OpenGitvCommit("Gvsplit", 0)<cr>
@@ -1008,7 +1008,7 @@ endf "}}}
 fu! s:JumpToCommit(backwards) "{{{
     let flags = 'W'
     if a:backwards
-        let flags += 'b'
+        let flags .= 'b'
     endif
 
     let c = v:count1
