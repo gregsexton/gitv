@@ -1008,7 +1008,7 @@ endf "}}}
 fu! s:JumpToCommit(backwards) "{{{
     let flags = 'W'
     if a:backwards
-        let flags += 'b'
+        let flags .= 'b' 
     endif
 
     let c = v:count1
