@@ -38,7 +38,7 @@ them exactly how you like. You can take advantage of Vim's
 registers to copy multiple fragments of code from previous
 commits. The list goes on.
 
-This plugin is an extension of the fugitive plugin.
+This plugin is an extension of the [tpope/fugitive](https://github.com/tpope/vim-fugitive) plugin.
 
 I hope you like it!
 
@@ -51,7 +51,7 @@ it this way.
 gitv was developed against Vim 7.3 but earlier versions of Vim
 should work.  Vim 7.2+ is recommended as it ships with syntax
 highlighting for many Git file types. **You will also need the
-fugitive plugin installed and working for gitv to work.**
+[tpope/fugitive](https://github.com/tpope/vim-fugitive) plugin installed and working for gitv to work.**
 
 ## Screenshots and Links
 
