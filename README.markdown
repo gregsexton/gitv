@@ -38,6 +38,8 @@ them exactly how you like. You can take advantage of Vim's
 registers to copy multiple fragments of code from previous
 commits. The list goes on.
 
+You can start this by running :Gitv in vim while in a git repository
+
 This plugin is an extension of the [tpope/fugitive](https://github.com/tpope/vim-fugitive) plugin.
 
 I hope you like it!
