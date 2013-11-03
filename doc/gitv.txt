@@ -269,6 +269,10 @@ around a repository history in the browser window.
 
     normal      P       Jumps the cursor to the commit referenced by HEAD.
 
+    normal      p       Jumps the cursor to the commit which is the parent of
+                        current line.  When on a merge commit, a |count|
+                        may be used to choose a parent other than the first.
+
 3.5 Commands
 
 Running the |:Git| command in the commit browser window, in either mode, will

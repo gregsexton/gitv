@@ -476,6 +476,7 @@ fu! s:SetupMappings() "{{{
     nnoremap <buffer> <silent> r :call <SID>JumpToRef(0)<cr>
     nnoremap <buffer> <silent> R :call <SID>JumpToRef(1)<cr>
     nnoremap <buffer> <silent> P :call <SID>JumpToHead()<cr>
+    nnoremap <buffer> <silent> p :<c-u>call <SID>JumpToParent()<cr>
 
     "misc
     nnoremap <buffer> git :Git<space>
@@ -525,6 +526,18 @@ fu! s:GetGitvRefs(line) "{{{
     let refstr = matchstr(l, "^\\(\\(|\\|\\/\\|\\\\\\|\\*\\)\\s\\?\\)*\\s\\+(\\zs.\\{-}\\ze)")
     let refs = split(refstr, ', ')
     return refs
+endf "}}}
+fu! s:GetParentSha(sha, parentNum) "{{{
+    if a:parentNum < 1
+        return
+    endif
+    let hashCmd = "git log -n1 --pretty=format:%p " . a:sha
+    let [result,cmd] = s:RunGitCommand(hashCmd, 1)
+    let parents=split(result, ' ')
+    if a:parentNum > len(parents)
+        return
+    endif
+    return parents[a:parentNum-1]
 endf "}}}
 fu! s:GetConfirmString(list, ...) "{{{ {{{
     "returns a string to be used with confirm out of the choices in a:list
@@ -1019,6 +1032,21 @@ fu! s:JumpToCommit(backwards) "{{{
 
     redraw
     call s:OpenGitvCommit("Gedit", 0)
+endf "}}}
+fu! s:JumpToParent() "{{{
+    let sha = s:GetGitvSha(line('.'))
+    if sha == ""
+        return
+    endif
+    let parent = s:GetParentSha(sha, v:count1 )
+    if parent == ""
+        echom 'Parent '.v:count1.' is out of range'
+        return
+    endif
+    while !search( '^\ze.*\['.parent.'\]$', 'Ws' )
+        call s:LoadGitv('', 1, b:Gitv_CommitCount+g:Gitv_CommitStep, b:Gitv_ExtraArgs, s:GetRelativeFilePath(), s:GetRange())
+    endwhile
+    redraw
 endf "}}}
 "}}} }}}
 "Align And Truncate Functions: "{{{
