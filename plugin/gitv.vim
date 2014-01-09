@@ -440,6 +440,7 @@ endfu "}}}
 fu! s:SetupMappings() "{{{
     "operations
     nnoremap <buffer> <silent> <cr> :call <SID>OpenGitvCommit("Gedit", 0)<cr>
+    nnoremap <buffer> <silent> <LeftMouse> <LeftMouse>:call <SID>OpenGitvCommit("Gedit", 0)<cr>
     nnoremap <buffer> <silent> o :call <SID>OpenGitvCommit("Gsplit", 0)<cr>
     nnoremap <buffer> <silent> O :call <SID>OpenGitvCommit("Gtabedit", 0)<cr>
     nnoremap <buffer> <silent> s :call <SID>OpenGitvCommit("Gvsplit", 0)<cr>
