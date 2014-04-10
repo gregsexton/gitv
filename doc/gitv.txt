@@ -138,9 +138,11 @@ This is a list of key mappings that will work only in the gitv browser window.
 Where appropriate the differences in action is described for the two gitv
 modes.
 
-    Mode        Map     Description~
+Map                       Description~
 
-    normal      <cr>      Opens a commit. In browser mode this will show the
+                                                    *<Plug>(gitv-open-commit)*
+<Plug>(gitv-open-commit)
+<cr>                      Opens a commit. In browser mode this will show the
                           commit header information including the commit
                           message. It will also display a full diff showing all the
                           changes to files.
@@ -163,37 +165,58 @@ modes.
                           Pressing <cr> on the top line in file mode opens the
                           current working copy of the focused file.
 
-    normal      <c-n>     In either browser or file mode, this moves down to
+                                                   *<Plug>(gitv-jump-forward)*
+<Plug>(gitv-jump-forward)
+<c-n>                     In either browser or file mode, this moves down to
                           the next commit and opens it. This allows you to
                           quickly move from commit to commit and view either
                           the commit details or the file itself, depending on
                           the mode, in one action.
 
-    normal      <c-p>     The same as <c-n> but move back a commit.
+                                                  *<Plug>(gitv-jump-backward)*
+<Plug>(gitv-jump-backward)
+<c-p>                     The same as <c-n> but move back a commit.
 
-    normal      o         The same as <cr> but opens in a new |split|.
-                <c-j>
-    normal      O         The same as <cr> but opens in a new |tab|.
-                <c-l>
-    normal      s         The same as <cr> but opens in a new |vsplit|.
-                <c-k>
+                                           *<Plug>(gitv-open-commit-in-split)*
+<Plug>(gitv-open-commit-in-split)
+o                         The same as <cr> but opens in a new |split|.
 
-    normal      i         This performs the same thing as <cr> in browser mode.
+                                             *<Plug>(gitv-open-commit-in-tab)*
+<Plug>(gitv-open-commit-in-tab)
+<c-j>                     The same as <cr> but opens in a new |tab|.
+O
+
+                                  *<Plug>(gitv-open-commit-in-vertical-split)*
+<Plug>(gitv-open-commit-in-vertical-split)
+s                         The same as <cr> but opens in a new |vsplit|.
+<c-k>
+
+                                                    *<Plug>(gitv-open-commit-2)*
+<Plug>(gitv-open-commit-2)
+i                         This performs the same thing as <cr> in browser mode.
                 <c-cr>    In file mode it opens the commit details rather than
                           the focused file.
 
-    normal      q         Quits gitv. In browser mode this will close the entire
+                                                           *<Plug>(gitv-quit)*
+<Plug>(gitv-quit)
+q                         Quits gitv. In browser mode this will close the entire
                           tab. In file mode this closes only the |preview-window|.
                           Note: in browser mode this will close the tab
                           regardless of any windows you may have opened as well
                           as the gitv windows.
 
-    normal      a         Switches the '--all' argument and updates the browser
+                                                             *<Plug>(gitv--all)*
+<Plug>(gitv--all)
+a                         Switches the '--all' argument and updates the browser
                           window.
 
-    normal      u         Forces an update of the content of the browser window.
+                                                           *<Plug>(gitv-redraw)*
+<Plug>(gitv-redraw)
+u                         Forces an update of the content of the browser window.
 
-    normal      co        Performs a 'git checkout' of the commit the cursor is
+                                                         *<Plug>(gitv-checkout)*
+<Plug>(gitv-checkout)
+co                        Performs a 'git checkout' of the commit the cursor is
                           on. In both modes this will present you with a choice
                           of whether you would like to checkout the sha or any
                           ref that might point to this commit.
@@ -206,25 +229,31 @@ modes.
                           You can make this a text choice by performing ':set
                           guioptions+=c.'
 
-    normal      D         Performs a diff using Vim's built in diff viewing
+                                                             *<Plug>(gitv-diff)*
+<Plug>(gitv-diff)
+D                         Performs a diff using Vim's built in diff viewing
                           capabilities. This does nothing in browser mode. In
                           file mode it will diff the current file with the
                           focused file in the commit under the cursor.
 
-    visual      D         In visual mode this performs a diff against the file
+{Visual}D                 In {Visual} mode this performs a diff against the file
                           in the commit at the top of the selection against the
                           file in the commit at the bottom of the selection. The
                           newest file is always on the right.
 
-    normal      S         This works for both browser and file mode. It opens a
+                                                         *<Plug>(gitv-diffstat)*
+<Plug>(gitv-diffstat)
+S                         This works for both browser and file mode. It opens a
                           diffstat of everything that has changed since the
                           commit under the cursor.
 
-    visual      S         In visual mode this works in exactly the same way as
+{Visual}S                 In {Visual} mode this works in exactly the same way as
                           normal mode. However, it only shows what has changed in
                           the range of commits that are highlighted.
 
-    visual      m         Merges the commit in either the top or bottom line of
+                                                            *<Plug>(gitv-merge)*
+<Plug>(gitv-merge)
+{Visual}m                 Merges the commit in either the top or bottom line of
                           the selection in to the commit specified by the other
                           end of the selection. This uses prompts to guide you
                           through the merging and should be fairly intuitive. It
@@ -236,15 +265,19 @@ modes.
                           contain refs in the form of tags, remotes or local
                           branches.
 
-    normal      <leader>m Merges the first ref found on the current line in to
+                                                  *<Plug>(gitv-merge-to-head)*
+<Plug>(gitv-merge-to-head)
+<leader>m                 Merges the first ref found on the current line in to
                           the branch currently pointed to by HEAD. This will
                           prompt you if you wish to use a fast-forward merge.
 
-    normal      git       Enters command mode with ":Git " already typed for
+git                       Enters command mode with ":Git " already typed for
                           you. Just a convenient shortcut for executing git
                           commands and watching them affect the repository.
 
-    normal      yc        Copy the sha on the current line in either mode.
+                                          *<Plug>(gitv-copy-sha-to-clipboard)*
+<Plug>(gitv-copy-sha-to-clipboard)
+yc                        Copy the sha on the current line in either mode.
                           This also copies it to the '+' register so that it
                           can be pasted externally. If there is no commit on
                           the current line the behaviour (although harmless)
@@ -253,25 +286,37 @@ modes.
 Here is a list of extra key mappings that can be used to efficiently move
 around a repository history in the browser window.
 
-    Mode        Map     Description~
+Map                       Description~
 
-    normal      x       Jumps the cursor forward to the next branching point
-                        in the history.
+                                            *<Plug>(gitv-jump-branch-forward)*
+<Plug>(gitv-jump-branch-forward)
+x                         Jumps the cursor forward to the next branching point
+                          in the history.
 
-    normal      X       Jumps the cursor backward to the previous branching
-                        point in the history.
+                                           *<Plug>(gitv-jump-branch-backward)*
+<Plug>(gitv-jump-branch-backward)
+X                         Jumps the cursor backward to the previous branching
+                          point in the history.
 
-    normal      r       Jumps the cursor forward to the next ref in the
-                        history.
+                                               *<Plug>(gitv-jump-ref-forward)*
+<Plug>(gitv-jump-ref-forward)
+r                         Jumps the cursor forward to the next ref in the
+                          history.
 
-    normal      R       Jumps the cursor backward to the previous ref in the
-                        history.
+                                              *<Plug>(gitv-jump-ref-backward)*
+<Plug>(gitv-jump-ref-backward)
+R                         Jumps the cursor backward to the previous ref in the
+                          history.
 
-    normal      P       Jumps the cursor to the commit referenced by HEAD.
+                                                      *<Plug>(gitv-jump-head)*
+<Plug>(gitv-jump-head)
+P                         Jumps the cursor to the commit referenced by HEAD.
 
-    normal      p       Jumps the cursor to the commit which is the parent of
-                        current line.  When on a merge commit, a |count|
-                        may be used to choose a parent other than the first.
+                                                    *<Plug>(gitv-jump-parent)*
+<Plug>(gitv-jump-parent)
+p                         Jumps the cursor to the commit which is the parent of
+                          current line. When on a merge commit, a |count| may
+                          be used to choose a parent other than the first.
 
 3.5 Commands
 
