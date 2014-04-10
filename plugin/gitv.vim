@@ -925,6 +925,13 @@ fu! s:MergeToCurrent()
 
     call s:PerformMerge("HEAD", target, ff)
 endfu "}}}
+fu! s:CopySha() "{{{
+    if has('mac') || !has('unix') || has('xterm_clipboard')
+        normal! m'$F[w"+yw`'
+    else
+        normal! m'$F[wyw`'
+    endif
+endf "}}}
 fu! s:StatGitvCommit() range "{{{
     let shafirst = s:GetGitvSha(a:firstline)
     let shalast  = s:GetGitvSha(a:lastline)
@@ -1106,6 +1113,7 @@ nnoremap <Plug>(gitv-quit) :call <SID>CloseGitv()<cr>
 nnoremap <Plug>(gitv--all) :call <SID>LoadGitv('', 0, b:Gitv_CommitCount, <SID>ToggleArg(b:Gitv_ExtraArgs, '--all'), <SID>GetRelativeFilePath(), <SID>GetRange())<cr>
 nnoremap <Plug>(gitv-redraw)<cr> :call <SID>LoadGitv('', 1, b:Gitv_CommitCount, b:Gitv_ExtraArgs, <SID>GetRelativeFilePath(), <SID>GetRange())<cr>
 
+nnoremap <Plug>(gitv-copy-sha-to-clipboard) :call <SID>CopySha()<cr>
 nnoremap <Plug>(gitv-checkout) :call <SID>CheckOutGitvCommit()<cr>
 nnoremap <Plug>(gitv-diffstat) :call <SID>StatGitvCommit()<cr>
 vnoremap <Plug>(gitv-diffstat) :call <SID>StatGitvCommit()<cr>
@@ -1170,13 +1178,7 @@ augroup gitv
 
     "misc
     au FileType gitv nnoremap <buffer> git :Git<space>
-
-    " yank the commit hash
-    if has('mac') || !has('unix') || has('xterm_clipboard')
-        au FileType gitv nnoremap <buffer> <silent> yc m'$F[w"+yw`'
-    else
-        au FileType gitv nnoremap <buffer> <silent> yc m'$F[wyw`'
-    endif
+    au FileType gitv nmap <buffer> <silent> yc <Plug>(gitv-copy-sha-to-clipboard)
 augroup END "}}}
 
 let &cpo = s:savecpo
