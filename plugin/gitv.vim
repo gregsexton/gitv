@@ -229,7 +229,6 @@ fu! s:LoadGitv(direction, reload, commitCount, extraArgs, filePath, range) "{{{
     endif
     call s:SetupBuffer(a:commitCount, a:extraArgs, a:filePath, a:range)
     exec exists('jumpTo') ? jumpTo : '1'
-    call s:SetupMappings() "redefines some of the mappings made by Gitv_OpenGitCommand
     call s:ResizeWindow(a:filePath!='')
 
     echom "Loaded up to " . a:commitCount . " commits."
@@ -437,57 +436,6 @@ fu! s:AddFileModeSpecific(filePath, range, commitCount) "{{{
         endif
     endif
 endfu "}}}
-fu! s:SetupMappings() "{{{
-    "operations
-    nnoremap <buffer> <silent> <cr> :call <SID>OpenGitvCommit("Gedit", 0)<cr>
-    nnoremap <buffer> <silent> <LeftMouse> <LeftMouse>:call <SID>OpenGitvCommit("Gedit", 0)<cr>
-    nnoremap <buffer> <silent> o :call <SID>OpenGitvCommit("Gsplit", 0)<cr>
-    nnoremap <buffer> <silent> O :call <SID>OpenGitvCommit("Gtabedit", 0)<cr>
-    nnoremap <buffer> <silent> s :call <SID>OpenGitvCommit("Gvsplit", 0)<cr>
-    if(!exists("g:Gitv_DoNotMapCtrlKey"))
-        nnoremap <buffer> <silent> <C-n> :<C-U>call <SID>JumpToCommit(0)<cr>
-        nnoremap <buffer> <silent> <C-p> :<C-U>call <SID>JumpToCommit(1)<cr>
-        "fuzzyfinder style key mappings
-        nnoremap <buffer> <silent> <c-j> :call <SID>OpenGitvCommit("Gsplit", 0)<cr>
-        nnoremap <buffer> <silent> <c-k> :call <SID>OpenGitvCommit("Gvsplit", 0)<cr>
-        nnoremap <buffer> <silent> <c-l> :call <SID>OpenGitvCommit("Gtabedit", 0)<cr>
-        "force opening the fugitive buffer for the commit
-        nnoremap <buffer> <silent> <c-cr> :call <SID>OpenGitvCommit("Gedit", 1)<cr>
-    endif
-    "for the terminal
-    nnoremap <buffer> <silent> i :call <SID>OpenGitvCommit("Gedit", 1)<cr>
-
-    nnoremap <buffer> <silent> q :call <SID>CloseGitv()<cr>
-    nnoremap <buffer> <silent> u :call <SID>LoadGitv('', 1, b:Gitv_CommitCount, b:Gitv_ExtraArgs, <SID>GetRelativeFilePath(), <SID>GetRange())<cr>
-    nnoremap <buffer> <silent> a :call <SID>LoadGitv('', 0, b:Gitv_CommitCount, <SID>ToggleArg(b:Gitv_ExtraArgs, '--all'), <SID>GetRelativeFilePath(), <SID>GetRange())<cr>
-    nnoremap <buffer> <silent> co :call <SID>CheckOutGitvCommit()<cr>
-
-    nnoremap <buffer> <silent> D :call <SID>DiffGitvCommit()<cr>
-    vnoremap <buffer> <silent> D :call <SID>DiffGitvCommit()<cr>
-
-    nnoremap <buffer> <silent> S :call <SID>StatGitvCommit()<cr>
-    vnoremap <buffer> <silent> S :call <SID>StatGitvCommit()<cr>
-
-    vnoremap <buffer> <silent> m :call <SID>MergeBranches()<cr>
-    nnoremap <buffer> <silent> <leader>m :call <SID>MergeToCurrent()<cr>
-
-    "movement
-    nnoremap <buffer> <silent> x :call <SID>JumpToBranch(0)<cr>
-    nnoremap <buffer> <silent> X :call <SID>JumpToBranch(1)<cr>
-    nnoremap <buffer> <silent> r :call <SID>JumpToRef(0)<cr>
-    nnoremap <buffer> <silent> R :call <SID>JumpToRef(1)<cr>
-    nnoremap <buffer> <silent> P :call <SID>JumpToHead()<cr>
-    nnoremap <buffer> <silent> p :<c-u>call <SID>JumpToParent()<cr>
-
-    "misc
-    nnoremap <buffer> git :Git<space>
-    " yank the commit hash
-    if has('mac') || !has('unix') || has('xterm_clipboard')
-        nnoremap <buffer> <silent> yc m'$F[w"+yw`'
-    else
-        nnoremap <buffer> <silent> yc m'$F[wyw`'
-    endif
-endf "}}}
 fu! s:SetupBufferCommands(fileMode) "{{{
     silent command! -buffer -nargs=* -complete=customlist,s:fugitive_GitComplete Git call <sid>MoveIntoPreviewAndExecute("unsilent Git <args>",1)|normal u
 endfu "}}}
@@ -1147,6 +1095,60 @@ function! s:fugitive_GitComplete(A,L,P) abort "{{{
     return filter(cmds,'v:val[0 : strlen(a:A)-1] ==# a:A')
   endif
 endfunction "}}} }}}
+"Key bindings: {{{
+augroup gitv
+    au!
+    "operations
+    au FileType gitv nnoremap <buffer> <silent> <cr> :call <SID>OpenGitvCommit("Gedit", 0)<cr>
+    au FileType gitv nnoremap <buffer> <silent> <LeftMouse> <LeftMouse>:call <SID>OpenGitvCommit("Gedit", 0)<cr>
+    au FileType gitv nnoremap <buffer> <silent> o :call <SID>OpenGitvCommit("Gsplit", 0)<cr>
+    au FileType gitv nnoremap <buffer> <silent> O :call <SID>OpenGitvCommit("Gtabedit", 0)<cr>
+    au FileType gitv nnoremap <buffer> <silent> s :call <SID>OpenGitvCommit("Gvsplit", 0)<cr>
+    if(!exists("g:Gitv_DoNotMapCtrlKey"))
+        au FileType gitv nnoremap <buffer> <silent> <C-n> :<C-U>call <SID>JumpToCommit(0)<cr>
+        au FileType gitv nnoremap <buffer> <silent> <C-p> :<C-U>call <SID>JumpToCommit(1)<cr>
+        "fuzzyfinder style key mappings
+        au FileType gitv nnoremap <buffer> <silent> <c-j> :call <SID>OpenGitvCommit("Gsplit", 0)<cr>
+        au FileType gitv nnoremap <buffer> <silent> <c-k> :call <SID>OpenGitvCommit("Gvsplit", 0)<cr>
+        au FileType gitv nnoremap <buffer> <silent> <c-l> :call <SID>OpenGitvCommit("Gtabedit", 0)<cr>
+        "force opening the fugitive buffer for the commit
+        au FileType gitv nnoremap <buffer> <silent> <c-cr> :call <SID>OpenGitvCommit("Gedit", 1)<cr>
+    endif
+    "for the terminal
+    au FileType gitv nnoremap <buffer> <silent> i :call <SID>OpenGitvCommit("Gedit", 1)<cr>
+
+    au FileType gitv nnoremap <buffer> <silent> q :call <SID>CloseGitv()<cr>
+    au FileType gitv nnoremap <buffer> <silent> u :call <SID>LoadGitv('', 1, b:Gitv_CommitCount, b:Gitv_ExtraArgs, <SID>GetRelativeFilePath(), <SID>GetRange())<cr>
+    au FileType gitv nnoremap <buffer> <silent> a :call <SID>LoadGitv('', 0, b:Gitv_CommitCount, <SID>ToggleArg(b:Gitv_ExtraArgs, '--all'), <SID>GetRelativeFilePath(), <SID>GetRange())<cr>
+    au FileType gitv nnoremap <buffer> <silent> co :call <SID>CheckOutGitvCommit()<cr>
+
+    au FileType gitv nnoremap <buffer> <silent> D :call <SID>DiffGitvCommit()<cr>
+    au FileType gitv vnoremap <buffer> <silent> D :call <SID>DiffGitvCommit()<cr>
+
+    au FileType gitv nnoremap <buffer> <silent> S :call <SID>StatGitvCommit()<cr>
+    au FileType gitv vnoremap <buffer> <silent> S :call <SID>StatGitvCommit()<cr>
+
+    au FileType gitv vnoremap <buffer> <silent> m :call <SID>MergeBranches()<cr>
+    au FileType gitv nnoremap <buffer> <silent> <leader>m :call <SID>MergeToCurrent()<cr>
+
+    "movement
+    au FileType gitv nnoremap <buffer> <silent> x :call <SID>JumpToBranch(0)<cr>
+    au FileType gitv nnoremap <buffer> <silent> X :call <SID>JumpToBranch(1)<cr>
+    au FileType gitv nnoremap <buffer> <silent> r :call <SID>JumpToRef(0)<cr>
+    au FileType gitv nnoremap <buffer> <silent> R :call <SID>JumpToRef(1)<cr>
+    au FileType gitv nnoremap <buffer> <silent> P :call <SID>JumpToHead()<cr>
+    au FileType gitv nnoremap <buffer> <silent> p :<c-u>call <SID>JumpToParent()<cr>
+
+    "misc
+    au FileType gitv nnoremap <buffer> git :Git<space>
+
+    " yank the commit hash
+    if has('mac') || !has('unix') || has('xterm_clipboard')
+        au FileType gitv nnoremap <buffer> <silent> yc m'$F[w"+yw`'
+    else
+        au FileType gitv nnoremap <buffer> <silent> yc m'$F[wyw`'
+    endif
+augroup END "}}}
 
 let &cpo = s:savecpo
 unlet s:savecpo
