@@ -1095,49 +1095,78 @@ function! s:fugitive_GitComplete(A,L,P) abort "{{{
     return filter(cmds,'v:val[0 : strlen(a:A)-1] ==# a:A')
   endif
 endfunction "}}} }}}
+"Mappings: {{{
+
+nnoremap <Plug>(gitv-open-commit-in-vertical-split) :call <SID>OpenGitvCommit("Gvsplit", 0)<cr>
+nnoremap <Plug>(gitv-open-commit-in-split) :call <SID>OpenGitvCommit("Gsplit", 0)<cr>
+nnoremap <Plug>(gitv-open-commit-in-tab) :call <SID>OpenGitvCommit("Gtabedit", 0)<cr>
+nnoremap <Plug>(gitv-open-commit-2) :call <SID>OpenGitvCommit("Gedit", 1)<cr>
+nnoremap <Plug>(gitv-open-commit) :call <SID>OpenGitvCommit("Gedit", 0)<cr>
+nnoremap <Plug>(gitv-quit) :call <SID>CloseGitv()<cr>
+nnoremap <Plug>(gitv--all) :call <SID>LoadGitv('', 0, b:Gitv_CommitCount, <SID>ToggleArg(b:Gitv_ExtraArgs, '--all'), <SID>GetRelativeFilePath(), <SID>GetRange())<cr>
+nnoremap <Plug>(gitv-redraw)<cr> :call <SID>LoadGitv('', 1, b:Gitv_CommitCount, b:Gitv_ExtraArgs, <SID>GetRelativeFilePath(), <SID>GetRange())<cr>
+
+nnoremap <Plug>(gitv-checkout) :call <SID>CheckOutGitvCommit()<cr>
+nnoremap <Plug>(gitv-diffstat) :call <SID>StatGitvCommit()<cr>
+vnoremap <Plug>(gitv-diffstat) :call <SID>StatGitvCommit()<cr>
+nnoremap <Plug>(gitv-diff) :call <SID>DiffGitvCommit()<cr>
+vnoremap <Plug>(gitv-diff) :call <SID>DiffGitvCommit()<cr>
+vnoremap <Plug>(gitv-merge) :call <SID>MergeBranches()<cr>
+nnoremap <Plug>(gitv-merge-to-head) :call <SID>MergeToCurrent()<cr>
+
+nnoremap <Plug>(gitv-jump-backward) :<C-U>call <SID>JumpToCommit(1)<cr>
+nnoremap <Plug>(gitv-jump-forward) :<C-U>call <SID>JumpToCommit(0)<cr>
+nnoremap <Plug>(gitv-jump-branch-backward) :call <SID>JumpToBranch(1)<cr>
+nnoremap <Plug>(gitv-jump-branch-forward) :call <SID>JumpToBranch(0)<cr>
+nnoremap <Plug>(gitv-jump-ref-backward) :call <SID>JumpToRef(1)<cr>
+nnoremap <Plug>(gitv-jump-ref-forward) :call <SID>JumpToRef(0)<cr>
+nnoremap <Plug>(gitv-jump-parent) :call <SID>JumpToParent()<cr>
+nnoremap <Plug>(gitv-jump-head) :call <SID>JumpToHead()<cr>
+
+" }}}
 "Key bindings: {{{
 augroup gitv
     au!
     "operations
-    au FileType gitv nnoremap <buffer> <silent> <cr> :call <SID>OpenGitvCommit("Gedit", 0)<cr>
-    au FileType gitv nnoremap <buffer> <silent> <LeftMouse> <LeftMouse>:call <SID>OpenGitvCommit("Gedit", 0)<cr>
-    au FileType gitv nnoremap <buffer> <silent> o :call <SID>OpenGitvCommit("Gsplit", 0)<cr>
-    au FileType gitv nnoremap <buffer> <silent> O :call <SID>OpenGitvCommit("Gtabedit", 0)<cr>
-    au FileType gitv nnoremap <buffer> <silent> s :call <SID>OpenGitvCommit("Gvsplit", 0)<cr>
+    au FileType gitv nmap <buffer> <silent> <cr> <Plug>(gitv-open-commit)
+    au FileType gitv nmap <buffer> <silent> <LeftMouse> <LeftMouse><Plug>(gitv-open-commit)
+    au FileType gitv nmap <buffer> <silent> O <Plug>(gitv-open-commit-in-tab)
+    au FileType gitv nmap <buffer> <silent> o <Plug>(gitv-open-commit-in-split)
+    au FileType gitv nmap <buffer> <silent> s <Plug>(gitv-open-commit-in-vertical-split)
     if(!exists("g:Gitv_DoNotMapCtrlKey"))
-        au FileType gitv nnoremap <buffer> <silent> <C-n> :<C-U>call <SID>JumpToCommit(0)<cr>
-        au FileType gitv nnoremap <buffer> <silent> <C-p> :<C-U>call <SID>JumpToCommit(1)<cr>
+        au FileType gitv nmap <buffer> <silent> <C-n> <Plug>(gitv-jump-forward)
+        au FileType gitv nmap <buffer> <silent> <C-p> <Plug>(gitv-jump-backward)
         "fuzzyfinder style key mappings
-        au FileType gitv nnoremap <buffer> <silent> <c-j> :call <SID>OpenGitvCommit("Gsplit", 0)<cr>
-        au FileType gitv nnoremap <buffer> <silent> <c-k> :call <SID>OpenGitvCommit("Gvsplit", 0)<cr>
-        au FileType gitv nnoremap <buffer> <silent> <c-l> :call <SID>OpenGitvCommit("Gtabedit", 0)<cr>
+        au FileType gitv nmap <buffer> <silent> <c-l> <Plug>(gitv-open-commit-in-tab)
+        au FileType gitv nmap <buffer> <silent> <c-j> <Plug>(gitv-open-commit-in-split)
+        au FileType gitv nmap <buffer> <silent> <c-k> <Plug>(gitv-open-commit-in-vertical-split)
         "force opening the fugitive buffer for the commit
-        au FileType gitv nnoremap <buffer> <silent> <c-cr> :call <SID>OpenGitvCommit("Gedit", 1)<cr>
+        au FileType gitv nmap <buffer> <silent> <c-cr> <Plug>(gitv-open-commit-2)
     endif
     "for the terminal
-    au FileType gitv nnoremap <buffer> <silent> i :call <SID>OpenGitvCommit("Gedit", 1)<cr>
+    au FileType gitv nmap <buffer> <silent> i <Plug>(gitv-open-commit-2)
 
-    au FileType gitv nnoremap <buffer> <silent> q :call <SID>CloseGitv()<cr>
-    au FileType gitv nnoremap <buffer> <silent> u :call <SID>LoadGitv('', 1, b:Gitv_CommitCount, b:Gitv_ExtraArgs, <SID>GetRelativeFilePath(), <SID>GetRange())<cr>
-    au FileType gitv nnoremap <buffer> <silent> a :call <SID>LoadGitv('', 0, b:Gitv_CommitCount, <SID>ToggleArg(b:Gitv_ExtraArgs, '--all'), <SID>GetRelativeFilePath(), <SID>GetRange())<cr>
-    au FileType gitv nnoremap <buffer> <silent> co :call <SID>CheckOutGitvCommit()<cr>
+    au FileType gitv nmap <buffer> <silent> q <Plug>(gitv-quit)
+    au FileType gitv nmap <buffer> <silent> u <Plug>(gitv-redraw)
+    au FileType gitv nmap <buffer> <silent> a <Plug>(gitv--all)
+    au FileType gitv nmap <buffer> <silent> co <Plug>(gitv-checkout)
 
-    au FileType gitv nnoremap <buffer> <silent> D :call <SID>DiffGitvCommit()<cr>
-    au FileType gitv vnoremap <buffer> <silent> D :call <SID>DiffGitvCommit()<cr>
+    au FileType gitv nmap <buffer> <silent> D <Plug>(gitv-diff)
+    au FileType gitv vmap <buffer> <silent> D <Plug>(gitv-diff)
 
-    au FileType gitv nnoremap <buffer> <silent> S :call <SID>StatGitvCommit()<cr>
-    au FileType gitv vnoremap <buffer> <silent> S :call <SID>StatGitvCommit()<cr>
+    au FileType gitv nmap <buffer> <silent> S <Plug>(gitv-diffstat)
+    au FileType gitv vmap <buffer> <silent> S <Plug>(gitv-diffstat)
 
-    au FileType gitv vnoremap <buffer> <silent> m :call <SID>MergeBranches()<cr>
-    au FileType gitv nnoremap <buffer> <silent> <leader>m :call <SID>MergeToCurrent()<cr>
+    au FileType gitv vmap <buffer> <silent> m <Plug>(gitv-merge)
+    au FileType gitv nmap <buffer> <silent> <leader>m <Plug>(gitv-merge-to-head)
 
     "movement
-    au FileType gitv nnoremap <buffer> <silent> x :call <SID>JumpToBranch(0)<cr>
-    au FileType gitv nnoremap <buffer> <silent> X :call <SID>JumpToBranch(1)<cr>
-    au FileType gitv nnoremap <buffer> <silent> r :call <SID>JumpToRef(0)<cr>
-    au FileType gitv nnoremap <buffer> <silent> R :call <SID>JumpToRef(1)<cr>
-    au FileType gitv nnoremap <buffer> <silent> P :call <SID>JumpToHead()<cr>
-    au FileType gitv nnoremap <buffer> <silent> p :<c-u>call <SID>JumpToParent()<cr>
+    au FileType gitv nmap <buffer> <silent> x <Plug>(gitv-jump-branch-forward)
+    au FileType gitv nmap <buffer> <silent> X <Plug>(gitv-jump-branch-backward)
+    au FileType gitv nmap <buffer> <silent> r <Plug>(gitv-jump-ref-forward)
+    au FileType gitv nmap <buffer> <silent> R <Plug>(gitv-jump-ref-backward)
+    au FileType gitv nmap <buffer> <silent> p <Plug>(gitv-jump-parent)
+    au FileType gitv nmap <buffer> <silent> P <Plug>(gitv-jump-head)
 
     "misc
     au FileType gitv nnoremap <buffer> git :Git<space>
