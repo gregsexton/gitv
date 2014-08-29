@@ -159,17 +159,17 @@ fu! s:RunCommandRelativeToGitRepo(command) abort "{{{
 endfu "}}} }}}
 "Open And Update Gitv:"{{{
 fu! s:OpenGitv(extraArgs, fileMode, rangeStart, rangeEnd) "{{{
-    let sanatizedArgs = a:extraArgs   == "''" ? '' : a:extraArgs
-    let sanatizedArgs = sanatizedArgs == '""' ? '' : sanatizedArgs
+    let sanitizedArgs = a:extraArgs   == "''" ? '' : a:extraArgs
+    let sanitizedArgs = sanitizedArgs == '""' ? '' : sanitizedArgs
     let g:Gitv_InstanceCounter += 1
     if !s:IsCompatible() "this outputs specific errors
         return
     endif
     try
         if a:fileMode
-            call s:OpenFileMode(sanatizedArgs, a:rangeStart, a:rangeEnd)
+            call s:OpenFileMode(sanitizedArgs, a:rangeStart, a:rangeEnd)
         else
-            call s:OpenBrowserMode(sanatizedArgs)
+            call s:OpenBrowserMode(sanitizedArgs)
         endif
     catch /not a git repository/
         echom 'Not a git repository.'
