@@ -400,14 +400,14 @@ fu! s:AddLocalNodes(filePath) "{{{
     let headLine = search('^\(\(|\|\/\|\\\|\*\)\s\?\)*\s*([^)]*HEAD', 'cnw')
     let headLine = headLine == 0 ? 1 : headLine
     if result != ""
-	let line = s:AlignWithRefs(headLine, s:localUncommitedMsg)
+        let line = s:AlignWithRefs(headLine, s:localUncommitedMsg)
         call append(headLine-1, substitute(line, '*', '=', ''))
         let headLine += 1
     endif
     let gitCmd = "diff --no-color --cached" . suffix
     let [result, cmd] = s:RunGitCommand(gitCmd, 0)
     if result != ""
-	let line = s:AlignWithRefs(headLine, s:localCommitedMsg)
+        let line = s:AlignWithRefs(headLine, s:localCommitedMsg)
         call append(headLine-1, substitute(line, '*', '+', ''))
     endif
 endfu
@@ -415,12 +415,12 @@ fu! s:AlignWithRefs(targetLine, targetStr)
     "returns the targetStr prefixed with enough whitespace to align with
     "the first asterisk on targetLine
     if a:targetLine == 0
-	return '*  '.a:targetStr
+        return '*  '.a:targetStr
     endif
     let line = getline(a:targetLine)
     let idx = stridx(line, '(')
     if idx == -1
-	return '*  '.a:targetStr
+        return '*  '.a:targetStr
     endif
     return strpart(line, 0, idx) . a:targetStr
 endfu "}}}
@@ -1151,4 +1151,4 @@ endfunction "}}} }}}
 let &cpo = s:savecpo
 unlet s:savecpo
 
- " vim:fdm=marker
+ " vim:set et sw=4 ts=4 fdm=marker:
