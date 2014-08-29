@@ -444,15 +444,22 @@ fu! s:SetupMappings() "{{{
     nnoremap <buffer> <silent> o :call <SID>OpenGitvCommit("Gsplit", 0)<cr>
     nnoremap <buffer> <silent> O :call <SID>OpenGitvCommit("Gtabedit", 0)<cr>
     nnoremap <buffer> <silent> s :call <SID>OpenGitvCommit("Gvsplit", 0)<cr>
+
+    nnoremap <buffer> <silent> <Plug>(gitv-previous-commit) :<C-U>call <SID>JumpToCommit(0)<cr>
+    nnoremap <buffer> <silent> <Plug>(gitv-next-commit) :<C-U>call <SID>JumpToCommit(1)<cr>
+    "fuzzyfinder style key mappings
+    nnoremap <buffer> <silent> <Plug>(gitv-split) :call <SID>OpenGitvCommit("Gsplit", 0)<cr>
+    nnoremap <buffer> <silent> <Plug>(gitv-vsplit) :call <SID>OpenGitvCommit("Gvsplit", 0)<cr>
+    nnoremap <buffer> <silent> <Plug>(gitv-tabedit) :call <SID>OpenGitvCommit("Gtabedit", 0)<cr>
+    "force opening the fugitive buffer for the commit
+    nnoremap <buffer> <silent> <Plug>(gitv-edit) :call <SID>OpenGitvCommit("Gedit", 1)<cr>
     if(!exists("g:Gitv_DoNotMapCtrlKey"))
-        nnoremap <buffer> <silent> <C-n> :<C-U>call <SID>JumpToCommit(0)<cr>
-        nnoremap <buffer> <silent> <C-p> :<C-U>call <SID>JumpToCommit(1)<cr>
-        "fuzzyfinder style key mappings
-        nnoremap <buffer> <silent> <c-j> :call <SID>OpenGitvCommit("Gsplit", 0)<cr>
-        nnoremap <buffer> <silent> <c-k> :call <SID>OpenGitvCommit("Gvsplit", 0)<cr>
-        nnoremap <buffer> <silent> <c-l> :call <SID>OpenGitvCommit("Gtabedit", 0)<cr>
-        "force opening the fugitive buffer for the commit
-        nnoremap <buffer> <silent> <c-cr> :call <SID>OpenGitvCommit("Gedit", 1)<cr>
+        nmap <buffer> <silent> <C-n> <Plug>(gitv-previous-commit)
+        nmap <buffer> <silent> <C-p> <Plug>(gitv-next-commit)
+        nmap <buffer> <silent> <c-j> <Plug>(gitv-split)
+        nmap <buffer> <silent> <c-k> <Plug>(gitv-vsplit)
+        nmap <buffer> <silent> <c-l> <Plug>(gitv-tabedit)
+        nmap <buffer> <silent> <c-cr> <Plug>(gitv-edit)
     endif
     "for the terminal
     nnoremap <buffer> <silent> i :call <SID>OpenGitvCommit("Gedit", 1)<cr>
