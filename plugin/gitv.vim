@@ -159,8 +159,10 @@ fu! s:RunCommandRelativeToGitRepo(command) abort "{{{
 endfu "}}} }}}
 "Open And Update Gitv:"{{{
 fu! s:OpenGitv(extraArgs, fileMode, rangeStart, rangeEnd) "{{{
-    let sanitizedArgs = a:extraArgs   == "''" ? '' : a:extraArgs
-    let sanitizedArgs = sanitizedArgs == '""' ? '' : sanitizedArgs
+    let sanitizedArgs = a:extraArgs
+    if sanitizedArgs[0] =~ "[\"']" && sanitizedArgs[:-1] =~ "[\"']"
+        let sanitizedArgs = sanitizedArgs[1:-2]
+    endif
     let g:Gitv_InstanceCounter += 1
     if !s:IsCompatible() "this outputs specific errors
         return
