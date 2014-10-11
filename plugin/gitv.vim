@@ -159,17 +159,19 @@ fu! s:RunCommandRelativeToGitRepo(command) abort "{{{
 endfu "}}} }}}
 "Open And Update Gitv:"{{{
 fu! s:OpenGitv(extraArgs, fileMode, rangeStart, rangeEnd) "{{{
-    let sanatizedArgs = a:extraArgs   == "''" ? '' : a:extraArgs
-    let sanatizedArgs = sanatizedArgs == '""' ? '' : sanatizedArgs
+    let sanitizedArgs = a:extraArgs
+    if sanitizedArgs[0] =~ "[\"']" && sanitizedArgs[:-1] =~ "[\"']"
+        let sanitizedArgs = sanitizedArgs[1:-2]
+    endif
     let g:Gitv_InstanceCounter += 1
     if !s:IsCompatible() "this outputs specific errors
         return
     endif
     try
         if a:fileMode
-            call s:OpenFileMode(sanatizedArgs, a:rangeStart, a:rangeEnd)
+            call s:OpenFileMode(sanitizedArgs, a:rangeStart, a:rangeEnd)
         else
-            call s:OpenBrowserMode(sanatizedArgs)
+            call s:OpenBrowserMode(sanitizedArgs)
         endif
     catch /not a git repository/
         echom 'Not a git repository.'
@@ -400,14 +402,14 @@ fu! s:AddLocalNodes(filePath) "{{{
     let headLine = search('^\(\(|\|\/\|\\\|\*\)\s\?\)*\s*([^)]*HEAD', 'cnw')
     let headLine = headLine == 0 ? 1 : headLine
     if result != ""
-	let line = s:AlignWithRefs(headLine, s:localUncommitedMsg)
+        let line = s:AlignWithRefs(headLine, s:localUncommitedMsg)
         call append(headLine-1, substitute(line, '*', '=', ''))
         let headLine += 1
     endif
     let gitCmd = "diff --no-color --cached" . suffix
     let [result, cmd] = s:RunGitCommand(gitCmd, 0)
     if result != ""
-	let line = s:AlignWithRefs(headLine, s:localCommitedMsg)
+        let line = s:AlignWithRefs(headLine, s:localCommitedMsg)
         call append(headLine-1, substitute(line, '*', '+', ''))
     endif
 endfu
@@ -415,12 +417,12 @@ fu! s:AlignWithRefs(targetLine, targetStr)
     "returns the targetStr prefixed with enough whitespace to align with
     "the first asterisk on targetLine
     if a:targetLine == 0
-	return '*  '.a:targetStr
+        return '*  '.a:targetStr
     endif
     let line = getline(a:targetLine)
     let idx = stridx(line, '(')
     if idx == -1
-	return '*  '.a:targetStr
+        return '*  '.a:targetStr
     endif
     return strpart(line, 0, idx) . a:targetStr
 endfu "}}}
@@ -444,15 +446,22 @@ fu! s:SetupMappings() "{{{
     nnoremap <buffer> <silent> o :call <SID>OpenGitvCommit("Gsplit", 0)<cr>
     nnoremap <buffer> <silent> O :call <SID>OpenGitvCommit("Gtabedit", 0)<cr>
     nnoremap <buffer> <silent> s :call <SID>OpenGitvCommit("Gvsplit", 0)<cr>
+
+    nnoremap <buffer> <silent> <Plug>(gitv-previous-commit) :<C-U>call <SID>JumpToCommit(0)<cr>
+    nnoremap <buffer> <silent> <Plug>(gitv-next-commit) :<C-U>call <SID>JumpToCommit(1)<cr>
+    "fuzzyfinder style key mappings
+    nnoremap <buffer> <silent> <Plug>(gitv-split) :call <SID>OpenGitvCommit("Gsplit", 0)<cr>
+    nnoremap <buffer> <silent> <Plug>(gitv-vsplit) :call <SID>OpenGitvCommit("Gvsplit", 0)<cr>
+    nnoremap <buffer> <silent> <Plug>(gitv-tabedit) :call <SID>OpenGitvCommit("Gtabedit", 0)<cr>
+    "force opening the fugitive buffer for the commit
+    nnoremap <buffer> <silent> <Plug>(gitv-edit) :call <SID>OpenGitvCommit("Gedit", 1)<cr>
     if(!exists("g:Gitv_DoNotMapCtrlKey"))
-        nnoremap <buffer> <silent> <C-n> :<C-U>call <SID>JumpToCommit(0)<cr>
-        nnoremap <buffer> <silent> <C-p> :<C-U>call <SID>JumpToCommit(1)<cr>
-        "fuzzyfinder style key mappings
-        nnoremap <buffer> <silent> <c-j> :call <SID>OpenGitvCommit("Gsplit", 0)<cr>
-        nnoremap <buffer> <silent> <c-k> :call <SID>OpenGitvCommit("Gvsplit", 0)<cr>
-        nnoremap <buffer> <silent> <c-l> :call <SID>OpenGitvCommit("Gtabedit", 0)<cr>
-        "force opening the fugitive buffer for the commit
-        nnoremap <buffer> <silent> <c-cr> :call <SID>OpenGitvCommit("Gedit", 1)<cr>
+        nmap <buffer> <silent> <C-n> <Plug>(gitv-previous-commit)
+        nmap <buffer> <silent> <C-p> <Plug>(gitv-next-commit)
+        nmap <buffer> <silent> <c-j> <Plug>(gitv-split)
+        nmap <buffer> <silent> <c-k> <Plug>(gitv-vsplit)
+        nmap <buffer> <silent> <c-l> <Plug>(gitv-tabedit)
+        nmap <buffer> <silent> <c-cr> <Plug>(gitv-edit)
     endif
     "for the terminal
     nnoremap <buffer> <silent> i :call <SID>OpenGitvCommit("Gedit", 1)<cr>
@@ -1151,4 +1160,4 @@ endfunction "}}} }}}
 let &cpo = s:savecpo
 unlet s:savecpo
 
- " vim:fdm=marker
+ " vim:set et sw=4 ts=4 fdm=marker:
