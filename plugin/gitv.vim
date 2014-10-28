@@ -187,6 +187,15 @@ endfu "}}}
 fu! s:CompleteGitv(arglead, cmdline, pos) "{{{
     return fugitive#buffer().repo().git_chomp('rev-parse', '--symbolic', '--branches', '--tags', '--remotes')
                 \ . "\nHEAD\nFETCH_HEAD\nORIG_HEAD"
+                \ . "\n--after\n--all-match\n--ancestry-path\n--author-date-order"
+                \ . "\n--author=\n--author=\n--before=\n--bisect\n--boundary"
+                \ . "\n--branches\n--cherry-mark\n--cherry-pick\n--committer="
+                \ . "\n--date-order\n--dense\n--exclude=\n--first-parent"
+                \ . "\n--fixed-strings\n--follow\n--glob\n--grep-reflog"
+                \ . "\n--grep=\n--max-age=\n--max-count=\n--merges\n--min-age="
+                \ . "\n--min-parents=\n--not\n--pickaxe-all\n--pickaxe-regex"
+                \ . "\n--regexp-ignore-case\n--remotes\n--remove-empty\n--since="
+                \ . "\n--skip\n--tags\n--topo-order\n--until=\n--use-mailmap"
 endf "}}}
 fu! s:OpenBrowserMode(extraArgs) "{{{
     "this throws an exception if not a git repo which is caught immediately
