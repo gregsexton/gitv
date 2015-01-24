@@ -319,7 +319,7 @@ fu! s:GetFileSlices(range, filePath, commitCount, extraArgs) "{{{
     let range     = substitute(range, "'", "'\\\\''", 'g') "force unix style escaping even on windows
     let git       = fugitive#buffer().repo().git_command()
     let sliceCmd  = "for hash in `".git." log " . a:extraArgs
-    let sliceCmd .= " --no-color --pretty=format:%H -".a:commitCount."-- " . a:filePath . '`; '
+    let sliceCmd .= " --no-color --pretty=format:%H -".a:commitCount." -- " . a:filePath . '`; '
     let sliceCmd .= "do "
     let sliceCmd .= 'echo "****${hash}"; '
     let sliceCmd .= git." --no-pager blame -s -L '" . range . "' ${hash} " . a:filePath . "; "
