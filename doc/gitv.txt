@@ -216,25 +216,25 @@ modes.
                           file in the commit at the bottom of the selection. The
                           newest file is always on the right.
 
-    normal      S         This works for both browser and file mode. It opens a
-                          diffstat of everything that has changed since the
-                          commit under the cursor.
+    normal      S         Open a diffstat of everything that has changed since
+                          the commit under the cursor, in both browse and
+                          normal mode.
 
     visual      S         In visual mode this works in exactly the same way as
-                          normal mode. However, it only shows what has changed in
-                          the range of commits that are highlighted.
+                          normal mode. However, it only shows what has changed
+                          in the range of commits that are highlighted.
 
     visual      m         Merges the commit in either the top or bottom line of
-                          the selection in to the commit specified by the other
+                          the selection into the commit specified by the other
                           end of the selection. This uses prompts to guide you
-                          through the merging and should be fairly intuitive. It
-                          will also confirm if you wish to perform a
-                          fast-forward merge or not.
+                          through the merge process and should be fairly
+                          intuitive. It will also ask for confirmation if you
+                          wish to perform a fast-forward merge or not.
 
-                          gitv doesn't allow you to merge arbitrary commits. The
-                          lines at the top and bottom of the selection must
-                          contain refs in the form of tags, remotes or local
-                          branches.
+                          gitv does not allow you to merge arbitrary commits.
+                          The lines at the top and bottom of the selection
+                          must contain refs in the form of tags, remotes or
+                          local branches.
 
     normal      <leader>m Merges the first ref found on the current line in to
                           the branch currently pointed to by HEAD. This will
