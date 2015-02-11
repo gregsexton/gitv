@@ -185,9 +185,8 @@ fu! s:IsCompatible() "{{{
     return exists('g:loaded_fugitive')
 endfu "}}}
 fu! s:CompleteGitv(arglead, cmdline, pos) "{{{
-    return fugitive#buffer().repo().git_chomp('rev-parse', '--symbolic', '--branches', '--tags', '--remotes')
-                \ . "\nHEAD\nFETCH_HEAD\nORIG_HEAD"
-                \ . "\n--after\n--all-match\n--ancestry-path\n--author-date-order"
+    if match( a:arglead, '^-' ) >= 0
+        return  "\n--after\n--all-match\n--ancestry-path\n--author-date-order"
                 \ . "\n--author=\n--author=\n--before=\n--bisect\n--boundary"
                 \ . "\n--branches\n--cherry-mark\n--cherry-pick\n--committer="
                 \ . "\n--date-order\n--dense\n--exclude=\n--first-parent"
@@ -196,6 +195,17 @@ fu! s:CompleteGitv(arglead, cmdline, pos) "{{{
                 \ . "\n--min-parents=\n--not\n--pickaxe-all\n--pickaxe-regex"
                 \ . "\n--regexp-ignore-case\n--remotes\n--remove-empty\n--since="
                 \ . "\n--skip\n--tags\n--topo-order\n--until=\n--use-mailmap"
+    else
+        let refs = fugitive#buffer().repo().git_chomp('rev-parse', '--symbolic', '--branches', '--tags', '--remotes')
+        let refs .= "\nHEAD\nFETCH_HEAD\nORIG_HEAD"
+
+        " Complete ref names preceded by a ^ or anything followed by 2-3 dots
+        let prefix = matchstr( a:arglead, '\v^(\^|.*\.\.\.?)' )
+        if prefix == ''
+            return refs
+        else
+            return substitute( refs, "\\v(^|\n)\\zs", prefix, 'g' )
+        endif
 endf "}}}
 fu! s:OpenBrowserMode(extraArgs) "{{{
     "this throws an exception if not a git repo which is caught immediately
