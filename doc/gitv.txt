@@ -238,14 +238,14 @@ modes.
 
     visual      cp        Cherry-Picks the selected commits to the active
                           branch.
-    normal      cp        same as visual p
+    normal      cp        same as visual cp
 
     visual      b         Reset (mixed) the active brarch to the top of the
                           selected commits
     normal      b         same as visual b
     visual      bh        Reset (hard) the active brarch to the top of the
                           selected commits
-    normal      bh        same as visual b
+    normal      bh        same as visual bh
 
     visual      d         Delete a branch or tag on the selected line. You will
                           be asked which branch/tag to use.
