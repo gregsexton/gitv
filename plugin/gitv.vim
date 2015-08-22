@@ -271,9 +271,10 @@ fu! s:ToggleArg(args, toggle) "{{{
 endf "}}}
 fu! s:ConstructAndExecuteCmd(direction, commitCount, extraArgs, filePath, range) "{{{
     if a:range == [] "no range, setup and execute the command
-        let cmd  = "log " . a:extraArgs
+        let cmd  = "log " 
         let cmd .= " --no-color --decorate=full --pretty=format:\"%d %s__SEP__%ar__SEP__%an__SEP__[%h]\" --graph -"
         let cmd .= a:commitCount
+        let cmd .= " " . a:extraArgs
         if a:filePath != ''
             let cmd .= ' -- ' . a:filePath
         endif
