@@ -410,11 +410,15 @@ fu! s:SetupBuffer(commitCount, extraArgs, filePath, range) "{{{
     silent %s/refs\/tags\//t:/ge
     silent %s/refs\/remotes\//r:/ge
     silent %s/refs\/heads\///ge
-    silent %call s:Align("__SEP__", a:filePath)
-    silent %s/\s\+$//e
     call s:AddLoadMore()
     call s:AddLocalNodes(a:filePath)
     call s:AddFileModeSpecific(a:filePath, a:range, a:commitCount)
+
+    " run any autocmds the user may have defined to hook in here
+    silent doautocmd User GitvSetupBuffer
+
+    silent %call s:Align("__SEP__", a:filePath)
+    silent %s/\s\+$//e
     silent setlocal nomodifiable
     silent setlocal readonly
     silent setlocal cursorline
