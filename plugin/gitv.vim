@@ -51,7 +51,7 @@ let g:Gitv_InstanceCounter = 0
 let s:localUncommitedMsg = 'Local uncommitted changes, not checked in to index.'
 let s:localCommitedMsg   = 'Local changes checked in to index but not committed.'
 
-command! -nargs=* -range -bang -complete=custom,s:CompleteGitv Gitv call s:OpenGitv(shellescape(<q-args>), <bang>0, <line1>, <line2>)
+command! -nargs=* -range -bang -complete=custom,s:CompleteGitv Gitv call s:OpenGitv(<q-args>, <bang>0, <line1>, <line2>)
 cabbrev gitv <c-r>=(getcmdtype()==':' && getcmdpos()==1 ? 'Gitv' : 'gitv')<CR>
 
 "Public API:"{{{
