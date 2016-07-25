@@ -496,10 +496,10 @@ fu! s:SetupMappings() "{{{
     nmap <buffer> <silent> cp :call <SID>CherryPick()<cr>
     vmap <buffer> <silent> cp :call <SID>CherryPick()<cr>
 
-    nmap <buffer> <silent> b :call <SID>ResetBranch('--mixed')<cr>
-    vmap <buffer> <silent> b :call <SID>ResetBranch('--mixed')<cr>
-    nmap <buffer> <silent> bh :call <SID>ResetBranch('--hard')<cr>
-    vmap <buffer> <silent> bh :call <SID>ResetBranch('--hard')<cr>
+    nmap <buffer> <silent> rb :call <SID>ResetBranch('--mixed')<cr>
+    vmap <buffer> <silent> rb :call <SID>ResetBranch('--mixed')<cr>
+    nmap <buffer> <silent> rbh :call <SID>ResetBranch('--hard')<cr>
+    vmap <buffer> <silent> rbh :call <SID>ResetBranch('--hard')<cr>
 
     nmap <buffer> <silent> d :call <SID>DeleteRef()<cr>
     vmap <buffer> <silent> d :call <SID>DeleteRef()<cr>

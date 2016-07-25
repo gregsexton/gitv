@@ -240,12 +240,12 @@ modes.
                           branch.
     normal      cp        same as visual cp
 
-    visual      b         Reset (mixed) the active brarch to the top of the
+    visual      rb        Reset (mixed) the active branch to the top of the
                           selected commits
-    normal      b         same as visual b
-    visual      bh        Reset (hard) the active brarch to the top of the
+    normal      rb        same as visual rb
+    visual      rbh       Reset (hard) the active branch to the top of the
                           selected commits
-    normal      bh        same as visual bh
+    normal      rbh       same as visual rbh
 
     visual      d         Delete a branch or tag on the selected line. You will
                           be asked which branch/tag to use.
