@@ -504,6 +504,17 @@ fu! s:SetupMappings() "{{{
     vnoremap <buffer> <silent> m :call <SID>MergeBranches()<cr>
     nnoremap <buffer> <silent> <leader>m :call <SID>MergeToCurrent()<cr>
 
+    nmap <buffer> <silent> cp :call <SID>CherryPick()<cr>
+    vmap <buffer> <silent> cp :call <SID>CherryPick()<cr>
+
+    nmap <buffer> <silent> rb :call <SID>ResetBranch('--mixed')<cr>
+    vmap <buffer> <silent> rb :call <SID>ResetBranch('--mixed')<cr>
+    nmap <buffer> <silent> rbh :call <SID>ResetBranch('--hard')<cr>
+    vmap <buffer> <silent> rbh :call <SID>ResetBranch('--hard')<cr>
+
+    nmap <buffer> <silent> d :call <SID>DeleteRef()<cr>
+    vmap <buffer> <silent> d :call <SID>DeleteRef()<cr>
+
     "movement
     nnoremap <buffer> <silent> x :call <SID>JumpToBranch(0)<cr>
     nnoremap <buffer> <silent> X :call <SID>JumpToBranch(1)<cr>
@@ -1009,6 +1020,50 @@ fu! s:MergeToCurrent()
     let ff = ff == 1 ? ff : 0
 
     call s:PerformMerge("HEAD", target, ff)
+endfu "}}}
+fu! s:CherryPick() range "{{{
+    let refs2 = s:GetGitvSha(a:firstline)
+    let refs1 = s:GetGitvSha(a:lastline)
+    if refs1 == refs2
+        let refs = refs1
+    else
+        let refs = refs1 . "^.." . refs2
+    endif
+
+    echom "Cherry-Pick " . refs
+    exec 'Git cherry-pick ' . refs
+endfu "}}}
+fu! s:ResetBranch(mode) range "{{{
+    let ref = s:GetGitvSha(a:firstline)
+
+    echom "Reset " . a:mode . " to " . ref
+    exec 'Git reset ' . a:mode . " " . ref
+endfu "}}}
+fu! s:DeleteRef() range "{{{
+    let refs = s:GetGitvRefs(a:firstline)
+    call filter(refs, 'v:val !=? "HEAD"')
+    let choice = confirm("Choose branch to delete:", s:GetConfirmString(refs, "Cancel"))
+    if choice == 0
+        return
+    endif
+    let choice = get(refs, choice-1, "")
+    if choice == ""
+        return
+    endif
+    if match(choice, 'tag: .*') < 0
+        let command = "branch"
+    else
+        let command = "tag"
+    endif
+    let choice = substitute(choice, "^t:", "", "")
+    let choice = substitute(choice, "^r:", "", "")
+    let choice = substitute(choice, "^tag: t:", "", "")
+    if s:IsFileMode()
+        let relPath = s:GetRelativeFilePath()
+        let choice .= " -- " . relPath
+    endif
+    echom "Delete " . command . " " . choice
+    exec 'Git ' . command . " -d " . choice
 endfu "}}}
 fu! s:StatGitvCommit() range "{{{
     let shafirst = s:GetGitvSha(a:firstline)
