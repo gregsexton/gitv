@@ -132,7 +132,7 @@ section: "Commit Limiting".
     -G<regex>         Look for differences whose added or removed line
                       matches the given <regex>.
 
-3.4 Key mappings.
+3.4 Key mappings.                                     *gitv-browser-mappings*
 
 This is a list of key mappings that will work only in the gitv browser window.
 Where appropriate the differences in action is described for the two gitv
