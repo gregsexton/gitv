@@ -512,6 +512,9 @@ fu! s:SetupMappings() "{{{
     nmap <buffer> <silent> rbh :call <SID>ResetBranch('--hard')<cr>
     vmap <buffer> <silent> rbh :call <SID>ResetBranch('--hard')<cr>
 
+    nmap <buffer> <silent> rev :call <SID>Revert()<cr>
+    vmap <buffer> <silent> rev :call <SID>Revert()<cr>
+
     nmap <buffer> <silent> d :call <SID>DeleteRef()<cr>
     vmap <buffer> <silent> d :call <SID>DeleteRef()<cr>
 
@@ -1038,6 +1041,33 @@ fu! s:ResetBranch(mode) range "{{{
 
     echom "Reset " . a:mode . " to " . ref
     exec 'Git reset ' . a:mode . " " . ref
+endfu "}}}
+fu! s:Revert() range "{{{
+    let refs2 = s:GetGitvSha(a:firstline)
+    let refs1 = s:GetGitvSha(a:lastline)
+    let refs = refs1
+    if refs1 != refs2
+        let refs = refs1 . "^.." . refs2
+    endif
+
+    let mergearg = ''
+    let mergerefs = split(s:RunGitCommand('show ' . refs, 0)[0], '\n')
+    let mergerefs = split(matchstr(mergerefs, '^Merge:'))[1:]
+    if len(mergerefs) > 0
+        if refs1 != refs2
+            throw 'Cannot revert a range with a merge commit.'
+            return
+        endif
+        let mergearg = '-m 1'
+    endif
+    let cmd = 'revert --no-commit ' . mergearg . ' ' . refs
+    let result = s:RunGitCommand(cmd, 0)[0]
+    let g:result = result
+    if result != ''
+        throw split(result)[0]
+        return
+    endif
+    exec 'Gcommit'
 endfu "}}}
 fu! s:DeleteRef() range "{{{
     let refs = s:GetGitvRefs(a:firstline)
