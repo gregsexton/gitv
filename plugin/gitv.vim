@@ -1062,7 +1062,6 @@ fu! s:Revert() range "{{{
     endif
     let cmd = 'revert --no-commit ' . mergearg . ' ' . refs
     let result = s:RunGitCommand(cmd, 0)[0]
-    let g:result = result
     if result != ''
         throw split(result)[0]
         return
