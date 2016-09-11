@@ -247,6 +247,12 @@ modes.
                           selected commits
     normal      rbh       same as visual rbh
 
+    normal      rev       Revert the commit. If the commit is a merge, selects
+                          the first parent for reverting to.
+
+    visual      rev       Same as rev, but revert a range of commits. If a
+                          merge is within the range, fails by necessity.
+
     visual      d         Delete a branch or tag on the selected line. You will
                           be asked which branch/tag to use.
     normal      d         same as visual d
