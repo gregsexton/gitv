@@ -1036,12 +1036,12 @@ fu! s:BisectLog() "{{{
     endif
     let fname = input('Enter a filename to save the log to: ')
     if filewritable(fname) != 1
-        throw 'Cannot write to file: ' . fname
+        echoerr 'Cannot write to file: ' . fname
         return
     endif
     let result = split(s:RunGitCommand('bisect log', 0)[0], '\n')
     if v:shell_error
-        throw result[0]
+        echoerr result[0]
         return
     endif
     call writefile(result, fname)
@@ -1049,12 +1049,12 @@ endf "}}}
 fu! s:BisectReplay() "{{{
     let fname = input('Enter a filename to replay: ')
     if !filereadable(fname)
-        throw 'Cannot read from file: ' . fname
+        echoerr 'Cannot read from file: ' . fname
         return
     endif
     let result = split(s:RunGitCommand('bisect replay ' . fname, 0)[0], '\n')
     if v:shell_error
-        throw result[0]
+        echoerr result[0]
         return
     endif
     let b:Bisecting = 1
