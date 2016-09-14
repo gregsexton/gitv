@@ -163,6 +163,10 @@ fu! s:OpenGitv(extraArgs, fileMode, rangeStart, rangeEnd) "{{{
     if sanitizedArgs[0] =~ "[\"']" && sanitizedArgs[:-1] =~ "[\"']"
         let sanitizedArgs = sanitizedArgs[1:-2]
     endif
+    if match(sanitizedArgs, ' --bisect') >= 0
+        let sanitizedArgs = substitute(' --bisect', '', 'g')
+        let b:Bisecting = 1
+    endif
     let g:Gitv_InstanceCounter += 1
     if !s:IsCompatible() "this outputs specific errors
         return
