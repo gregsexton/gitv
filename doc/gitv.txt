@@ -508,7 +508,7 @@ losing functionality. The default is to create the mappings.
 
 If this is set then no bisect mappings will log their actions. This will
 prevent the need to press enter after every bisect action, but could cause
-confusion. Errors will still be show.
+confusion. Errors will still be shown.
 >
     let g:Gitv_QuietBisect = 1
 
