@@ -266,13 +266,6 @@ fu! s:LoadGitv(direction, reload, commitCount, extraArgs, filePath, range) "{{{
     echom "Loaded up to " . a:commitCount . " commits."
     return 1
 endf "}}}
-fu! s:DisableArg(args, disable) "{{{
-    if matchstr(a:args, a:disable) != ''
-      let NewArgs = substitute(a:args, ' ' . a:disable, '', '')
-    endif
-    let b:Gitv_ExtraArgs = NewArgs
-    return NewArgs
-endf "}}}
 fu! s:SanitizeArgs(args, sanitize) "{{{
     let newArgs = a:args
     for arg in a:sanitize
