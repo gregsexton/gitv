@@ -266,7 +266,7 @@ fu! s:LoadGitv(direction, reload, commitCount, extraArgs, filePath, range) "{{{
     echom "Loaded up to " . a:commitCount . " commits."
     return 1
 endf "}}}
-fu! s:SanitizeArgs(args, sanitize) "{{{
+fu! s:FilterArgs(args, sanitize) "{{{
     let newArgs = a:args
     for arg in a:sanitize
         let newArgs = substitute(newArgs, ' ' . arg, '', 'g')
@@ -288,7 +288,7 @@ fu! s:ConstructAndExecuteCmd(direction, commitCount, extraArgs, filePath, range)
         let extraArgs = a:extraArgs
         if exists('b:Bisecting')
             let cmd .= " --bisect"
-            let extraArgs = s:SanitizeArgs(extraArgs, ['--all', '--first-parent'])
+            let extraArgs = s:FilterArgs(extraArgs, ['--all', '--first-parent'])
         endif
         let cmd .= " --no-color --decorate=full --pretty=format:\"%d %s__SEP__%ar__SEP__%an__SEP__[%h]\" --graph -"
         let cmd .= a:commitCount
@@ -319,7 +319,7 @@ fu! s:ConstructRangeBuffer(commitCount, extraArgs, filePath, range) "{{{
     let hashCmd       = "log "
     let extraArgs = a:extraArgs
     if exists('b:Bisecting')
-        let extraArgs = s:SanitizeArgs(extraArgs, ['--all', '--first-parent'])
+        let extraArgs = s:FilterArgs(extraArgs, ['--all', '--first-parent'])
         let hashCmd .= extraArgs
         let cmd .= " --bisect"
     else
@@ -360,7 +360,7 @@ fu! s:GetFileSlices(range, filePath, commitCount, extraArgs) "{{{
     let sliceCmd  = "for hash in `".git." log " . a:extraArgs
     let extraArgs = a:extraArgs
     if exists('b:Bisecting')
-        let extraArgs = s:SanitizeArgs(extraArgs, ['--all', '--first-parent'])
+        let extraArgs = s:FilterArgs(extraArgs, ['--all', '--first-parent'])
         let cmd .= extraArgs
         let cmd .= " --bisect"
     else
