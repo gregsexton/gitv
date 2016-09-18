@@ -116,6 +116,8 @@ section: "Commit Limiting".
 
     --all             View repository history for all refs.
 
+    --bisect          If a bisect is started, show only the remaining commits.
+
     <since>..<until>  Show only commits between the named two commits. When
                       either <since> or <until> is omitted, it defaults to
                       HEAD, i.e. the tip of the current branch. For a more
@@ -294,6 +296,44 @@ around a repository history in the browser window.
                         current line.  When on a merge commit, a |count|
                         may be used to choose a parent other than the first.
 
+Here is a list of mappings for bisecting.
+
+    Mode        Map     Description~
+
+    normal      gbs     Begin the bisecting process. If the bisecting process
+                        has been started elsewhere, merely enables bisect mode.
+                        If the bisecting process has already been enabled,
+                        disables bisecting mode.
+                        Works in both modes.
+                        Mnemonic- git bisect start/git bisect stop.
+
+    visual      gbs     Same as normal mode, but if the bisecting process has
+                        not yet been started, marks the first commit selected
+                        as bad and the last commit selected as good.
+
+    normal      gbg     Mark the commit under the cursor as good.
+
+    visual      gbg     Mark selected commits as good.
+
+    normal      gbb     Mark the commit under the cursor as bad.
+
+    visual      gbb     Mark selected commits as bad.
+
+    normal      gbn     Skip the commit under the cursor. Accepts a count. If
+                        a count is given, ignores the commit under the cursor
+                        and starts at the currently checked out commit.
+                        Mnemonic- git bisect next.
+
+    visual      gbn     Skip the selected range of commits.
+
+    normal      gbr     End the bisect process. Mnemonic- git bisect reset.
+
+    normal      gbl     Save the current bisect history to a file. Edit the log
+                        file to correct mistakes and replay later.
+                        Mnemonic- git bisect log.
+
+    normal      gbp     Replay a saved log file.
+
 3.5 Commands
 
 Running the |:Git| command in the commit browser window, in either mode, will
@@ -463,6 +503,14 @@ losing functionality. The default is to create the mappings.
 >
     let g:Gitv_DoNotMapCtrlKey = 1
 >
+
+4.9 Do not log bisect actions.
+
+If this is set then no bisect mappings will log their actions. This will
+prevent the need to press enter after every bisect action, but could cause
+confusion. Errors will still be show.
+>
+    let g:Gitv_QuietBisect = 1
 
 ==============================================================================
 5. Changelog                                                *gitv-changelog*

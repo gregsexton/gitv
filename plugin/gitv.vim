@@ -163,6 +163,12 @@ fu! s:OpenGitv(extraArgs, fileMode, rangeStart, rangeEnd) "{{{
     if sanitizedArgs[0] =~ "[\"']" && sanitizedArgs[:-1] =~ "[\"']"
         let sanitizedArgs = sanitizedArgs[1:-2]
     endif
+    if match(sanitizedArgs, ' --bisect') >= 0
+        let sanitizedArgs = substitute(' --bisect', '', 'g')
+        if s:BisectHasStarted()
+            let b:Bisecting = 1
+        endif
+    endif
     let g:Gitv_InstanceCounter += 1
     if !s:IsCompatible() "this outputs specific errors
         return
@@ -260,6 +266,20 @@ fu! s:LoadGitv(direction, reload, commitCount, extraArgs, filePath, range) "{{{
     echom "Loaded up to " . a:commitCount . " commits."
     return 1
 endf "}}}
+fu! s:DisableArg(args, disable) "{{{
+    if matchstr(a:args, a:disable) != ''
+      let NewArgs = substitute(a:args, ' ' . a:disable, '', '')
+    endif
+    let b:Gitv_ExtraArgs = NewArgs
+    return NewArgs
+endf "}}}
+fu! s:SanitizeArgs(args, sanitize) "{{{
+    let newArgs = a:args
+    for arg in a:sanitize
+        let newArgs = substitute(newArgs, ' ' . arg, '', 'g')
+    endfor
+    return newArgs
+endf "}}}
 fu! s:ToggleArg(args, toggle) "{{{
     if matchstr(a:args, a:toggle) == ''
       let NewArgs = a:args . ' ' . a:toggle
@@ -272,17 +292,24 @@ endf "}}}
 fu! s:ConstructAndExecuteCmd(direction, commitCount, extraArgs, filePath, range) "{{{
     if a:range == [] "no range, setup and execute the command
         let cmd  = "log " 
+        let extraArgs = a:extraArgs
+        if exists('b:Bisecting')
+            let cmd .= " --bisect"
+            let extraArgs = s:SanitizeArgs(extraArgs, ['--all', '--first-parent'])
+        endif
         let cmd .= " --no-color --decorate=full --pretty=format:\"%d %s__SEP__%ar__SEP__%an__SEP__[%h]\" --graph -"
         let cmd .= a:commitCount
-        let cmd .= " " . a:extraArgs
+        let cmd .= " " . extraArgs
         if a:filePath != ''
             let cmd .= ' -- ' . a:filePath
         endif
+        let g:cmd = cmd
         silent let res = Gitv_OpenGitCommand(cmd, a:direction)
         return res
     else "range applies, setup a trivial buffer and then modify it with custom logic
         let cmd = "--version" "arbitrary command intended to setup the buffer
                               "and act as a check everything is ok
+        let g:cmd = cmd
         silent let res = Gitv_OpenGitCommand(cmd, a:direction)
         if !res | return res | endif
         silent let res = s:ConstructRangeBuffer(a:commitCount, a:extraArgs, a:filePath, a:range)
@@ -296,7 +323,15 @@ fu! s:ConstructRangeBuffer(commitCount, extraArgs, filePath, range) "{{{
     %delete
 
     "necessary as order is important; can't just iterate over keys(slices)
-    let hashCmd       = "log " . a:extraArgs
+    let hashCmd       = "log "
+    let extraArgs = a:extraArgs
+    if exists('b:Bisecting')
+        let extraArgs = s:SanitizeArgs(extraArgs, ['--all', '--first-parent'])
+        let hashCmd .= extraArgs
+        let cmd .= " --bisect"
+    else
+        let hashCmd = . extraArgs
+    endif
     let hashCmd      .= " --no-color --pretty=format:%H -".a:commitCount." -- " . a:filePath
     let [result, cmd] = s:RunGitCommand(hashCmd, 0)
     let hashes        = split(result, '\n')
@@ -330,6 +365,14 @@ fu! s:GetFileSlices(range, filePath, commitCount, extraArgs) "{{{
     let range     = substitute(range, "'", "'\\\\''", 'g') "force unix style escaping even on windows
     let git       = fugitive#buffer().repo().git_command()
     let sliceCmd  = "for hash in `".git." log " . a:extraArgs
+    let extraArgs = a:extraArgs
+    if exists('b:Bisecting')
+        let extraArgs = s:SanitizeArgs(extraArgs, ['--all', '--first-parent'])
+        let cmd .= extraArgs
+        let cmd .= " --bisect"
+    else
+        let cmd = . extraArgs
+    endif
     let sliceCmd .= " --no-color --pretty=format:%H -".a:commitCount." -- " . a:filePath . '`; '
     let sliceCmd .= "do "
     let sliceCmd .= 'echo "****${hash}"; '
@@ -380,7 +423,11 @@ fu! s:GetFinalOutputForHashes(hashes) "{{{
         let git       = fugitive#buffer().repo().git_command()
         let cmd       = 'for hash in ' . join(a:hashes, " ") . '; '
         let cmd      .= "do "
-        let cmd      .= git.' log --no-color --decorate=full --pretty=format:"%d %s__SEP__%ar__SEP__%an__SEP__[%h]%n" --graph -1 ${hash}; '
+        let cmd      .= git.' log'
+        if exists('b:Bisecting')
+            let cmd .= " --bisect"
+        endif
+        let cmd      .='--no-color --decorate=full --pretty=format:"%d %s__SEP__%ar__SEP__%an__SEP__[%h]%n" --graph -1 ${hash}; '
         let cmd      .= 'done'
         let finalCmd  = "bash -c " . shellescape(cmd)
 
@@ -517,6 +564,24 @@ fu! s:SetupMappings() "{{{
 
     nmap <buffer> <silent> d :call <SID>DeleteRef()<cr>
     vmap <buffer> <silent> d :call <SID>DeleteRef()<cr>
+
+    "bisect
+    nmap <buffer> <silent> gbs :call <SID>BisectStart('n')<cr>
+    vmap <buffer> <silent> gbs :call <SID>BisectStart('v')<cr>
+
+    nmap <buffer> <silent> gbg :call <SID>BisectGoodBad('good')<cr>
+    vmap <buffer> <silent> gbg :call <SID>BisectGoodBad('good')<cr>
+
+    nmap <buffer> <silent> gbb :call <SID>BisectGoodBad('bad')<cr>
+    vmap <buffer> <silent> gbb :call <SID>BisectGoodBad('bad')<cr>
+
+    nmap <buffer> <silent> gbn :call <SID>BisectSkip('n')<cr>
+    vmap <buffer> <silent> gbn :call <SID>BisectSkip('v')<cr>
+
+    nmap <buffer> <silent> gbr :call <SID>BisectReset()<cr>
+
+    nmap <buffer> <silent> gbl :call <SID>BisectLog()<cr>
+    nmap <buffer> <silent> gbp :call <SID>BisectReplay()<cr>
 
     "movement
     nnoremap <buffer> <silent> x :call <SID>JumpToBranch(0)<cr>
@@ -901,6 +966,161 @@ fu! s:EditRange(rangeDelimiter)
     call s:SetRange(idx, value)
     return 1
 endfu "}}}
+"Bisect: "{{{
+fu! s:BisectHasStarted() "{{{
+    call s:RunGitCommand('bisect log', 0)
+    return !v:shell_error
+endf "}}}
+fu! s:BisectStart(mode) range "{{{
+    if exists('b:Bisecting')
+        if !exists('g:Gitv_QuietBisect')
+            echom 'Bisect disabled'
+        endif
+        unlet! b:Bisecting
+    elseif !s:BisectHasStarted()
+        let result = s:RunGitCommand('bisect start', 0)[0]
+        if v:shell_error
+            echoerr split(result, '\n')[0]
+            return
+        endif
+        if a:mode == 'v'
+            call s:RunGitCommand('bisect bad ' . s:GetGitvSha(a:firstline), 0)[0]
+            if a:firstline != a:lastline
+                call s:RunGitCommand('bisect good ' . s:GetGitvSha(a:lastline), 0)[0]
+            endif
+        endif
+        let b:Bisecting = 1
+        if !exists('g:Gitv_QuietBisect')
+            echom 'Bisect started'
+        endif
+    else
+        let b:Bisecting = 1
+        if !exists('g:Gitv_QuietBisect')
+            echom 'Bisect enabled'
+        endif
+    endif
+    call s:LoadGitv('', 1, b:Gitv_CommitCount, b:Gitv_ExtraArgs, s:GetRelativeFilePath(), s:GetRange())
+endf "}}}
+fu! s:BisectReset() "{{{
+    if exists('b:Bisecting')
+        unlet! b:Bisecting
+    endif
+    if s:BisectHasStarted()
+        call s:RunGitCommand('bisect reset', 0)
+        if !exists('g:Gitv_QuietBisect')
+            echom 'Bisect stopped'
+        endif
+    else
+        if !exists('g:Gitv_QuietBisect')
+            echom 'Bisect disabled'
+        endif
+    endif
+    call s:LoadGitv('', 1, b:Gitv_CommitCount, b:Gitv_ExtraArgs, s:GetRelativeFilePath(), s:GetRange())
+endf "}}}
+fu! s:BisectGoodBad(goodbad) range "{{{
+    let goodbad = a:goodbad . ' '
+    if exists('b:Bisecting') && s:BisectHasStarted()
+        let result = ''
+        if a:firstline == a:lastline
+            let ref = s:GetGitvSha('.')
+            let result = s:RunGitCommand('bisect ' . goodbad . ref, 0)[0]
+            if v:shell_error
+                echoerr split(result, '\n')[0]
+                return
+            endif
+            if !exists('g:Gitv_QuietBisect')
+                echom ref . ' marked as ' . a:goodbad
+            endif
+        else
+            let refs2 = s:GetGitvSha(a:firstline)
+            let refs1 = s:GetGitvSha(a:lastline)
+            let refs = refs1 . "^.." . refs2
+            let cmd = 'log --pretty=format:%h '
+            let reflist = split(s:RunGitCommand(cmd . refs, 0)[0], '\n')
+            if v:shell_error
+                echoerr reflist[0]
+                return
+            endif
+            let errors = 0
+            for ref in reflist
+                let result = s:RunGitCommand('bisect ' . goodbad . ref, 0)[0]
+                if v:shell_error
+                    echoerr split(result, '\n')[0]
+                    errors += 1
+                endif
+            endfor
+            if !exists('g:Gitv_QuietBisect')
+                echom refs . ' commits marked as ' . a:goodbad
+            endif
+            if errors == len(reflist)
+                return
+            endif
+        endif
+        call s:LoadGitv('', 1, b:Gitv_CommitCount, b:Gitv_ExtraArgs, s:GetRelativeFilePath(), s:GetRange())
+    endif
+endf "}}}
+fu! s:BisectSkip(mode) range "{{{
+    if exists('b:Bisecting') && s:BisectHasStarted()
+        if a:mode == 'n' && v:count
+            let loops = abs(v:count)
+            let loop = 0
+            let errors = 0
+            while loop < loops
+                let result = s:RunGitCommand('bisect skip', 0)[0]
+                if v:shell_error
+                    echoerr split(result, '\n')[0]
+                    let errors += 1
+                endif
+                let loop += 1
+            endwhile
+            if !exists('g:Gitv_QuietBisect')
+                echom loop - errors . ' commits skipped'
+            endif
+            if errors == loops
+                return
+            endif
+        else "visual mode or no range
+            let cmd = 'bisect skip '
+            let refs = s:GetGitvSha(a:lastline)
+            if a:firstline != a:lastline
+                let refs2 = s:GetGitvSha(a:firstline)
+                let refs .= "^.." . refs2
+            endif
+            let result = s:RunGitCommand('bisect skip ' . refs, 0)[0]
+            if v:shell_error
+                echoerr split(result, '\n')[0]
+                return
+            else
+                if !exists('g:Gitv_QuietBisect')
+                    echom refs . 'skipped'
+                endif
+            endif
+        endif
+        call s:LoadGitv('', 1, b:Gitv_CommitCount, b:Gitv_ExtraArgs, s:GetRelativeFilePath(), s:GetRange())
+    endif
+endf "}}}
+fu! s:BisectLog() "{{{
+    if !s:BisectHasStarted()
+        return
+    endif
+    let fname = input('Enter a filename to save the log to: ', '', 'file')
+    let result = split(s:RunGitCommand('bisect log', 0)[0], '\n')
+    if v:shell_error
+        echoerr result[0]
+        return
+    endif
+    call writefile(result, fname)
+endf "}}}
+fu! s:BisectReplay() "{{{
+    let fname = input('Enter a filename to replay: ', '', 'file')
+    let result = split(s:RunGitCommand('bisect replay ' . fname, 0)[0], '\n')
+    if v:shell_error
+        echoerr result[0]
+        return
+    endif
+    let b:Bisecting = 1
+    call s:LoadGitv('', 1, b:Gitv_CommitCount, b:Gitv_ExtraArgs, s:GetRelativeFilePath(), s:GetRange())
+endf "}}} }}}
 fu! s:CheckOutGitvCommit() "{{{
     let allrefs = s:GetGitvRefs('.')
     let sha = s:GetGitvSha(line('.'))
