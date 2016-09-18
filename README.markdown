@@ -1,9 +1,3 @@
-#Looking for a maintainer
-
-I no longer use Vim regularly enough to maintain this project. If you
-are interested in taking over ownership of this project please email
-me.
-
 #Readme
 
 This repository represents the latest bleeding-edge changes to gitv.
