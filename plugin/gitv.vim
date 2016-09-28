@@ -323,7 +323,7 @@ fu! s:ConstructRangeBuffer(commitCount, extraArgs, filePath, range) "{{{
         let hashCmd .= extraArgs
         let cmd .= " --bisect"
     else
-        let hashCmd = . extraArgs
+        let hashCmd .= extraArgs
     endif
     let hashCmd      .= " --no-color --pretty=format:%H -".a:commitCount." -- " . a:filePath
     let [result, cmd] = s:RunGitCommand(hashCmd, 0)
@@ -359,12 +359,13 @@ fu! s:GetFileSlices(range, filePath, commitCount, extraArgs) "{{{
     let git       = fugitive#buffer().repo().git_command()
     let sliceCmd  = "for hash in `".git." log " . a:extraArgs
     let extraArgs = a:extraArgs
+    let cmd       = ''
     if exists('b:Bisecting')
         let extraArgs = s:FilterArgs(extraArgs, ['--all', '--first-parent'])
         let cmd .= extraArgs
         let cmd .= " --bisect"
     else
-        let cmd = . extraArgs
+        let cmd .= extraArgs
     endif
     let sliceCmd .= " --no-color --pretty=format:%H -".a:commitCount." -- " . a:filePath . '`; '
     let sliceCmd .= "do "
@@ -420,7 +421,7 @@ fu! s:GetFinalOutputForHashes(hashes) "{{{
         if exists('b:Bisecting')
             let cmd .= " --bisect"
         endif
-        let cmd      .='--no-color --decorate=full --pretty=format:"%d %s__SEP__%ar__SEP__%an__SEP__[%h]%n" --graph -1 ${hash}; '
+        let cmd      .=' --no-color --decorate=full --pretty=format:"%d %s__SEP__%ar__SEP__%an__SEP__[%h]%n" --graph -1 ${hash}; '
         let cmd      .= 'done'
         let finalCmd  = "bash -c " . shellescape(cmd)
 
