@@ -512,6 +512,60 @@ confusion. Errors will still be shown.
 >
     let g:Gitv_QuietBisect = 1
 
+4.10 Custom key mappings                       *gitv-custom-browser-mappings*
+
+Set custom key mappings which will overwrite the defaults. The following would
+result in bindings equivalent to the defaults.
+
+    let g:Gitv_CustomMappings = {
+      \'quit': 'q',
+      \'update': 'u',
+      \'toggleAll': 'a',
+      \'nextBranch': 'x',
+      \'prevBranch': 'X',
+      \'nextRef': 'r',
+      \'prevRef': 'R',
+      \'editCommit': [
+        \'<cr>', { 'keys': '<LeftMouse>', 'prefix', '<LeftMouse>' }
+      \],
+      \'splitCommit': 'o',
+      \'tabeCommit': 'O',
+      \'let': 's',
+      \'editCommitDetails': 'i',
+      \'diff': 'D',
+      \'vdiff': 'D',
+      \'stat': 'S',
+      \'vstat': 'S',
+      \'checkout': 'co',
+      \'merge': '<leader>m',
+      \'vmerge': 'm',
+      \'cherryPick': 'cp',
+      \'vcherryPick': 'cp',
+      \'reset': 'rb',
+      \'vreset': 'rb',
+      \'resetHard': 'rbh',
+      \'vresetHard': 'rbh',
+      \'revert': 'rev',
+      \'vrevert': 'rev',
+      \'delete': 'd',
+      \'vdelete': 'd',
+      \'bisectStart': 'gbs',
+      \'vbisectStart': 'gbs',
+      \'bisectGood': 'gbg',
+      \'vbisectGood': 'gbg',
+      \'bisectBad': 'gbb',
+      \'vbisectBad': 'gbb',
+      \'bisectSkip': 'gbn',
+      \'vbisectSkip': 'gbn',
+      \'bisectReset': 'gbr',
+      \'bisectLog': 'gbl',
+      \'bisectReplay': 'gbp',
+      \'head': 'P',
+      \'parent': 'p',
+      \'git': 'git',
+      \'yank': 'yc'
+    \}
+
 ==============================================================================
 5. Changelog                                                *gitv-changelog*
 

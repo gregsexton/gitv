@@ -45,6 +45,10 @@ if !exists('g:Gitv_PromptToDeleteMergeBranch')
     let g:Gitv_PromptToDeleteMergeBranch = 0
 endif
 
+if !exists('g:Gitv_CustomMappings')
+    let g:Gitv_CustomMappings = {}
+endif
+
 "this counts up each time gitv is opened to ensure a unique file name
 let g:Gitv_InstanceCounter = 0
 
@@ -504,96 +508,390 @@ fu! s:AddFileModeSpecific(filePath, range, commitCount) "{{{
         endif
     endif
 endfu "}}}
-fu! s:SetupMappings() "{{{
-    "operations
-    nnoremap <buffer> <silent> <cr> :call <SID>OpenGitvCommit("Gedit", 0)<cr>
-    nnoremap <buffer> <silent> <LeftMouse> <LeftMouse>:call <SID>OpenGitvCommit("Gedit", 0)<cr>
-    nnoremap <buffer> <silent> o :call <SID>OpenGitvCommit("Gsplit", 0)<cr>
-    nnoremap <buffer> <silent> O :call <SID>OpenGitvCommit("Gtabedit", 0)<cr>
-    nnoremap <buffer> <silent> s :call <SID>OpenGitvCommit("Gvsplit", 0)<cr>
+"Mapping: "{{{
+fu! s:SetDefaultMappings() "{{{
+    " creates the script-scoped dictionary of mapping descriptors
+    " the dictionary will optionally include ctrl based commands
+    " sets s:defaultMappings to the dictionary
+    let s:defaultMappings = {}
 
-    nnoremap <buffer> <silent> <Plug>(gitv-previous-commit) :<C-U>call <SID>JumpToCommit(0)<cr>
-    nnoremap <buffer> <silent> <Plug>(gitv-next-commit) :<C-U>call <SID>JumpToCommit(1)<cr>
-    "fuzzyfinder style key mappings
-    nnoremap <buffer> <silent> <Plug>(gitv-split) :call <SID>OpenGitvCommit("Gsplit", 0)<cr>
-    nnoremap <buffer> <silent> <Plug>(gitv-vsplit) :call <SID>OpenGitvCommit("Gvsplit", 0)<cr>
-    nnoremap <buffer> <silent> <Plug>(gitv-tabedit) :call <SID>OpenGitvCommit("Gtabedit", 0)<cr>
-    "force opening the fugitive buffer for the commit
-    nnoremap <buffer> <silent> <Plug>(gitv-edit) :call <SID>OpenGitvCommit("Gedit", 1)<cr>
-    if(!exists("g:Gitv_DoNotMapCtrlKey"))
-        nmap <buffer> <silent> <C-n> <Plug>(gitv-previous-commit)
-        nmap <buffer> <silent> <C-p> <Plug>(gitv-next-commit)
-        nmap <buffer> <silent> <c-j> <Plug>(gitv-split)
-        nmap <buffer> <silent> <c-k> <Plug>(gitv-vsplit)
-        nmap <buffer> <silent> <c-l> <Plug>(gitv-tabedit)
-        nmap <buffer> <silent> <c-cr> <Plug>(gitv-edit)
-    endif
-    "for the terminal
-    nnoremap <buffer> <silent> i :call <SID>OpenGitvCommit("Gedit", 1)<cr>
+    " convenience
+    let s:defaultMappings.quit = {
+        \'cmd': ':call <SID>CloseGitv()<cr>', 'bindings': 'q'
+    \}
+    let s:defaultMappings.update = {
+        \'cmd': ':call <SID>LoadGitv('', 1, b:Gitv_CommitCount, b:Gitv_ExtraArgs, <SID>GetRelativeFilePath(), <SID>GetRange())<cr>',
+        \'bindings': 'u'
+    \}
+    let s:defaultMappings.toggleAll = {
+        \'cmd': ':call <SID>LoadGitv('', 0, b:Gitv_CommitCount, <SID>ToggleArg(b:Gitv_ExtraArgs, "--all"), <SID>GetRelativeFilePath(), <SID>GetRange())<cr>',
+        \'bindings': 'a'
+    \}
 
-    nnoremap <buffer> <silent> q :call <SID>CloseGitv()<cr>
-    nnoremap <buffer> <silent> u :call <SID>LoadGitv('', 1, b:Gitv_CommitCount, b:Gitv_ExtraArgs, <SID>GetRelativeFilePath(), <SID>GetRange())<cr>
-    nnoremap <buffer> <silent> a :call <SID>LoadGitv('', 0, b:Gitv_CommitCount, <SID>ToggleArg(b:Gitv_ExtraArgs, '--all'), <SID>GetRelativeFilePath(), <SID>GetRange())<cr>
-    nnoremap <buffer> <silent> co :call <SID>CheckOutGitvCommit()<cr>
+    " movement
+    let s:defaultMappings.nextBranch = {
+        \'cmd': ':call <SID>JumpToBranch(0)<cr>',
+        \'bindings': 'x'
+    \}
+    let s:defaultMappings.prevBranch = {
+        \'cmd': ':call <SID>JumpToBranch(1)<cr>',
+        \'bindings': 'X'
+    \}
+    let s:defaultMappings.nextRef = {
+        \'cmd': ':call <SID>JumpToRef(0)<cr>',
+        \'bindings': 'r'
+    \}
+    let s:defaultMappings.prevRef = {
+        \'cmd': ':call <SID>JumpToRef(1)<cr>',
+        \'bindings': 'R'
+    \}
+    let s:defaultMappings.head = {
+        \'cmd': ':call <SID>JumpToHead()<cr>',
+        \'bindings': 'P'
+    \}
+    let s:defaultMappings.parent = {
+        \'cmd': ':<c-u>call <SID>JumpToParent()<cr>',
+        \'bindings': 'p'
+    \}
 
-    nnoremap <buffer> <silent> D :call <SID>DiffGitvCommit()<cr>
-    vnoremap <buffer> <silent> D :call <SID>DiffGitvCommit()<cr>
+    " viewing commits
+    let s:defaultMappings.editCommit = {
+        \'cmd': ':call <SID>OpenGitvCommit("Gedit", 0)<cr>',
+        \'bindings': [
+            \'<cr>', { 'keys': '<LeftMouse>', 'prefix': '<LeftMouse>' }
+        \],
+    \}
+    " <Plug>(gitv-*) are fuzzyfinder style keymappings
+    let s:defaultMappings.splitCommit = {
+        \'cmd': ':call <SID>OpenGitvCommit("Gsplit", 0)<cr>',
+        \'bindings': 'o',
+        \'permanentBindings': '<Plug>(gitv-split)'
+    \}
+    let s:defaultMappings.tabeCommit = {
+        \'cmd': ':call <SID>OpenGitvCommit("Gtabedit", 0)<cr>',
+        \'bindings': 'O' ,
+        \'permanentBindings': '<Plug>(gitv-tabedit)'
+    \}
+    let s:defaultMappings.vsplitCommit = {
+        \'cmd': ':call <SID>OpenGitvCommit("Gvsplit", 0)<cr>',
+        \'bindings': 's',
+        \'permanentBindings': '<Plug>(gitv-vsplit)'
+    \}
+    let s:defaultMappings.previousCommit = {
+        \'cmd': ':<C-U>call <SID>JumpToCommit(0)<cr>',
+        \'preventCustomBindings': 1,
+        \'bindings': '<Plug>(gitv-previous-commit)'
+    \}
+    let s:defaultMappings.nextCommit = {
+        \'cmd': ':<C-U>call <SID>JumpToCommit(1)<cr>',
+        \'preventCustomBindings': 1,
+        \'bindings': '<Plug>(gitv-next-commit)'
+    \}
+    " force opening the fugitive buffer for the commit
+    let s:defaultMappings.editCommitDetails = {
+        \'cmd': ':call <SID>OpenGitvCommit("Gedit", 1)<cr>',
+        \'bindings': 'i',
+        \'permanentBindings': '<Plug>(gitv-edit)'
+    \}
+    let s:defaultMappings.diff = {
+        \'cmd': ':call <SID>DiffGitvCommit()<cr>',
+        \'bindings': 'D'
+    \}
+    let s:defaultMappings.vdiff = {
+        \'mapCmd': 'vnoremap',
+        \'cmd': ':call <SID>DiffGitvCommit()<cr>',
+        \'bindings': 'D'
+    \}
+    let s:defaultMappings.stat = {
+        \'cmd': ':call <SID>StatGitvCommit()<cr>',
+        \'bindings': 'Scall'
+    \}
+    let s:defaultMappings.vstat = {
+        \'mapCmd': 'vnoremap',
+        \'cmd': ':call <SID>StatGitvCommit()<cr>',
+        \'bindings': 'S'
+    \}
 
-    nnoremap <buffer> <silent> S :call <SID>StatGitvCommit()<cr>
-    vnoremap <buffer> <silent> S :call <SID>StatGitvCommit()<cr>
+    " general git commands
+    let s:defaultMappings.checkout = {
+        \'cmd': ':call <SID>CheckOutGitvCommit()<cr>', 'bindings': 'co'
+    \}
+    let s:defaultMappings.merge = {
+        \'cmd': ':call <SID>MergeToCurrent()<cr>', 'bindings': '<leader>m'
+    \}
+    let s:defaultMappings.vmerge = {
+        \'mapCmd': 'vnoremap',
+        \'cmd': ':call <SID>MergeBranches()<cr>',
+        \'bindings': 'm'
+    \}
+    let s:defaultMappings.cherryPick = {
+        \'mapCmd': 'nmap',
+        \'cmd': ':call <SID>CherryPick()<cr>',
+        \'bindings': 'cp'
+    \}
+    let s:defaultMappings.vcherryPick = {
+        \'mapCmd': 'vmap',
+        \'cmd': ':call <SID>CherryPick()<cr>',
+        \'bindings': 'cp'
+    \}
+    let s:defaultMappings.reset = {
+        \'mapCmd': 'nmap',
+        \'cmd': ':call <SID>ResetBranch("--mixed")<cr>',
+        \'bindings': 'rb'
+    \}
+    let s:defaultMappings.vreset = {
+        \'mapCmd': 'vmap',
+        \'cmd': ':call <SID>ResetBranch("--mixed")<cr>',
+        \'bindings': 'rb'
+    \}
+    let s:defaultMappings.resetHard = {
+        \'mapCmd': 'nmap',
+        \'cmd': ':call <SID>ResetBranch("--hard")<cr>',
+        \'bindings': 'rbh'
+    \}
+    let s:defaultMappings.vresetHard = {
+        \'mapCmd': 'vmap',
+        \'cmd': ':call <SID>ResetBranch("--hard")<cr>',
+        \'bindings': 'rbh'
+    \}
+    let s:defaultMappings.revert = {
+        \'mapCmd': 'nmap',
+        \'cmd': ':call <SID>Revert()<cr>',
+        \'bindings': 'rev'
+    \}
+    let s:defaultMappings.vrevert = {
+        \'mapCmd': 'vmap',
+        \'cmd': ':call <SID>Revert()<cr>',
+        \'bindings': 'rev'
+    \}
+    let s:defaultMappings.delete = {
+        \'mapCmd': 'nmap',
+        \'cmd': ':call <SID>DeleteRef()<cr>',
+        \'bindings': 'd'
+    \}
+    let s:defaultMappings.vdelete = {
+        \'mapCmd': 'vmap',
+        \'cmd': ':call <SID>DeleteRef()<cr>',
+        \'bindings': 'd'
+    \}
 
-    vnoremap <buffer> <silent> m :call <SID>MergeBranches()<cr>
-    nnoremap <buffer> <silent> <leader>m :call <SID>MergeToCurrent()<cr>
+    " bisecting
+    let s:defaultMappings.bisectStart = {
+        \'mapCmd': 'nmap',
+        \'cmd': ':call <SID>BisectStart("n")<cr>',
+        \'bindings': 'gbs'
+    \}
+    let s:defaultMappings.vbisectStart = {
+        \'mapCmd': 'vmap',
+        \'cmd': ':call <SID>BisectStart("v")<cr>',
+        \'bindings': 'gbs'
+    \}
+    let s:defaultMappings.bisectGood = {
+        \'mapCmd': 'nmap',
+        \'cmd': ':call <SID>BisectGoodBad("good")<cr>',
+        \'bindings': 'gbg'
+    \}
+    let s:defaultMappings.vbisectGood = {
+        \'mapCmd': 'vmap',
+        \'cmd': ':call <SID>BisectGoodBad("good")<cr>',
+        \'bindings': 'gbg'
+    \}
+    let s:defaultMappings.bisectBad = {
+        \'mapCmd': 'nmap',
+        \'cmd': ':call <SID>BisectGoodBad("bad")<cr>',
+        \'bindings': 'gbb'
+    \}
+    let s:defaultMappings.vbisectBad = {
+        \'mapCmd': 'vmap',
+        \'cmd': ':call <SID>BisectGoodBad("bad")<cr>',
+        \'bindings': 'gbb'
+    \}
+    let s:defaultMappings.bisectSkip = {
+        \'mapCmd': 'nmap',
+        \'cmd': ':call <SID>BisectSkip("n")<cr>',
+        \'bindings': 'gbn'
+    \}
+    let s:defaultMappings.vbisectSkip = {
+        \'mapCmd': 'vmap',
+        \'cmd': ':call <SID>BisectSkip("v")<cr>',
+        \'bindings': 'gbn'
+    \}
+    let s:defaultMappings.bisectReset = {
+        \'mapCmd': 'nmap',
+        \'cmd': ':call <SID>BisectReset()<cr>',
+        \'bindings': 'gbr'
+    \}
+    let s:defaultMappings.bisectLog = {
+        \'mapCmd': 'nmap',
+        \'cmd': ':call <SID>BisectLog()<cr>',
+        \'bindings': 'gbl'
+    \}
+    let s:defaultMappings.bisectReplay = {
+        \'mapCmd': 'nmap',
+        \'cmd': ':call <SID>BisectReplay()<cr>',
+        \'bindings': 'gbp'
+    \}
 
-    nmap <buffer> <silent> cp :call <SID>CherryPick()<cr>
-    vmap <buffer> <silent> cp :call <SID>CherryPick()<cr>
-
-    nmap <buffer> <silent> rb :call <SID>ResetBranch('--mixed')<cr>
-    vmap <buffer> <silent> rb :call <SID>ResetBranch('--mixed')<cr>
-    nmap <buffer> <silent> rbh :call <SID>ResetBranch('--hard')<cr>
-    vmap <buffer> <silent> rbh :call <SID>ResetBranch('--hard')<cr>
-
-    nmap <buffer> <silent> rev :call <SID>Revert()<cr>
-    vmap <buffer> <silent> rev :call <SID>Revert()<cr>
-
-    nmap <buffer> <silent> d :call <SID>DeleteRef()<cr>
-    vmap <buffer> <silent> d :call <SID>DeleteRef()<cr>
-
-    "bisect
-    nmap <buffer> <silent> gbs :call <SID>BisectStart('n')<cr>
-    vmap <buffer> <silent> gbs :call <SID>BisectStart('v')<cr>
-
-    nmap <buffer> <silent> gbg :call <SID>BisectGoodBad('good')<cr>
-    vmap <buffer> <silent> gbg :call <SID>BisectGoodBad('good')<cr>
-
-    nmap <buffer> <silent> gbb :call <SID>BisectGoodBad('bad')<cr>
-    vmap <buffer> <silent> gbb :call <SID>BisectGoodBad('bad')<cr>
-
-    nmap <buffer> <silent> gbn :call <SID>BisectSkip('n')<cr>
-    vmap <buffer> <silent> gbn :call <SID>BisectSkip('v')<cr>
-
-    nmap <buffer> <silent> gbr :call <SID>BisectReset()<cr>
-
-    nmap <buffer> <silent> gbl :call <SID>BisectLog()<cr>
-    nmap <buffer> <silent> gbp :call <SID>BisectReplay()<cr>
-
-    "movement
-    nnoremap <buffer> <silent> x :call <SID>JumpToBranch(0)<cr>
-    nnoremap <buffer> <silent> X :call <SID>JumpToBranch(1)<cr>
-    nnoremap <buffer> <silent> r :call <SID>JumpToRef(0)<cr>
-    nnoremap <buffer> <silent> R :call <SID>JumpToRef(1)<cr>
-    nnoremap <buffer> <silent> P :call <SID>JumpToHead()<cr>
-    nnoremap <buffer> <silent> p :<c-u>call <SID>JumpToParent()<cr>
-
-    "misc
-    nnoremap <buffer> git :Git<space>
+    " misc
+    let s:defaultMappings.git = {
+        \'mapOpts': '<buffer>',
+        \'cmd': ':Git<space>',
+        \'bindings': 'git'
+    \}
     " yank the commit hash
     if has('mac') || !has('unix') || has('xterm_clipboard')
-        nnoremap <buffer> <silent> yc m'$F[w"+yw`'
+        let s:defaultMappings.yank = {
+            \'cmd': "m'$F[w\"+yw`'",
+            \'bindings': 'yc'
+        \}
     else
-        nnoremap <buffer> <silent> yc m'$F[wyw`'
+        let s:defaultMappings.yank = {
+            \'cmd': "m'$F[wyw`'",
+            \'bindings': 'yc'
+        \}
+    endif
+
+    " bindings which use ctrl
+    if !exists('g:Gitv_DoNotMapCtrlKey')
+        let s:defaultMappings.ctrlPreviousCommit = {
+            \'mapCmd': 'nmap',
+            \'cmd': '<Plug>(gitv-previous-commit)',
+            \'preventCustomBindings': 1,
+            \'bindings': '<C-n>'
+        \}
+        let s:defaultMappings.ctrlNextCommit = {
+            \'mapCmd': 'nmap',
+            \'cmd': '<Plug>(gitv-next-commit)',
+            \'preventCustomBindings': 1,
+            \'bindings': '<C-p>'
+        \}
+        let s:defaultMappings.ctrlEdit = {
+            \'mapCmd': 'nmap',
+            \'cmd': '<Plug>(gitv-edit)',
+            \'preventCustomBindings': 1,
+            \'bindings': '<c-cr>'
+        \}
+        let s:defaultMappings.ctrlSplit = {
+            \'mapCmd': 'nmap',
+            \'cmd': '<Plug>(gitv-split)',
+            \'preventCustomBindings': 1,
+            \'bindings': '<c-j>'
+        \}
+        let s:defaultMappings.ctrlVsplit = {
+            \'mapCmd': 'nmap',
+            \'cmd': '<Plug>(gitv-vsplit)',
+            \'preventCustomBindings': 1,
+            \'bindings': '<c-k>'
+        \}
+        let s:defaultMappings.ctrlTabe = {
+            \'mapCmd': 'nmap',
+            \'cmd': '<Plug>(gitv-tabedit)',
+            \'preventCustomBindings': 1,
+            \'bindings': '<c-l>'
+        \}
     endif
 endf "}}}
+fu! s:TransformBindings(bindings) "{{{
+    " a:bindings can be a string or list of (in)complete binding descriptors
+    " a list of complete binding descriptors will be returned
+    " a complete binding object is a binding object with all possible fields
+    let bindings = a:bindings
+    if type(bindings) != 3 " list
+        let bindings = [bindings]
+    endif
+    let newBindings = []
+    for binding in bindings
+        let newBinding = binding
+        if type(newBinding) != 4 " dictionary
+            let newBinding = { 'keys': newBinding }
+        endif
+        if !exists('newBinding.prefix')
+            let newBinding.prefix = ''
+        endif
+        call add(newBindings, newBinding)
+    endfor
+    return newBindings
+endf "}}}
+fu! s:GetBindings(mapId) "{{{
+    " returns a list of complete binding objects based on customs/defaults
+    " does not return custom bindings for descriptors with preventCustomBindings
+    " always includes permanentBindings for an object
+    let defaults = s:defaultMappings[a:mapId]
+    if exists('defaults.permanentBindings')
+        let permanentBindings = s:TransformBindings(defaults.permanentBindings)
+    else
+        let permanentBindings = []
+    endif
+    if !exists('g:Gitv_CustomMappings[a:mapId]')
+        let bindings = defaults.bindings
+    else
+        if exists('defaults.preventCustomBindings')
+            let bindings = defaults.bindings
+        else
+            let bindings = g:Gitv_CustomMappings[a:mapId]
+        endif
+    endif
+    return s:TransformBindings(bindings) + permanentBindings
+endf "}}}
+fu! s:GetMapCmd(mapId) "{{{
+    " gets the map command from the dictionary of defaults
+    " if it does not exist, returns 'nnoremap'
+    let defaults = s:defaultMappings[a:mapId]
+    if !exists('defaults.mapCmd')
+        return 'nnoremap'
+    endif
+    return defaults.mapCmd
+endf "}}}
+fu! s:GetMapOpts(mapId) "{{{
+    " gets the map options from the dictionary of defaults
+    " if it does not exist, returns '<buffer> <silent>'
+    let defaults = s:defaultMappings[a:mapId]
+    if !exists('defaults.mapOpts')
+        return '<buffer> <silent>'
+    endif
+    return defaults.mapOpts
+endf "}}}
+fu! s:ApplyMapping(descriptor) "{{{
+    " executes a map descriptor to apply the mappings
+    let prefix = a:descriptor.mapCmd . ' ' . a:descriptor.mapOpts . ' '
+    let suffix = a:descriptor.cmd
+    for binding in a:descriptor.bindings
+        let cmd = prefix . binding.prefix . binding.keys . ' ' . suffix
+        exec cmd
+    endfor
+endf "}}}
+fu! s:GetMapDescriptor(mapId) "{{{
+    " builds a complete map descriptor
+    " a complete map descriptor has all possible fields
+    if !exists('s:defaultMappings[a:mapId]')
+        return 0
+    endif
+    let descriptor={
+        \'mapCmd': s:GetMapCmd(a:mapId),
+        \'mapOpts': s:GetMapOpts(a:mapId),
+        \'cmd': s:defaultMappings[a:mapId].cmd,
+        \'bindings': s:GetBindings(a:mapId)
+    \}
+    return descriptor
+endf "}}}
+fu! s:SetupMapping(mapId) "{{{
+    " sets up a single mapping using defaults or custom descriptors
+    let mapping = s:GetMapDescriptor(a:mapId)
+    if type(mapping) != 4 " dictionary
+        echoerr "Invalid mapping: ".a:mapId
+    else
+        call s:ApplyMapping(mapping)
+    endif
+endf "}}}
+fu! s:SetupBackgroundMapping(mapId, binding) "{{{
+endf "}}}
+fu! s:SetupMappings() "{{{
+    call s:SetDefaultMappings()
+    "operations
+    for mapId in keys(s:defaultMappings)
+        call s:SetupMapping(mapId)
+    endfor
+endf "}}} }}}
 fu! s:SetupBufferCommands(fileMode) "{{{
     silent command! -buffer -nargs=* -complete=customlist,s:fugitive_GitComplete Git call <sid>MoveIntoPreviewAndExecute("unsilent Git <args>",1)|normal u
 endfu "}}}
