@@ -182,7 +182,8 @@ modes.
 
     normal      i         This performs the same thing as <cr> in browser mode.
                 <c-cr>    In file mode it opens the commit details rather than
-                          the focused file.
+                          the focused file. (NOTE: many terminal emulators do
+                          not support <c-cr>).
 
     normal      q         Quits gitv. In browser mode this will close the entire
                           tab. In file mode this closes only the |preview-window|.
@@ -384,7 +385,8 @@ Selecting a commit by pressing <cr> on it will show the file as it was in that
 commit with all lines not in the range folded away. This allows you to quickly
 and easily move from commit to commit viewing the evolution of the range of
 lines. Pressing <c-cr> will show you the commit details so that you can see
-any other changes it may have made.
+any other changes it may have made. (NOTE: many terminal emulators do not
+support <c-cr>).
 
 The range that Git looks at is specified by the first and last line in the
 range passed to :Gitv. These lines are escaped appropriately and passed to Git
