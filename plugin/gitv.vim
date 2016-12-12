@@ -201,10 +201,11 @@ fu! s:CompleteGitv(arglead, cmdline, pos) "{{{
                 \ . "\n--branches\n--cherry-mark\n--cherry-pick\n--committer="
                 \ . "\n--date-order\n--dense\n--exclude=\n--first-parent"
                 \ . "\n--fixed-strings\n--follow\n--glob\n--grep-reflog"
-                \ . "\n--grep=\n--max-age=\n--max-count=\n--merges\n--min-age="
-                \ . "\n--min-parents=\n--not\n--pickaxe-all\n--pickaxe-regex"
-                \ . "\n--regexp-ignore-case\n--remotes\n--remove-empty\n--since="
-                \ . "\n--skip\n--tags\n--topo-order\n--until=\n--use-mailmap"
+                \ . "\n--grep=\n--max-age=\n--max-count=\n--merges\n--no-merges"
+                \ . "\n--min-age=\n--min-parents=\n--not\n--pickaxe-all"
+                \ . "\n--pickaxe-regex\n--regexp-ignore-case\n--remotes"
+                \ . "\n--remove-empty\n--since=\n--skip\n--tags\n--topo-order"
+                \ . "\n--until=\n--use-mailmap"
     else
         let refs = fugitive#buffer().repo().git_chomp('rev-parse', '--symbolic', '--branches', '--tags', '--remotes')
         let refs .= "\nHEAD\nFETCH_HEAD\nORIG_HEAD"
