@@ -784,7 +784,7 @@ fu! s:RecordBufferExecAndWipe(cmd, wipe) "{{{
 endfu "}}}
 fu! s:MoveIntoPreviewAndExecute(cmd, tryToOpenNewWin) "{{{
     if winnr("$") == 1 "is the only window
-        call s:AttemptToCreateAPreviewWindow(a:tryToOpenNewWin, a:cmd)
+        call s:AttemptToCreateAPreviewWindow(a:tryToOpenNewWin, a:cmd, 0)
         return
     endif
     let horiz      = s:IsHorizontal()
@@ -798,7 +798,7 @@ fu! s:MoveIntoPreviewAndExecute(cmd, tryToOpenNewWin) "{{{
     endif
 
     if currentWin == winnr() "haven't moved anywhere
-        call s:AttemptToCreateAPreviewWindow(a:tryToOpenNewWin, a:cmd)
+        call s:AttemptToCreateAPreviewWindow(a:tryToOpenNewWin, a:cmd, 1)
         return
     endif
 
@@ -809,11 +809,11 @@ fu! s:MoveIntoPreviewAndExecute(cmd, tryToOpenNewWin) "{{{
         wincmd h
     endif
 endfu "}}}
-fu! s:AttemptToCreateAPreviewWindow(shouldAttempt, cmd) "{{{
+fu! s:AttemptToCreateAPreviewWindow(shouldAttempt, cmd, shouldWarn) "{{{
     if a:shouldAttempt
         call s:CreateNewPreviewWindow()
         call s:MoveIntoPreviewAndExecute(a:cmd, 0)
-    else
+    elseif a:shouldWarn
         echoerr "No preview window detected."
     endif
 endfu "}}}
