@@ -168,7 +168,7 @@ fu! s:OpenGitv(extraArgs, fileMode, rangeStart, rangeEnd) "{{{
         let sanitizedArgs = sanitizedArgs[1:-2]
     endif
     if match(sanitizedArgs, ' --bisect') >= 0
-        let sanitizedArgs = substitute(' --bisect', '', 'g')
+        let sanitizedArgs = substitute(sanitizedArgs, ' --bisect', '', 'g')
         if s:BisectHasStarted()
             let b:Bisecting = 1
         endif
