@@ -521,11 +521,11 @@ fu! s:SetDefaultMappings() "{{{
         \'cmd': ':call <SID>CloseGitv()<cr>', 'bindings': 'q'
     \}
     let s:defaultMappings.update = {
-        \'cmd': ':call <SID>LoadGitv('', 1, b:Gitv_CommitCount, b:Gitv_ExtraArgs, <SID>GetRelativeFilePath(), <SID>GetRange())<cr>',
+        \'cmd': ':call <SID>LoadGitv("", 1, b:Gitv_CommitCount, b:Gitv_ExtraArgs, <SID>GetRelativeFilePath(), <SID>GetRange())<cr>',
         \'bindings': 'u'
     \}
     let s:defaultMappings.toggleAll = {
-        \'cmd': ':call <SID>LoadGitv('', 0, b:Gitv_CommitCount, <SID>ToggleArg(b:Gitv_ExtraArgs, "--all"), <SID>GetRelativeFilePath(), <SID>GetRange())<cr>',
+        \'cmd': ':call <SID>LoadGitv("", 0, b:Gitv_CommitCount, <SID>ToggleArg(b:Gitv_ExtraArgs, "--all"), <SID>GetRelativeFilePath(), <SID>GetRange())<cr>',
         \'bindings': 'a'
     \}
 
