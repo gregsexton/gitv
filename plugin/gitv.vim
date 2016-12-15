@@ -162,17 +162,42 @@ fu! s:RunCommandRelativeToGitRepo(command) abort "{{{
     return [result, a:command]
 endfu "}}} }}}
 "Open And Update Gitv:"{{{
-fu! s:OpenGitv(extraArgs, fileMode, rangeStart, rangeEnd) "{{{
+fu! s:SanitizeReservedArgs(extraArgs) "{{{
     let sanitizedArgs = a:extraArgs
     if sanitizedArgs[0] =~ "[\"']" && sanitizedArgs[:-1] =~ "[\"']"
         let sanitizedArgs = sanitizedArgs[1:-2]
     endif
+    " store bisect
     if match(sanitizedArgs, ' --bisect') >= 0
         let sanitizedArgs = substitute(sanitizedArgs, ' --bisect', '', 'g')
         if s:BisectHasStarted()
             let b:Bisecting = 1
         endif
     endif
+    " store files
+    let selectedFiles = []
+    let splitArgs = split(sanitizedArgs, ' ')
+    let index = len(splitArgs)
+    while index
+        let index -= 1
+        if !empty(glob(splitArgs[index]))
+            let selectedFiles += [fnamemodify(splitArgs[index], ':p')]
+        else
+            break
+        endif
+    endwhile
+    return [join(splitArgs[0:-len(selectedFiles) - 1], ' '), join(selectedFiles, ' ')]
+endfu "}}}
+fu! s:ReapplyReservedArgs(extraArgs) "{{{
+    let options = a:extraArgs[0]
+    if exists('b:Bisecting')
+        let options .= " --bisect"
+        let options = s:FilterArgs(options, ['--all', '--first-parent'])
+    endif
+    return [options, a:extraArgs[1]]
+endfu "}}}
+fu! s:OpenGitv(extraArgs, fileMode, rangeStart, rangeEnd) "{{{
+    let sanitizedArgs = s:SanitizeReservedArgs(a:extraArgs)
     let g:Gitv_InstanceCounter += 1
     if !s:IsCompatible() "this outputs specific errors
         return
@@ -207,15 +232,21 @@ fu! s:CompleteGitv(arglead, cmdline, pos) "{{{
                 \ . "\n--remove-empty\n--since=\n--skip\n--tags\n--topo-order"
                 \ . "\n--until=\n--use-mailmap"
     else
+        if match(a:arglead, '\/$') >= 0
+            let paths = "\n".globpath(a:arglead, '*')
+        else
+            let paths = "\n".globpath(a:arglead.'*', '')
+        endif
+
         let refs = fugitive#buffer().repo().git_chomp('rev-parse', '--symbolic', '--branches', '--tags', '--remotes')
         let refs .= "\nHEAD\nFETCH_HEAD\nORIG_HEAD"
 
         " Complete ref names preceded by a ^ or anything followed by 2-3 dots
         let prefix = matchstr( a:arglead, '\v^(\^|.*\.\.\.?)' )
         if prefix == ''
-            return refs
+            return refs.paths
         else
-            return substitute( refs, "\\v(^|\n)\\zs", prefix, 'g' )
+            return substitute( refs, "\\v(^|\n)\\zs", prefix, 'g' ).paths
         endif
 endf "}}}
 fu! s:OpenBrowserMode(extraArgs) "{{{
@@ -279,27 +310,25 @@ fu! s:FilterArgs(args, sanitize) "{{{
     return newArgs
 endf "}}}
 fu! s:ToggleArg(args, toggle) "{{{
-    if matchstr(a:args, a:toggle) == ''
-      let NewArgs = a:args . ' ' . a:toggle
+    if matchstr(a:args[0], a:toggle) == ''
+      let NewArgs = a:args[0] . ' ' . a:toggle
     else
-      let NewArgs = substitute(a:args, ' ' . a:toggle, '', '')
+      let NewArgs = substitute(a:args[0], ' ' . a:toggle, '', '')
     endif
     let b:Gitv_ExtraArgs = NewArgs
-    return NewArgs
+    return [NewArgs, a:args[1]]
 endf "}}}
 fu! s:ConstructAndExecuteCmd(direction, commitCount, extraArgs, filePath, range) "{{{
     if a:range == [] "no range, setup and execute the command
+        let extraArgs = s:ReapplyReservedArgs(a:extraArgs)
         let cmd  = "log " 
-        let extraArgs = a:extraArgs
-        if exists('b:Bisecting')
-            let cmd .= " --bisect"
-            let extraArgs = s:FilterArgs(extraArgs, ['--all', '--first-parent'])
-        endif
         let cmd .= " --no-color --decorate=full --pretty=format:\"%d %s__SEP__%ar__SEP__%an__SEP__[%h]\" --graph -"
         let cmd .= a:commitCount
-        let cmd .= " " . extraArgs
+        let cmd .= " " . extraArgs[0]
         if a:filePath != ''
             let cmd .= ' -- ' . a:filePath
+        elseif extraArgs[1] != ''
+            let cmd .= ' -- ' . extraArgs[1]
         endif
         let g:cmd = cmd
         silent let res = Gitv_OpenGitCommand(cmd, a:direction)
@@ -321,15 +350,8 @@ fu! s:ConstructRangeBuffer(commitCount, extraArgs, filePath, range) "{{{
     %delete
 
     "necessary as order is important; can't just iterate over keys(slices)
-    let hashCmd       = "log "
-    let extraArgs = a:extraArgs
-    if exists('b:Bisecting')
-        let extraArgs = s:FilterArgs(extraArgs, ['--all', '--first-parent'])
-        let hashCmd .= extraArgs
-        let cmd .= " --bisect"
-    else
-        let hashCmd .= extraArgs
-    endif
+    let extraArgs = s:ReapplyReservedArgs(a:extraArgs)
+    let hashCmd       = "log " . extraArgs[0]
     let hashCmd      .= " --no-color --pretty=format:%H -".a:commitCount." -- " . a:filePath
     let [result, cmd] = s:RunGitCommand(hashCmd, 0)
     let hashes        = split(result, '\n')
@@ -362,16 +384,7 @@ fu! s:GetFileSlices(range, filePath, commitCount, extraArgs) "{{{
     let range     = a:range[0] . ',' . a:range[1]
     let range     = substitute(range, "'", "'\\\\''", 'g') "force unix style escaping even on windows
     let git       = fugitive#buffer().repo().git_command()
-    let sliceCmd  = "for hash in `".git." log " . a:extraArgs
-    let extraArgs = a:extraArgs
-    let cmd       = ''
-    if exists('b:Bisecting')
-        let extraArgs = s:FilterArgs(extraArgs, ['--all', '--first-parent'])
-        let cmd .= extraArgs
-        let cmd .= " --bisect"
-    else
-        let cmd .= extraArgs
-    endif
+    let sliceCmd  = "for hash in `".git." log " . a:extraArgs[0]
     let sliceCmd .= " --no-color --pretty=format:%H -".a:commitCount." -- " . a:filePath . '`; '
     let sliceCmd .= "do "
     let sliceCmd .= 'echo "****${hash}"; '
@@ -419,13 +432,12 @@ fu! s:CompareFileAtCommits(slices, c1sha, c2sha) "{{{
 endfu "}}}
 fu! s:GetFinalOutputForHashes(hashes) "{{{
     if len(a:hashes) > 0
+        let extraArgs = s:ReapplyReservedArgs(['', ''])
         let git       = fugitive#buffer().repo().git_command()
         let cmd       = 'for hash in ' . join(a:hashes, " ") . '; '
         let cmd      .= "do "
         let cmd      .= git.' log'
-        if exists('b:Bisecting')
-            let cmd .= " --bisect"
-        endif
+        let cmd      .= extraArgs[0]
         let cmd      .=' --no-color --decorate=full --pretty=format:"%d %s__SEP__%ar__SEP__%an__SEP__[%h]%n" --graph -1 ${hash}; '
         let cmd      .= 'done'
         let finalCmd  = "bash -c " . shellescape(cmd)

@@ -108,6 +108,9 @@ Without any arguments gitv behaves just like gitk and git log without
 arguments. It will display the commit history for the currently checked out
 branch.
 
+Gitv will also accept and autocomplete filenames. Only filenames at the end of
+the command are supported, as in 'git log'.
+
 Here are some particularly useful examples of arguments that could be
 passed to :Gitv. For more info see 'git help log' and in particular the
 section: "Commit Limiting".
