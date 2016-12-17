@@ -803,7 +803,7 @@ fu! s:SetDefaultMappings() "{{{
     endif
 
     " bindings which use ctrl
-    if g:Gitv_DoNotMapCtrlKey != 0
+    if g:Gitv_DoNotMapCtrlKey != 1
         let s:defaultMappings.ctrlPreviousCommit = {
             \'mapCmd': 'nmap',
             \'cmd': '<Plug>(gitv-previous-commit)',
