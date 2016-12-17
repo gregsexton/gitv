@@ -649,7 +649,7 @@ fu! s:SetDefaultMappings() "{{{
     \}
     let s:defaultMappings.stat = {
         \'cmd': ':call <SID>StatGitvCommit()<cr>',
-        \'bindings': 'Scall'
+        \'bindings': 'S'
     \}
     let s:defaultMappings.vstat = {
         \'mapCmd': 'vnoremap',
