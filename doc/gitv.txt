@@ -571,6 +571,14 @@ result in bindings equivalent to the defaults.
       \'yank': 'yc'
     \}
 
+4.11 Change The Behaviour Of The Preview Window
+
+Set custom options for the preview window. These options are passed directly
+to |git show|.
+>
+    let g:Gitv_PreviewOptions = '--name-only'
+<
+
 ==============================================================================
 5. Changelog                                                *gitv-changelog*
 

@@ -1225,8 +1225,15 @@ fu! s:OpenGitvCommit(geditForm, forceOpenFugitive) "{{{
     if s:IsFileMode() && !a:forceOpenFugitive
         call s:OpenRelativeFilePath(sha, a:geditForm)
     else
-        let cmd = a:geditForm . " " . sha
-        let cmd = 'call s:RecordBufferExecAndWipe("'.cmd.'", '.(a:geditForm=='Gedit').')'
+        let opts = s:GetPreviewOptions()
+        if opts == ''
+            let cmd = a:geditForm . " " . sha
+            let cmd = 'call s:RecordBufferExecAndWipe("'.cmd.'", '.(a:geditForm=='Gedit').')'
+        else
+            let winCmd = a:geditForm[1:] == 'edit' ? '' : a:geditForm[1:]
+            let cmd = 'call Gitv_OpenGitCommand(\"show '.opts.' --no-color '.sha.'\", \"'.winCmd.'\")'
+            let cmd = 'call s:RecordBufferExecAndWipe("'.cmd.'", '.(winCmd=='').')'
+        endif
         call s:MoveIntoPreviewAndExecute(cmd, 1)
         call s:MoveIntoPreviewAndExecute('setlocal fdm=syntax', 0)
     endif
@@ -1237,6 +1244,12 @@ fu! s:OpenWorkingCopy(geditForm)
     let cmd = form . " " . fugitive#buffer().repo().tree() . "/" . fp
     let cmd = 'call s:RecordBufferExecAndWipe("'.cmd.'", '.(form=='edit').')'
     call s:MoveIntoPreviewAndExecute(cmd, 1)
+endfu
+fu! s:GetPreviewOptions()
+    if !exists('g:Gitv_PreviewOptions')
+        return ''
+    endif
+    return g:Gitv_PreviewOptions
 endfu
 fu! s:OpenWorkingDiff(geditForm, staged)
     let winCmd = a:geditForm[1:] == 'edit' ? '' : a:geditForm[1:]
