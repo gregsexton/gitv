@@ -665,6 +665,16 @@ fu! s:SetDefaultMappings() "{{{
         \'cmd': ':call <SID>ResetBranch("--mixed")<cr>',
         \'bindings': 'rb'
     \}
+    let s:defaultMappings.resetSoft = {
+        \'mapCmd': 'nmap',
+        \'cmd': ':call <SID>ResetBranch("--soft")<cr>',
+        \'bindings': 'rbs'
+    \}
+    let s:defaultMappings.vresetSoft = {
+        \'mapCmd': 'vmap',
+        \'cmd': ':call <SID>ResetBranch("--soft")<cr>',
+        \'bindings': 'rbs'
+    \}
     let s:defaultMappings.resetHard = {
         \'mapCmd': 'nmap',
         \'cmd': ':call <SID>ResetBranch("--hard")<cr>',
