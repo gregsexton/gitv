@@ -183,6 +183,8 @@ modes.
     normal      s         The same as <cr> but opens in a new |vsplit|.
                 <c-k>
 
+    normal      gw         Switch between the preview window and browser.
+
     normal      i         This performs the same thing as <cr> in browser mode.
                 <c-cr>    In file mode it opens the commit details rather than
                           the focused file. (NOTE: many terminal emulators do

@@ -594,6 +594,10 @@ fu! s:SetDefaultMappings() "{{{
         \'cmd': ':<c-u>call <SID>JumpToParent()<cr>',
         \'bindings': 'p'
     \}
+    let s:defaultMappings.toggleWindow = {
+        \'cmd': ':<c-u>call <SID>SwitchBetweenWindows()<cr>',
+        \'bindings': 'gw'
+    \}
 
     " viewing commits
     let s:defaultMappings.editCommit = {
@@ -1120,6 +1124,24 @@ fu! s:RecordBufferExecAndWipe(cmd, wipe) "{{{
         endif
     endif
 endfu "}}}
+fu! s:SwitchBetweenWindows() "{{{
+    let currentType = &filetype
+    if currentType == 'gitv'
+        if s:IsFileMode()
+            return
+        endif
+        let targetType = 'git'
+    elseif currentType == 'git'
+        let targetType = 'gitv'
+    else
+        return
+    endif
+    let winnum = -1
+    windo exec 'if &filetype == targetType | let winnum = winnr() | endif'
+    if winnum != -1
+        execute winnum.'wincmd w'
+    endif
+endfu "}}}
 fu! s:MoveIntoPreviewAndExecute(cmd, tryToOpenNewWin) "{{{
     if winnr("$") == 1 "is the only window
         call s:AttemptToCreateAPreviewWindow(a:tryToOpenNewWin, a:cmd, 0)
@@ -1223,6 +1245,7 @@ endf "}}} }}}
 "Mapped Functions:"{{{
 "Operations: "{{{
 fu! s:OpenGitvCommit(geditForm, forceOpenFugitive) "{{{
+    let bindingsCmd = 'call s:MoveIntoPreviewAndExecute("call s:SetupMapping('."'".'toggleWindow'."'".', s:defaultMappings)", 0)'
     if getline('.') == "-- Load More --"
         call s:LoadGitv('', 1, b:Gitv_CommitCount+g:Gitv_CommitStep, b:Gitv_ExtraArgs, s:GetRelativeFilePath(), s:GetRange())
         return
@@ -1233,10 +1256,12 @@ fu! s:OpenGitvCommit(geditForm, forceOpenFugitive) "{{{
     endif
     if getline('.') =~ s:localUncommitedMsg.'$'
         call s:OpenWorkingDiff(a:geditForm, 0)
+        exec bindingsCmd
         return
     endif
     if getline('.') =~ s:localCommitedMsg.'$'
         call s:OpenWorkingDiff(a:geditForm, 1)
+        exec bindingsCmd
         return
     endif
     if s:IsFileMode() && getline('.') =~ '^-- /.*/$'
@@ -1263,6 +1288,7 @@ fu! s:OpenGitvCommit(geditForm, forceOpenFugitive) "{{{
         endif
         call s:MoveIntoPreviewAndExecute(cmd, 1)
         call s:MoveIntoPreviewAndExecute('setlocal fdm=syntax', 0)
+        exec bindingsCmd
     endif
 endf
 fu! s:OpenWorkingCopy(geditForm)
