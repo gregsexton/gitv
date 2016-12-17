@@ -863,11 +863,11 @@ fu! s:TransformBindings(bindings) "{{{
     endfor
     return newBindings
 endf "}}}
-fu! s:GetBindings(mapId) "{{{
+fu! s:GetBindings(mapId, mappings) "{{{
     " returns a list of complete binding objects based on customs/defaults
     " does not return custom bindings for descriptors with preventCustomBindings
     " always includes permanentBindings for an object
-    let defaults = s:defaultMappings[a:mapId]
+    let defaults = a:mappings[a:mapId]
     if exists('defaults.permanentBindings')
         let permanentBindings = s:TransformBindings(defaults.permanentBindings)
     else
@@ -884,19 +884,19 @@ fu! s:GetBindings(mapId) "{{{
     endif
     return s:TransformBindings(bindings) + permanentBindings
 endf "}}}
-fu! s:GetMapCmd(mapId) "{{{
+fu! s:GetMapCmd(mapId, mappings) "{{{
     " gets the map command from the dictionary of defaults
     " if it does not exist, returns 'nnoremap'
-    let defaults = s:defaultMappings[a:mapId]
+    let defaults = a:mappings[a:mapId]
     if !exists('defaults.mapCmd')
         return 'nnoremap'
     endif
     return defaults.mapCmd
 endf "}}}
-fu! s:GetMapOpts(mapId) "{{{
+fu! s:GetMapOpts(mapId, mappings) "{{{
     " gets the map options from the dictionary of defaults
     " if it does not exist, returns '<buffer> <silent>'
-    let defaults = s:defaultMappings[a:mapId]
+    let defaults = a:mappings[a:mapId]
     if !exists('defaults.mapOpts')
         return '<buffer> <silent>'
     endif
@@ -911,23 +911,23 @@ fu! s:ApplyMapping(descriptor) "{{{
         exec cmd
     endfor
 endf "}}}
-fu! s:GetMapDescriptor(mapId) "{{{
+fu! s:GetMapDescriptor(mapId, mappings) "{{{
     " builds a complete map descriptor
     " a complete map descriptor has all possible fields
-    if !exists('s:defaultMappings[a:mapId]')
+    if !exists('a:mappings[a:mapId]')
         return 0
     endif
     let descriptor={
-        \'mapCmd': s:GetMapCmd(a:mapId),
-        \'mapOpts': s:GetMapOpts(a:mapId),
-        \'cmd': s:defaultMappings[a:mapId].cmd,
-        \'bindings': s:GetBindings(a:mapId)
+        \'mapCmd': s:GetMapCmd(a:mapId, a:mappings),
+        \'mapOpts': s:GetMapOpts(a:mapId, a:mappings),
+        \'cmd': a:mappings[a:mapId].cmd,
+        \'bindings': s:GetBindings(a:mapId, a:mappings)
     \}
     return descriptor
 endf "}}}
-fu! s:SetupMapping(mapId) "{{{
+fu! s:SetupMapping(mapId, mappings) "{{{
     " sets up a single mapping using defaults or custom descriptors
-    let mapping = s:GetMapDescriptor(a:mapId)
+    let mapping = s:GetMapDescriptor(a:mapId, a:mappings)
     if type(mapping) != 4 " dictionary
         echoerr "Invalid mapping: ".a:mapId
     else
@@ -940,7 +940,7 @@ fu! s:SetupMappings() "{{{
     call s:SetDefaultMappings()
     "operations
     for mapId in keys(s:defaultMappings)
-        call s:SetupMapping(mapId)
+        call s:SetupMapping(mapId, s:defaultMappings)
     endfor
 endf "}}} }}}
 fu! s:SetupBufferCommands(fileMode) "{{{
