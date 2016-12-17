@@ -641,8 +641,18 @@ I highly recommend adding to your vimrc:
 This stops Vim from redrawing the screen during complex operations and results
 in much smoother looking plugins.
 
+6.2 API
 
-6.2 Bugs, issues, features and contributing.
+You can grab the current line's hash programatically with
+>
+    gitv#util#line#sha(line('.'))
+<
+You can grab the ref with
+>
+    gitv#util#line#refs('.')
+<
+
+6.3 Bugs, issues, features and contributing.
 
 There are no known bugs. Hopefully there are not too many unknown. Please see
 below to help.
