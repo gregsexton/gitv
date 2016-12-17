@@ -49,6 +49,22 @@ if !exists('g:Gitv_CustomMappings')
     let g:Gitv_CustomMappings = {}
 endif
 
+if !exists('g:Gitv_DisableShellEscape')
+    let g:Gitv_DisableShellEscape = 0
+endif
+
+if !exists('g:Gitv_DoNotMapCtrlKey')
+    let g:Gitv_DoNotMapCtrlKey = 0
+endif
+
+if !exists('g:Gitv_PreviewOptions')
+    let g:Gitv_PreviewOptions = ''
+endif
+
+if !exists('g:Gitv_QuietBisect')
+    let g:Gitv_QuietBisect = 0
+endif
+
 "this counts up each time gitv is opened to ensure a unique file name
 let g:Gitv_InstanceCounter = 0
 
@@ -198,7 +214,7 @@ fu! s:ReapplyReservedArgs(extraArgs) "{{{
 endfu "}}}
 fu! s:EscapeGitvArgs(extraArgs) "{{{
     " TODO: test whether shellescape is really needed on windows.
-    if !exists('g:Gitv_DisableShellEscape')
+    if g:Gitv_DisableShellEscape == 0
         return shellescape(a:extraArgs)
     else
         return a:extraArgs
@@ -783,7 +799,7 @@ fu! s:SetDefaultMappings() "{{{
     endif
 
     " bindings which use ctrl
-    if !exists('g:Gitv_DoNotMapCtrlKey')
+    if g:Gitv_DoNotMapCtrlKey != 0
         let s:defaultMappings.ctrlPreviousCommit = {
             \'mapCmd': 'nmap',
             \'cmd': '<Plug>(gitv-previous-commit)',
@@ -1232,7 +1248,7 @@ fu! s:OpenGitvCommit(geditForm, forceOpenFugitive) "{{{
     if s:IsFileMode() && !a:forceOpenFugitive
         call s:OpenRelativeFilePath(sha, a:geditForm)
     else
-        let opts = s:GetPreviewOptions()
+        let opts = g:Gitv_PreviewOptions
         if opts == ''
             let cmd = a:geditForm . " " . sha
             let cmd = 'call s:RecordBufferExecAndWipe("'.cmd.'", '.(a:geditForm=='Gedit').')'
@@ -1251,12 +1267,6 @@ fu! s:OpenWorkingCopy(geditForm)
     let cmd = form . " " . fugitive#buffer().repo().tree() . "/" . fp
     let cmd = 'call s:RecordBufferExecAndWipe("'.cmd.'", '.(form=='edit').')'
     call s:MoveIntoPreviewAndExecute(cmd, 1)
-endfu
-fu! s:GetPreviewOptions()
-    if !exists('g:Gitv_PreviewOptions')
-        return ''
-    endif
-    return g:Gitv_PreviewOptions
 endfu
 fu! s:OpenWorkingDiff(geditForm, staged)
     let winCmd = a:geditForm[1:] == 'edit' ? '' : a:geditForm[1:]
@@ -1298,7 +1308,7 @@ fu! s:BisectHasStarted() "{{{
 endf "}}}
 fu! s:BisectStart(mode) range "{{{
     if exists('b:Bisecting')
-        if !exists('g:Gitv_QuietBisect')
+        if g:Gitv_QuietBisect == 0
             echom 'Bisect disabled'
         endif
         unlet! b:Bisecting
@@ -1315,12 +1325,12 @@ fu! s:BisectStart(mode) range "{{{
             endif
         endif
         let b:Bisecting = 1
-        if !exists('g:Gitv_QuietBisect')
+        if g:Gitv_QuietBisect == 0
             echom 'Bisect started'
         endif
     else
         let b:Bisecting = 1
-        if !exists('g:Gitv_QuietBisect')
+        if g:Gitv_QuietBisect == 0
             echom 'Bisect enabled'
         endif
     endif
@@ -1332,11 +1342,11 @@ fu! s:BisectReset() "{{{
     endif
     if s:BisectHasStarted()
         call s:RunGitCommand('bisect reset', 0)
-        if !exists('g:Gitv_QuietBisect')
+        if g:Gitv_QuietBisect == 0
             echom 'Bisect stopped'
         endif
     else
-        if !exists('g:Gitv_QuietBisect')
+        if g:Gitv_QuietBisect == 0
             echom 'Bisect disabled'
         endif
     endif
@@ -1353,7 +1363,7 @@ fu! s:BisectGoodBad(goodbad) range "{{{
                 echoerr split(result, '\n')[0]
                 return
             endif
-            if !exists('g:Gitv_QuietBisect')
+            if g:Gitv_QuietBisect == 0
                 echom ref . ' marked as ' . a:goodbad
             endif
         else
@@ -1374,7 +1384,7 @@ fu! s:BisectGoodBad(goodbad) range "{{{
                     errors += 1
                 endif
             endfor
-            if !exists('g:Gitv_QuietBisect')
+            if g:Gitv_QuietBisect == 0
                 echom refs . ' commits marked as ' . a:goodbad
             endif
             if errors == len(reflist)
@@ -1398,7 +1408,7 @@ fu! s:BisectSkip(mode) range "{{{
                 endif
                 let loop += 1
             endwhile
-            if !exists('g:Gitv_QuietBisect')
+            if g:Gitv_QuietBisect == 0
                 echom loop - errors . ' commits skipped'
             endif
             if errors == loops
@@ -1416,7 +1426,7 @@ fu! s:BisectSkip(mode) range "{{{
                 echoerr split(result, '\n')[0]
                 return
             else
-                if !exists('g:Gitv_QuietBisect')
+                if g:Gitv_QuietBisect == 0
                     echom refs . 'skipped'
                 endif
             endif
