@@ -55,7 +55,7 @@ let g:Gitv_InstanceCounter = 0
 let s:localUncommitedMsg = 'Local uncommitted changes, not checked in to index.'
 let s:localCommitedMsg   = 'Local changes checked in to index but not committed.'
 
-command! -nargs=* -range -bang -complete=custom,s:CompleteGitv Gitv call s:OpenGitv(shellescape(<q-args>), <bang>0, <line1>, <line2>)
+command! -nargs=* -range -bang -complete=custom,s:CompleteGitv Gitv call s:OpenGitv(s:EscapeGitvArgs(<q-args>), <bang>0, <line1>, <line2>)
 cabbrev gitv <c-r>=(getcmdtype()==':' && getcmdpos()==1 ? 'Gitv' : 'gitv')<CR>
 
 "Public API:"{{{
@@ -195,6 +195,14 @@ fu! s:ReapplyReservedArgs(extraArgs) "{{{
         let options = s:FilterArgs(options, ['--all', '--first-parent'])
     endif
     return [options, a:extraArgs[1]]
+endfu "}}}
+fu! s:EscapeGitvArgs(extraArgs) "{{{
+    " TODO: test whether shellescape is really needed on windows.
+    if !exists('g:Gitv_DisableShellEscape')
+        return shellescape(a:extraArgs)
+    else
+        return a:extraArgs
+    fi
 endfu "}}}
 fu! s:OpenGitv(extraArgs, fileMode, rangeStart, rangeEnd) "{{{
     let sanitizedArgs = s:SanitizeReservedArgs(a:extraArgs)
