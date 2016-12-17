@@ -934,17 +934,6 @@ fu! s:ResizeWindow(fileMode) "{{{
     endif
 endf "}}} }}}
 "Utilities:"{{{
-fu! s:GetGitvSha(lineNumber) "{{{
-    let l = getline(a:lineNumber)
-    let sha = matchstr(l, "\\[\\zs[0-9a-f]\\{7}\\ze\\]$")
-    return sha
-endf "}}}
-fu! s:GetGitvRefs(line) "{{{
-    let l = getline(a:line)
-    let refstr = matchstr(l, "^\\(\\(|\\|\\/\\|\\\\\\|\\*\\)\\s\\?\\)*\\s\\+(\\zs.\\{-}\\ze)")
-    let refs = split(refstr, ', ')
-    return refs
-endf "}}}
 fu! s:GetParentSha(sha, parentNum) "{{{
     if a:parentNum < 1
         return
@@ -1218,7 +1207,7 @@ fu! s:OpenGitvCommit(geditForm, forceOpenFugitive) "{{{
         endif
         return
     endif
-    let sha = s:GetGitvSha(line('.'))
+    let sha = gitv#util#line#sha(line('.'))
     if sha == ""
         return
     endif
@@ -1440,8 +1429,8 @@ fu! s:BisectReplay() "{{{
     call s:LoadGitv('', 1, b:Gitv_CommitCount, b:Gitv_ExtraArgs, s:GetRelativeFilePath(), s:GetRange())
 endf "}}} }}}
 fu! s:CheckOutGitvCommit() "{{{
-    let allrefs = s:GetGitvRefs('.')
-    let sha = s:GetGitvSha(line('.'))
+    let allrefs = gitv#util#line#refs('.')
+    let sha = gitv#util#line#sha(line('.'))
     if sha == ""
         return
     endif
@@ -1487,8 +1476,8 @@ fu! s:DiffGitvCommit() range "{{{
         echom "Diffing is not possible in browser mode."
         return
     endif
-    let shafirst = s:GetGitvSha(a:firstline)
-    let shalast  = s:GetGitvSha(a:lastline)
+    let shafirst = gitv#util#line#sha(a:firstline)
+    let shalast  = gitv#util#line#sha(a:lastline)
     if shafirst == "" || shalast == ""
         return
     endif
@@ -1502,8 +1491,8 @@ fu! s:MergeBranches() range "{{{
         echom 'Already up to date.'
         return
     endif
-    let refs = s:GetGitvRefs(a:firstline)
-    let refs += s:GetGitvRefs(a:lastline)
+    let refs = gitv#util#line#refs(a:firstline)
+    let refs += gitv#util#line#refs(a:lastline)
     call filter(refs, 'v:val !=? "HEAD"')
     if len(refs) < 2
         echom 'Not enough refs found to perform a merge.'
@@ -1546,7 +1535,7 @@ fu! s:PerformMerge(target, mergeBranch, ff) abort
     endif
 endfu
 fu! s:MergeToCurrent()
-    let refs = s:GetGitvRefs(".")
+    let refs = gitv#util#line#refs(".")
     call filter(refs, 'v:val !=? "HEAD"')
     if len(refs) < 1
         echoerr 'No ref found to perform a merge.'
@@ -1633,8 +1622,8 @@ fu! s:DeleteRef() range "{{{
     exec 'Git ' . command . " -d " . choice
 endfu "}}}
 fu! s:StatGitvCommit() range "{{{
-    let shafirst = s:GetGitvSha(a:firstline)
-    let shalast  = s:GetGitvSha(a:lastline)
+    let shafirst = gitv#util#line#sha(a:firstline)
+    let shalast  = gitv#util#line#sha(a:lastline)
     if shafirst == "" || shalast == ""
         return
     endif
@@ -1690,7 +1679,7 @@ fu! s:JumpToCommit(backwards) "{{{
     call s:OpenGitvCommit("Gedit", 0)
 endf "}}}
 fu! s:JumpToParent() "{{{
-    let sha = s:GetGitvSha(line('.'))
+    let sha = gitv#util#line#sha(line('.'))
     if sha == ""
         return
     endif
