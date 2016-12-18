@@ -221,7 +221,9 @@ fu! s:EscapeGitvArgs(extraArgs) "{{{
     fi
 endfu "}}}
 fu! s:OpenGitv(extraArgs, fileMode, rangeStart, rangeEnd) "{{{
-    let s:fugitiveSid = s:GetFugitiveSid()
+    if !exists('s:fugitiveSid')
+        let s:fugitiveSid = s:GetFugitiveSid()
+    endif
     let sanitizedArgs = s:SanitizeReservedArgs(a:extraArgs)
     let g:Gitv_InstanceCounter += 1
     if !s:IsCompatible() "this outputs specific errors
@@ -1766,6 +1768,15 @@ else
     return len(split(a:string,'\zs'))
   endfu
 end "}}}
+if exists("*strdisplaywidth") "{{{
+  fu! s:StringDisplayWidth(string)
+    return strdisplaywidth(a:string)
+  endfu
+else
+  fu! s:StringDisplayWidth(string)
+    return s:StrWidth(a:string,'\zs')
+  endfu
+end "}}}
 fu! s:Align(seperator, filePath) range "{{{
     let lines = getline(a:firstline, a:lastline)
     call map(lines, 'split(v:val, a:seperator)')
@@ -1799,12 +1810,26 @@ fu! s:TruncateLines(lines, filePath) "{{{
     "truncates the commit subject for any line > &columns
     call map(a:lines, "s:TruncateHelp(v:val, a:filePath)")
 endfu "}}}
+fu! s:TruncateWideString(string, target) "{{{
+    if !exists('*strdisplaywidth')
+        return a:string
+    endif
+    let newString = a:string
+    while strdisplaywidth(newString) > a:target
+        let newString = newString[0:-2]
+    endwhile
+    while strdisplaywidth(newString) < a:target
+        let newString .= ' '
+    endwhile
+    return newString
+endfu "}}}
 fu! s:TruncateHelp(line, filePath) "{{{
     let length = s:StringWidth(join(a:line))
+    let displayLength = s:StringDisplayWidth(join(a:line))
     let maxWidth = s:IsHorizontal() ? &columns : &columns/2
     let maxWidth = a:filePath != '' ? winwidth(0) : maxWidth
-    if length > maxWidth
-        let delta = length - maxWidth
+    if displayLength > maxWidth
+        let delta = displayLength - maxWidth
         "offset = 3 for the elipsis and 1 for truncation
         let offset = 3 + 1
         if a:line[0][-(delta + offset + 1):] =~ "^\\s\\+$"
@@ -1812,7 +1837,12 @@ fu! s:TruncateHelp(line, filePath) "{{{
         else
             let extension = "..."
         endif
-        let a:line[0] = a:line[0][:-(delta + offset)] . extension
+        if length > maxWidth
+            let a:line[0] = a:line[0][:-(delta + offset)]
+        endif
+        let target = maxWidth - offset - s:StringWidth(join(a:line[1:-1]))
+        let a:line[0] = s:TruncateWideString(a:line[0], target)
+        let a:line[0] =  a:line[0] . extension
     endif
     return a:line
 endfu "}}}
