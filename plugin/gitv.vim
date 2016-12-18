@@ -846,6 +846,10 @@ fu! s:SetDefaultMappings() "{{{
         \}
     endif
 endf "}}}
+fu! s:NormalCmd(mapId, mappings) "{{{
+    let bindings = s:GetBindings(a:mapId, a:mappings)
+    exec 'normal '.bindings[0].keys
+endfu "}}}
 fu! s:TransformBindings(bindings) "{{{
     " a:bindings can be a string or list of (in)complete binding descriptors
     " a list of complete binding descriptors will be returned
@@ -948,7 +952,7 @@ fu! s:SetupMappings() "{{{
     endfor
 endf "}}} }}}
 fu! s:SetupBufferCommands(fileMode) "{{{
-    silent command! -buffer -nargs=* -complete=customlist,s:fugitive_GitComplete Git call <sid>MoveIntoPreviewAndExecute("unsilent Git <args>",1)|normal u
+    silent command! -buffer -nargs=* -complete=customlist,s:fugitive_GitComplete Git call <sid>MoveIntoPreviewAndExecute("unsilent Git <args>",1)| call <sid>NormalCmd('update', s:defaultMappings)
 endfu "}}}
 fu! s:ResizeWindow(fileMode) "{{{
     if a:fileMode "window height determined by &previewheight
@@ -1131,10 +1135,8 @@ fu! s:SwitchBetweenWindows() "{{{
             return
         endif
         let targetType = 'git'
-    elseif currentType == 'git'
-        let targetType = 'gitv'
     else
-        return
+        let targetType = 'gitv'
     endif
     let winnum = -1
     windo exec 'if &filetype == targetType | let winnum = winnr() | endif'
@@ -1266,7 +1268,7 @@ fu! s:OpenGitvCommit(geditForm, forceOpenFugitive) "{{{
     endif
     if s:IsFileMode() && getline('.') =~ '^-- /.*/$'
         if s:EditRange(matchstr(getline('.'), '^-- /\zs.*\ze/$'))
-            normal u
+            call s:NormalCmd('update', s:defaultMappings)
         endif
         return
     endif
