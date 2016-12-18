@@ -221,6 +221,7 @@ fu! s:EscapeGitvArgs(extraArgs) "{{{
     fi
 endfu "}}}
 fu! s:OpenGitv(extraArgs, fileMode, rangeStart, rangeEnd) "{{{
+    let s:fugitiveSid = s:GetFugitiveSid()
     let sanitizedArgs = s:SanitizeReservedArgs(a:extraArgs)
     let g:Gitv_InstanceCounter += 1
     if !s:IsCompatible() "this outputs specific errors
@@ -952,7 +953,7 @@ fu! s:SetupMappings() "{{{
     endfor
 endf "}}} }}}
 fu! s:SetupBufferCommands(fileMode) "{{{
-    silent command! -buffer -nargs=* -complete=customlist,s:fugitive_GitComplete Git call <sid>RunGitCommand("unsilent Git <args>",1)| call <sid>NormalCmd('update', s:defaultMappings)
+    exec 'silent command! -buffer -nargs=* -complete=customlist,<SNR>'.s:fugitiveSid.'_GitComplete Git call <sid>RunGitCommand("unsilent Git <args>",1)| call <sid>NormalCmd("update", s:defaultMappings)'
 endfu "}}}
 fu! s:ResizeWindow(fileMode) "{{{
     if a:fileMode "window height determined by &previewheight
@@ -1834,23 +1835,17 @@ fu! s:MaxLengths(colls) "{{{
     return lengths
 endfu "}}} }}}
 "Fugitive Functions: "{{{
-"These functions are lifted directly from fugitive and modified only to work with gitv.
-function! s:fugitive_sub(str,pat,rep) abort "{{{
-  return substitute(a:str,'\v\C'.a:pat,a:rep,'')
-endfunction "}}}
-function! s:fugitive_GitComplete(A,L,P) abort "{{{
-  if !exists('s:exec_path')
-    let s:exec_path = s:fugitive_sub(system(g:fugitive_git_executable.' --exec-path'),'\n$','')
-  endif
-  let cmds = map(split(glob(s:exec_path.'/git-*'),"\n"),'s:fugitive_sub(v:val[strlen(s:exec_path)+5 : -1],"\\.exe$","")')
-  if a:L =~ ' [[:alnum:]-]\+ '
-    return fugitive#buffer().repo().superglob(a:A)
-  elseif a:A == ''
-    return cmds
-  else
-    return filter(cmds,'v:val[0 : strlen(a:A)-1] ==# a:A')
-  endif
-endfunction "}}} }}}
+fu! s:GetFugitiveSid() "{{{
+    redir => scriptnames
+    silent! scriptnames
+    redir END
+    for script in split(l:scriptnames, "\n")
+        if l:script =~ 'fugitive'
+            return str2nr(split(l:script, ":")[0])
+        endif
+    endfor
+    throw 'Unable to find fugitive'
+endfu "}}} }}}
 
 let &cpo = s:savecpo
 unlet s:savecpo
