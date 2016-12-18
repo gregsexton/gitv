@@ -952,7 +952,7 @@ fu! s:SetupMappings() "{{{
     endfor
 endf "}}} }}}
 fu! s:SetupBufferCommands(fileMode) "{{{
-    silent command! -buffer -nargs=* -complete=customlist,s:fugitive_GitComplete Git call <sid>MoveIntoPreviewAndExecute("unsilent Git <args>",1)| call <sid>NormalCmd('update', s:defaultMappings)
+    silent command! -buffer -nargs=* -complete=customlist,s:fugitive_GitComplete Git call <sid>RunGitCommand("unsilent Git <args>",1)| call <sid>NormalCmd('update', s:defaultMappings)
 endfu "}}}
 fu! s:ResizeWindow(fileMode) "{{{
     if a:fileMode "window height determined by &previewheight
