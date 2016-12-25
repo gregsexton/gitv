@@ -857,9 +857,10 @@ fu! s:TransformBindings(bindings) "{{{
     " a:bindings can be a string or list of (in)complete binding descriptors
     " a list of complete binding descriptors will be returned
     " a complete binding object is a binding object with all possible fields
-    let bindings = a:bindings
-    if type(bindings) != 3 " list
-        let bindings = [bindings]
+    if type(a:bindings) != 3 " list
+        let bindings = [a:bindings]
+    else
+        let bindings = a:bindings
     endif
     let newBindings = []
     for binding in bindings
