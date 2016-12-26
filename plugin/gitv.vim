@@ -733,6 +733,28 @@ fu! s:SetDefaultMappings() "{{{
         \'bindings': 'd'
     \}
 
+    " rebasing
+    let s:defaultMappings.rebase = {
+        \'cmd': ':call <SID>Rebase()<cr>',
+        \'bindings': 'grr'
+    \}
+    let s:defaultMappings.rebaseToggle = {
+        \'cmd': ':call <SID>RebaseToggle(gitv#util#line#sha("."))<cr>',
+        \'bindings': 'grs'
+    \}
+    let s:defaultMappings.rebaseSkip = {
+        \'cmd': ':call <SID>RebaseSkip()<cr>',
+        \'bindings': 'grn'
+    \}
+    let s:defaultMappings.rebaseContinue = {
+        \'cmd': ':call <SID>RebaseContinue()<cr>',
+        \'bindings': 'grc'
+    \}
+    let s:defaultMappings.rebaseEdit = {
+        \'cmd': ':call <SID>RebaseEdit()<cr>',
+        \'bindings': 'gre'
+    \}
+
     " bisecting
     let s:defaultMappings.bisectStart = {
         \'mapCmd': 'nmap',
@@ -1337,6 +1359,106 @@ fu! s:EditRange(rangeDelimiter)
     call s:SetRange(idx, value)
     return 1
 endfu "}}}
+" Rebase: "{{{
+fu! s:RebaseHasStarted() " {{{
+    return !empty(glob(fugitive#buffer().repo().tree().'/.git/rebase-merge'))
+endf " }}}
+fu! s:Rebase() " {{{
+    if s:RebaseHasStarted()
+        echoerr "Rebase already in progress."
+        return
+    endif
+    let refs = gitv#util#line#refs('.')
+    let choice = confirm("Choose branch to rebase onto:", s:GetConfirmString(refs, "Cancel"))
+    if choice == 0
+        return
+    endif
+    let result=s:RunGitCommand('rebase HEAD '.refs[choice - 1], 0)[0]
+endf " }}}
+fu! s:RebaseToggle(ref) "{{{
+    if s:RebaseHasStarted()
+        echo 'Abort current rebase? (y/n) '
+        if nr2char(getchar()) == 'y'
+            call s:RunGitCommand('rebase --abort', 0)
+        endif
+        return
+    endif
+    " do nothing for editor
+    let $GIT_SEQUENCE_EDITOR="exit 1"
+    let result=s:RunGitCommand('rebase --interactive '.a:ref.'^', 0)[0]
+    let $GIT_SEQUENCE_EDITOR=""
+    if v:shell_error != 1
+        echoerr split(result, '\n')[0]
+    endif
+    call s:RebaseEdit()
+    if expand('%:p') == s:GetRebaseTodo()
+        augroup rebase
+            augroup! rebase
+            autocmd BufLeave <buffer> call s:RebaseContinue()
+        augroup END
+    endif
+endf " }}}
+fu! s:RebaseSkip() " {{{
+    if !s:RebaseHasStarted()
+        return
+    endif
+    let result = s:RunGitCommand('rebase --skip', 0)[0]
+    let result = split(result, '\n')[0]
+    if v:shell_error
+        echoerr result
+    else
+        echo result
+    endif
+endf " }}}
+fu! s:RebaseRecover(head) " {{{
+    let result = split(s:RunGitCommand('status', 0)[0], '\n')[0]
+    if v:shell_error
+        return
+    endif
+    let detached = matchstr(result, '^HEAD detached \(at\|from\) \zs[^ ]\+$')
+    if detached == -1
+        return
+    endif
+    let head = matchstr(a:head, '\/\zs[^\/]\+$')
+    echo 'Attempt to reattach HEAD to '.head.'? (y/n) '
+    if nr2char(getchar()) != 'y'
+        return
+    endif
+    let result = s:RunGitCommand('rebase HEAD '.head, 0)[0]
+    echo split(result, '\n')[0]
+endf " }}}
+fu! s:RebaseContinue() " {{{
+    if !s:RebaseHasStarted()
+        return
+    endif
+    let head = readfile(s:GetRebaseHeadname())[0]
+    " do nothing for editor
+    let $GIT_EDITOR="exit 1"
+    let result = s:RunGitCommand('rebase --continue', 0)[0]
+    let $GIT_EDITOR=""
+    let result = split(result, '\n')[0]
+    echo result
+    if !s:RebaseHasStarted()
+        call s:RebaseRecover(head)
+    endif
+endf " }}}
+fu! s:GetRebaseHeadname() " {{{
+    return fugitive#buffer().repo().tree().'/.git/rebase-merge/head-name'
+endf "}}}
+fu! s:GetRebaseTodo() " {{{
+    return fugitive#buffer().repo().tree().'/.git/rebase-merge/git-rebase-todo'
+endf "}}}
+fu! s:RebaseEdit() " {{{
+    if !s:RebaseHasStarted()
+        return
+    endif
+    let todo = s:GetRebaseTodo()
+    if empty(glob(todo))
+        echoerr 'No interactive rebase in progress.'
+        return
+    endif
+    execute 'split' todo
+endf "}}} }}}
 "Bisect: "{{{
 fu! s:BisectHasStarted() "{{{
     call s:RunGitCommand('bisect log', 0)

@@ -302,6 +302,27 @@ around a repository history in the browser window.
                         current line.  When on a merge commit, a |count|
                         may be used to choose a parent other than the first.
 
+Here is a list of mapping for rebasing.
+
+    Mode        Map     Description~
+
+    normal      grr     Rebase the current HEAD onto the ref or commit under
+                        the cursor. A choice will be given of multiple refs.
+
+    normal      grs     Start or stop an interactive commit. If starting the
+                        commit, it begins at the commit under the cursor.
+
+    normal      grn     Go to the next commit in the current rebase (skip).
+
+    normal      grc     Continue through the rebase until input is needed. If
+                        the interactive rebase process has ended, attempts to
+                        automatically rebase the updated commits back onto the
+                        original branch. This is a workaround for git's
+                        inability to disable immediately editing rebase todo
+                        files and commit messages.
+
+    normal      gre     Edit the current rebase method.
+
 Here is a list of mappings for bisecting.
 
     Mode        Map     Description~
