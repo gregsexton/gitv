@@ -65,6 +65,9 @@ if !exists('g:Gitv_QuietBisect')
     let g:Gitv_QuietBisect = 0
 endif
 
+" create a temporary file for working
+let s:workingFile = tempname()
+
 "this counts up each time gitv is opened to ensure a unique file name
 let g:Gitv_InstanceCounter = 0
 
@@ -1375,7 +1378,21 @@ fu! s:Rebase() " {{{
     endif
     let result=s:RunGitCommand('rebase HEAD '.refs[choice - 1], 0)[0]
 endf " }}}
-fu! s:RebaseToggle(ref) "{{{
+fu! s:SetRebaseEditor() " {{{
+    " change pick to edit
+    let $GIT_SEQUENCE_EDITOR='function gitv_edit() {
+                \ echo "" > '.s:workingFile.';
+                \ while read line; do
+                \ if [[ "${line:0:4}" == "pick" ]]; then
+                \ echo "edit ${line:5}";
+                \ else
+                \ echo $line;
+                \ fi;
+                \ done < $1 > '.s:workingFile.';
+                \ mv '.s:workingFile.' '.s:GetRebaseTodo().';
+                \ }; gitv_edit'
+endf " }}}
+fu! s:RebaseToggle(ref) " {{{
     if s:RebaseHasStarted()
         echo 'Abort current rebase? (y/n) '
         if nr2char(getchar()) == 'y'
@@ -1383,20 +1400,14 @@ fu! s:RebaseToggle(ref) "{{{
         endif
         return
     endif
-    " do nothing for editor
-    let $GIT_SEQUENCE_EDITOR="exit 1"
-    let result=s:RunGitCommand('rebase --interactive '.a:ref.'^', 0)[0]
+    call s:SetRebaseEditor()
+    redir @a | echo $GIT_SEQUENCE_EDITOR | redir END
+    let result=s:RunGitCommand('rebase --no-ff --interactive '.a:ref.'^', 0)[0]
     let $GIT_SEQUENCE_EDITOR=""
-    if v:shell_error != 1
+    if v:shell_error
         echoerr split(result, '\n')[0]
     endif
     call s:RebaseEdit()
-    if expand('%:p') == s:GetRebaseTodo()
-        augroup rebase
-            augroup! rebase
-            autocmd BufLeave <buffer> call s:RebaseContinue()
-        augroup END
-    endif
 endf " }}}
 fu! s:RebaseSkip() " {{{
     if !s:RebaseHasStarted()
@@ -1410,37 +1421,14 @@ fu! s:RebaseSkip() " {{{
         echo result
     endif
 endf " }}}
-fu! s:RebaseRecover(head) " {{{
-    let result = split(s:RunGitCommand('status', 0)[0], '\n')[0]
-    if v:shell_error
-        return
-    endif
-    let detached = matchstr(result, '^HEAD detached \(at\|from\) \zs[^ ]\+$')
-    if detached == -1
-        return
-    endif
-    let head = matchstr(a:head, '\/\zs[^\/]\+$')
-    echo 'Attempt to reattach HEAD to '.head.'? (y/n) '
-    if nr2char(getchar()) != 'y'
-        return
-    endif
-    let result = s:RunGitCommand('rebase HEAD '.head, 0)[0]
-    echo split(result, '\n')[0]
-endf " }}}
 fu! s:RebaseContinue() " {{{
     if !s:RebaseHasStarted()
         return
     endif
-    let head = readfile(s:GetRebaseHeadname())[0]
     " do nothing for editor
     let $GIT_EDITOR="exit 1"
     let result = s:RunGitCommand('rebase --continue', 0)[0]
     let $GIT_EDITOR=""
-    let result = split(result, '\n')[0]
-    echo result
-    if !s:RebaseHasStarted()
-        call s:RebaseRecover(head)
-    endif
 endf " }}}
 fu! s:GetRebaseHeadname() " {{{
     return fugitive#buffer().repo().tree().'/.git/rebase-merge/head-name'
