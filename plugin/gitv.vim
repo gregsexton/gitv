@@ -1438,6 +1438,9 @@ fu! s:RebaseExecContinue() " {{{
     if exists('#rebasecontinue')
         augroup! rebasecontinue
     endif
+    if &ft == 'gitv'
+        call s:NormalCmd('update', s:defaultMappings)
+    endif
 endf " }}}
 fu! s:RebaseContinue() " {{{
     if !s:RebaseHasStarted()
@@ -1445,7 +1448,7 @@ fu! s:RebaseContinue() " {{{
     endif
     let mode = s:GetRebaseMode(0)
     if mode == 'r' || mode == 'e' || mode == 'f' || mode == 's'
-        if mode == 'r' || mode == 'e' ||  mode == 'f'
+        if mode == 'r' || mode == 'e'
             Gcommit --amend
         else
             Gcommit
