@@ -1402,7 +1402,7 @@ fu! s:RebaseToggle(ref) " {{{
     endif
     call s:SetRebaseEditor()
     redir @a | echo $GIT_SEQUENCE_EDITOR | redir END
-    let result=s:RunGitCommand('rebase --no-ff --interactive '.a:ref.'^', 0)[0]
+    let result=s:RunGitCommand('rebase --interactive '.a:ref.'^', 0)[0]
     let $GIT_SEQUENCE_EDITOR=""
     if v:shell_error
         echoerr split(result, '\n')[0]
@@ -1421,14 +1421,44 @@ fu! s:RebaseSkip() " {{{
         echo result
     endif
 endf " }}}
+fu! s:GetRebaseMode(line) " {{{
+    let output = readfile(s:GetRebaseTodo())
+    if len(output) <= a:line || len(output[a:line]) < 1
+        return ''
+    endif
+    return output[a:line][0]
+endf " }}
+fu! s:RebaseExecContinue() " {{{
+    let $GIT_EDITOR='exit 1'
+    let result = split(s:RunGitCommand('rebase --continue', 0)[0], '\n')[0]
+    let $GIT_EDITOR=""
+    if !v:shell_error
+        echo result
+    endif
+    if exists('#rebasecontinue')
+        augroup! rebasecontinue
+    endif
+endf " }}}
 fu! s:RebaseContinue() " {{{
     if !s:RebaseHasStarted()
         return
     endif
-    " do nothing for editor
-    let $GIT_EDITOR="exit 1"
-    let result = s:RunGitCommand('rebase --continue', 0)[0]
-    let $GIT_EDITOR=""
+    let mode = s:GetRebaseMode(0)
+    if mode == 'r' || mode == 'e' || mode == 'f' || mode == 's'
+        if mode == 'r' || mode == 'e' ||  mode == 'f'
+            Gcommit --amend
+        else
+            Gcommit
+        endif
+        if &ft == 'gitcommit'
+            augroup rebasecontinue
+                augroup! rebasecontinue
+                autocmd BufWipeout <buffer> call s:RebaseExecContinue()
+            augroup END
+        endif
+    else
+        call s:RebaseExecContinue()
+    endif
 endf " }}}
 fu! s:GetRebaseHeadname() " {{{
     return fugitive#buffer().repo().tree().'/.git/rebase-merge/head-name'
