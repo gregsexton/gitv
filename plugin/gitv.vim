@@ -1409,7 +1409,6 @@ fu! s:RebaseToggle(ref) " {{{
         return
     endif
     call s:SetRebaseEditor()
-    redir @a | echo $GIT_SEQUENCE_EDITOR | redir END
     let result=s:RunGitCommand('rebase --interactive '.a:ref.'^', 0)[0]
     let $GIT_SEQUENCE_EDITOR=""
     if v:shell_error
