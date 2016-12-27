@@ -1275,6 +1275,9 @@ fu! s:OpenRelativeFilePath(sha, geditForm) "{{{
 endf "}}} }}}
 "Mapped Functions:"{{{
 "Operations: "{{{
+fu! s:GetCommitMsg() " {{{
+    return fugitive#buffer().repo().tree().'/.git/COMMIT_EDITMSG'
+endf " }}}
 fu! s:OpenGitvCommit(geditForm, forceOpenFugitive) "{{{
     let bindingsCmd = 'call s:MoveIntoPreviewAndExecute("call s:SetupMapping('."'".'toggleWindow'."'".', s:defaultMappings)", 0)'
     if getline('.') == "-- Load More --"
@@ -1458,6 +1461,15 @@ fu! s:RebaseContinue() " {{{
         return
     endif
     let mode = s:GetRebaseMode()
+    if mode == 's'
+        call writefile([], s:workingFile)
+        call writefile(readfile(s:GetCommitMsg()), s:workingFile)
+        let result = s:RunGitCommand('reset --soft HEAD~1', 0)[0]
+        if v:shell_error
+            echoerr split(result, '\n')[0]
+            return
+        endif
+    endif
     if mode == 'r' || mode == 'f' || mode == 's'
         if mode == 'r'
             Gcommit --amend
@@ -1465,6 +1477,9 @@ fu! s:RebaseContinue() " {{{
             Gcommit
         endif
         if &ft == 'gitcommit'
+            if mode == 's'
+                call writefile(readfile(s:workingFile), s:GetCommitMsg())
+            endif
             augroup gitvrebasecontinue
                 augroup! gitvrebasecontinue
                 autocmd BufWipeout <buffer> call s:RebaseContinue()
