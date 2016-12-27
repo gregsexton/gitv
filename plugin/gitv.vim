@@ -1409,7 +1409,7 @@ fu! s:RebaseToggle(ref) " {{{
         return
     endif
     call s:SetRebaseEditor()
-    let result=s:RunGitCommand('rebase --interactive '.a:ref.'^', 0)[0]
+    let result=s:RunGitCommand('rebase --preserve-merges --interactive '.a:ref.'^', 0)[0]
     let $GIT_SEQUENCE_EDITOR=""
     if v:shell_error
         echoerr split(result, '\n')[0]
