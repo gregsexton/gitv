@@ -310,18 +310,17 @@ Here is a list of mapping for rebasing.
                         the cursor. A choice will be given of multiple refs.
 
     normal      grs     Start or stop an interactive commit. If starting the
-                        commit, it begins at the commit under the cursor.
+                        commit, it begins at the commit before the commit
+                        under the cursor in edit mode. This is a limitation of
+                        interactive rebasing. Interactive rebasing is only
+                        available in browser mode. Merge commits are
+                        preserved.
 
     normal      grn     Go to the next commit in the current rebase (skip).
 
-    normal      grc     Continue through the rebase until input is needed. If
-                        the interactive rebase process has ended, attempts to
-                        automatically rebase the updated commits back onto the
-                        original branch. This is a workaround for git's
-                        inability to disable immediately editing rebase todo
-                        files and commit messages.
+    normal      grc     Continue through the rebase until input is needed.
 
-    normal      gre     Edit the current rebase method.
+    normal      gre     Edit the current rebase todo-list.
 
 Here is a list of mappings for bisecting.
 
