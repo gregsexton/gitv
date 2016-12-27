@@ -1392,6 +1392,14 @@ fu! s:SetRebaseEditor() " {{{
                 \ mv '.s:workingFile.' '.s:GetRebaseTodo().';
                 \ }; gitv_edit'
 endf " }}}
+fu! s:RebaseUpdateView() " {{{
+    wincmd j
+    wincmd h
+    if &ft == 'gitv'
+        call s:NormalCmd('update', s:defaultMappings)
+        normal gg
+    endif
+endf " }}}
 fu! s:RebaseToggle(ref) " {{{
     if s:RebaseHasStarted()
         echo 'Abort current rebase? (y/n) '
@@ -1407,6 +1415,7 @@ fu! s:RebaseToggle(ref) " {{{
     if v:shell_error
         echoerr split(result, '\n')[0]
     endif
+    call s:RebaseUpdateView()
     call s:RebaseEdit()
 endf " }}}
 fu! s:RebaseSkip() " {{{
@@ -1442,9 +1451,7 @@ fu! s:RebaseContinue() " {{{
     if exists('#gitvrebasecontinue')
         augroup! gitvrebasecontinue
     endif
-    if &ft == 'gitv'
-        call s:NormalCmd('update', s:defaultMappings)
-    endif
+    call s:RebaseUpdateView()
     if !s:RebaseHasStarted()
         return
     endif
