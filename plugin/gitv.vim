@@ -1470,7 +1470,7 @@ fu! s:RebaseContinue() " {{{
             return
         endif
     endif
-    if mode == 'r' || mode == 'f' || mode == 's'
+    if mode == 'r' || mode == 's'
         if mode == 'r'
             Gcommit --amend
         else
