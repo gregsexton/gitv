@@ -1401,6 +1401,9 @@ fu! s:RebaseUpdateView() " {{{
     endif
 endf " }}}
 fu! s:RebaseToggle(ref) " {{{
+    if s:IsFileMode()
+        return
+    endif
     if s:RebaseHasStarted()
         echo 'Abort current rebase? (y/n) '
         if nr2char(getchar()) == 'y'
