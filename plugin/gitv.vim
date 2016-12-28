@@ -1606,9 +1606,6 @@ fu! s:RebaseContinue() "{{{
     if !v:shell_error
         echo result
     endif
-    if exists('#gitvrebasecontinue')
-        augroup! gitvrebasecontinue
-    endif
     call s:RebaseUpdateView()
     call s:RebaseContinueCleanup()
 endf "}}}
@@ -1637,10 +1634,6 @@ fu! s:RebaseContinueCleanup() "{{{
             if mode == 's'
                 call writefile(readfile(s:workingFile), s:GetCommitMsg())
             endif
-            augroup gitvrebasecontinue
-                augroup! gitvrebasecontinue
-                autocmd BufWipeout <buffer> call s:RebaseContinue()
-            augroup END
         endif
     endif
 endf "}}}
