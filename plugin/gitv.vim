@@ -789,12 +789,12 @@ fu! s:SetDefaultMappings() "{{{
     \}
     let s:defaultMappings.rebaseExec = {
         \'cmd': ':call <SID>RebaseSetInstruction("e")<cr>',
-        \'bindings': 'grE'
+        \'bindings': 'grX'
     \}
     let s:defaultMappings.vrebaseExec = {
         \'mapCmd': 'vmap',
         \'cmd': ':call <SID>RebaseSetInstruction("e")<cr>',
-        \'bindings': 'grE'
+        \'bindings': 'grX'
     \}
     let s:defaultMappings.rebaseDrop = {
         \'cmd': ':call <SID>RebaseSetInstruction("d")<cr>',

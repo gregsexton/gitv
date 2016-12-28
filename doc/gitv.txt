@@ -321,7 +321,7 @@ Here is a list of mapping for rebasing.
     normal      grF     Mark the commit under the line for fixup. In visual
                         mode, marks every commit in the range.
 
-    normal      grE     Mark the commit under the line for exec. In visual
+    normal      grX     Mark the commit under the line for exec. In visual
                         mode, marks every commit in the range.
 
     normal      grD     Mark the commit under the line for dropping. In visual
