@@ -333,7 +333,9 @@ Here is a list of mapping for rebasing.
     normal      grP     Mark the commit under the line for picking. In visual
                         mode, marks every commit in the range. Since this is
                         the default instruction, if every commit is marked for
-                        picking, no commits will be considered marked.
+                        picking, no commits will be considered marked. This
+                        also removes exec commands from marking commits with
+                        grX.
 
     normal      grs     Start or stop an interactive rebase. If starting the
                         rebase, it begins at the commit before the commit
