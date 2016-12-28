@@ -1502,6 +1502,7 @@ endf "}}}
 fu! s:RebaseUpdateView() "{{{
     wincmd j
     wincmd h
+    wincmd j
     if &ft == 'gitv'
         call s:NormalCmd('update', s:defaultMappings)
         normal gg
