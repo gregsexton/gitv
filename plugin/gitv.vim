@@ -1528,12 +1528,16 @@ fu! s:RebaseToggle(ref) "{{{
         let jump = '~2'
     endif
     let g:result=s:RunGitCommand('rebase --preserve-merges --interactive '.a:ref.jump, 0)[0]
+    let hasError = v:shell_error
+    let hasInstructions = s:RebaseHasInstructions()
+    call s:RebaseClearInstructions()
+    call s:RebaseUpdateView()
     let $GIT_SEQUENCE_EDITOR=""
-    if v:shell_error
+    if hasError
         echoerr split(g:result, '\n')[0]
+        return
     endif
-    if s:RebaseHasInstructions()
-        call s:RebaseClearInstructions()
+    if hasInstructions
         call s:RebaseContinueCleanup()
     else
         call s:RebaseEdit()
@@ -1574,11 +1578,11 @@ fu! s:RebaseContinue() "{{{
     if exists('#gitvrebasecontinue')
         augroup! gitvrebasecontinue
     endif
+    call s:RebaseUpdateView()
     call s:RebaseContinueCleanup()
 endf "}}}
 fu! s:RebaseContinueCleanup() "{{{
     let $GIT_EDITOR=""
-    call s:RebaseUpdateView()
     if !s:RebaseHasStarted()
         return
     endif
