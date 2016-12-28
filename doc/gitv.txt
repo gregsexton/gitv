@@ -322,7 +322,10 @@ Here is a list of mapping for rebasing.
                         mode, marks every commit in the range.
 
     normal      grX     Mark the commit under the line for exec. In visual
-                        mode, marks every commit in the range.
+                        mode, marks every commit in the range. A command must
+                        be entered to be executed. The command will be
+                        executed after performing an instruction on the
+                        commit. By default, the commit will be picked.
 
     normal      grD     Mark the commit under the line for dropping. In visual
                         mode, marks every commit in the range.

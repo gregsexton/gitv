@@ -788,12 +788,12 @@ fu! s:SetDefaultMappings() "{{{
         \'bindings': 'grF'
     \}
     let s:defaultMappings.rebaseExec = {
-        \'cmd': ':call <SID>RebaseSetInstruction("e")<cr>',
+        \'cmd': ':call <SID>RebaseSetInstruction("x")<cr>',
         \'bindings': 'grX'
     \}
     let s:defaultMappings.vrebaseExec = {
         \'mapCmd': 'vmap',
-        \'cmd': ':call <SID>RebaseSetInstruction("e")<cr>',
+        \'cmd': ':call <SID>RebaseSetInstruction("x")<cr>',
         \'bindings': 'grX'
     \}
     let s:defaultMappings.rebaseDrop = {
@@ -1440,6 +1440,13 @@ fu! s:RebaseSetInstruction(instruction) range "{{{
     if s:RebaseHasStarted()
         return
     endif
+    if a:instruction == 'x'
+        let cmd = input('Please enter a command to execute for each commit: ')
+        if cmd == ''
+            echo 'Not marking any commits for exec.'
+            return
+        endif
+    endif
     for line in range(a:firstline, a:lastline)
         let sha = gitv#util#line#sha(line)
         if sha == ''
@@ -1448,7 +1455,14 @@ fu! s:RebaseSetInstruction(instruction) range "{{{
         if a:instruction == 'p' || a:instruction == 'pick' || a:instruction == ''
             call remove(b:rebaseInstructions, sha)
         else
-            let b:rebaseInstructions[sha] = a:instruction
+            if exists('cmd')
+                if !exists('b:rebaseInstructions[sha]')
+                    let b:rebaseInstructions[sha] = { 'instruction': 'p' }
+                endif
+                let b:rebaseInstructions[sha].cmd = cmd
+            else
+                let b:rebaseInstructions[sha] = { 'instruction': a:instruction }
+            endif
         endif
     endfor
 endf "}}}
@@ -1471,15 +1485,23 @@ fu! s:SetRebaseEditor() "{{{
     if  s:RebaseHasInstructions()
         let $GIT_SEQUENCE_EDITOR='function gitv_edit() {'
         for sha in keys(b:rebaseInstructions)
-            let instruction = b:rebaseInstructions[sha]
+            let instruction = b:rebaseInstructions[sha].instruction
             let $GIT_SEQUENCE_EDITOR .= ' SHA_'.sha.'='.instruction.';'
+            if exists('b:rebaseInstructions[sha].cmd')
+                let cmd = b:rebaseInstructions[sha].cmd
+                let $GIT_SEQUENCE_EDITOR .= ' CMD_'.sha.'='.shellescape(cmd).';'
+            endif
         endfor
         let $GIT_SEQUENCE_EDITOR .= 'while read line; do
                     \ if [[ $line == "" ]]; then break; fi;
                     \ sha=${line:5:7};
                     \ key=SHA_$sha;
                     \ if [[ ${!key} != "" ]]; then
+                    \ cmd=CMD_$sha;
                     \ echo ${!key} ${line:5};
+                    \ if [[ $cmd != "" ]]; then
+                    \ echo x ${!cmd};
+                    \ fi;
                     \ else
                     \ echo $line;
                     \ fi;
@@ -1630,7 +1652,11 @@ fu! s:RebaseEdit() "{{{
     if s:RebaseHasInstructions()
         let output = []
         for key in keys(b:rebaseInstructions)
-            call add(output, b:rebaseInstructions[key].' '.key)
+            let line = b:rebaseInstructions[key].instruction.' '.key
+            if exists('b:rebaseInstructions[key].cmd')
+                let line .= ' '.b:rebaseInstructions[key].cmd
+            endif
+            call add(output, line)
         endfor
         call writefile(output, s:workingFile)
         exec 'split' s:workingFile
