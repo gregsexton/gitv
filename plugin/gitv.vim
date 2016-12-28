@@ -1275,9 +1275,9 @@ fu! s:OpenRelativeFilePath(sha, geditForm) "{{{
 endf "}}} }}}
 "Mapped Functions:"{{{
 "Operations: "{{{
-fu! s:GetCommitMsg() " {{{
+fu! s:GetCommitMsg() "{{{
     return fugitive#buffer().repo().tree().'/.git/COMMIT_EDITMSG'
-endf " }}}
+endf "}}}
 fu! s:OpenGitvCommit(geditForm, forceOpenFugitive) "{{{
     let bindingsCmd = 'call s:MoveIntoPreviewAndExecute("call s:SetupMapping('."'".'toggleWindow'."'".', s:defaultMappings)", 0)'
     if getline('.') == "-- Load More --"
@@ -1366,10 +1366,10 @@ fu! s:EditRange(rangeDelimiter)
     return 1
 endfu "}}}
 " Rebase: "{{{
-fu! s:RebaseHasStarted() " {{{
+fu! s:RebaseHasStarted() "{{{
     return !empty(glob(fugitive#buffer().repo().tree().'/.git/rebase-merge'))
-endf " }}}
-fu! s:Rebase() " {{{
+endf "}}}
+fu! s:Rebase() "{{{
     if s:RebaseHasStarted()
         echoerr "Rebase already in progress."
         return
@@ -1380,8 +1380,8 @@ fu! s:Rebase() " {{{
         return
     endif
     let result=s:RunGitCommand('rebase HEAD '.refs[choice - 1], 0)[0]
-endf " }}}
-fu! s:SetRebaseEditor() " {{{
+endf "}}}
+fu! s:SetRebaseEditor() "{{{
     " change pick to edit
     let $GIT_SEQUENCE_EDITOR='function gitv_edit() {
                 \ echo "" > '.s:workingFile.';
@@ -1394,16 +1394,16 @@ fu! s:SetRebaseEditor() " {{{
                 \ done < $1 > '.s:workingFile.';
                 \ mv '.s:workingFile.' '.s:GetRebaseTodo().';
                 \ }; gitv_edit'
-endf " }}}
-fu! s:RebaseUpdateView() " {{{
+endf "}}}
+fu! s:RebaseUpdateView() "{{{
     wincmd j
     wincmd h
     if &ft == 'gitv'
         call s:NormalCmd('update', s:defaultMappings)
         normal gg
     endif
-endf " }}}
-fu! s:RebaseToggle(ref) " {{{
+endf "}}}
+fu! s:RebaseToggle(ref) "{{{
     if s:IsFileMode()
         return
     endif
@@ -1422,8 +1422,8 @@ fu! s:RebaseToggle(ref) " {{{
     endif
     call s:RebaseUpdateView()
     call s:RebaseEdit()
-endf " }}}
-fu! s:RebaseSkip() " {{{
+endf "}}}
+fu! s:RebaseSkip() "{{{
     if !s:RebaseHasStarted()
         return
     endif
@@ -1434,16 +1434,16 @@ fu! s:RebaseSkip() " {{{
     else
         echo result
     endif
-endf " }}}
-fu! s:GetRebaseMode() " {{{
+endf "}}}
+fu! s:GetRebaseMode() "{{{
     let output = readfile(s:GetRebaseDone())
     let length = len(output)
     if length < 1
         return ''
     endif
     return output[length - 1][0]
-endf " }}}
-fu! s:RebaseContinue() " {{{
+endf "}}}
+fu! s:RebaseContinue() "{{{
     if !s:RebaseHasStarted()
         return
     endif
@@ -1486,17 +1486,17 @@ fu! s:RebaseContinue() " {{{
             augroup END
         endif
     endif
-endf " }}}
-fu! s:GetRebaseHeadname() " {{{
+endf "}}}
+fu! s:GetRebaseHeadname() "{{{
     return fugitive#buffer().repo().tree().'/.git/rebase-merge/head-name'
 endf "}}}
-fu! s:GetRebaseDone() " {{{
+fu! s:GetRebaseDone() "{{{
     return fugitive#buffer().repo().tree().'/.git/rebase-merge/done'
-endf " }}}
-fu! s:GetRebaseTodo() " {{{
+endf "}}}
+fu! s:GetRebaseTodo() "{{{
     return fugitive#buffer().repo().tree().'/.git/rebase-merge/git-rebase-todo'
 endf "}}}
-fu! s:RebaseEdit() " {{{
+fu! s:RebaseEdit() "{{{
     if !s:RebaseHasStarted()
         return
     endif
