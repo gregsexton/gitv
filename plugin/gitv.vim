@@ -1436,19 +1436,21 @@ endf
 fu! s:RebaseClearInstructions() "{{{
     let b:rebaseInstructions = {}
 endf "}}}
-fu! s:RebaseSetInstruction(instruction) "{{{
+fu! s:RebaseSetInstruction(instruction) range "{{{
     if s:RebaseHasStarted()
         return
     endif
-    let sha = gitv#util#line#sha('.')
-    if sha == ''
-        return
-    endif
-    if a:instruction == 'p' || a:instruction == 'pick' || a:instruction == ''
-        call remove(b:rebaseInstructions, sha)
-    else
-        let b:rebaseInstructions[sha] = a:instruction
-    endif
+    for line in range(a:firstline, a:lastline)
+        let sha = gitv#util#line#sha(line)
+        if sha == ''
+            return
+        endif
+        if a:instruction == 'p' || a:instruction == 'pick' || a:instruction == ''
+            call remove(b:rebaseInstructions, sha)
+        else
+            let b:rebaseInstructions[sha] = a:instruction
+        endif
+    endfor
 endf "}}}
 fu! s:RebaseHasStarted() "{{{
     return !empty(glob(fugitive#buffer().repo().tree().'/.git/rebase-merge'))
