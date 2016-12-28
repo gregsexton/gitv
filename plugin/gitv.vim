@@ -1625,6 +1625,17 @@ fu! s:GetRebaseTodo() "{{{
     return fugitive#buffer().repo().tree().'/.git/rebase-merge/git-rebase-todo'
 endf "}}}
 fu! s:RebaseEdit() "{{{
+    if s:RebaseHasInstructions()
+        let output = []
+        for key in keys(b:rebaseInstructions)
+            call add(output, b:rebaseInstructions[key].' '.key)
+        endfor
+        call writefile(output, s:workingFile)
+        exec 'split' s:workingFile
+        set syntax=gitrebase
+        set nomodifiable
+        return
+    endif
     if !s:RebaseHasStarted()
         return
     endif

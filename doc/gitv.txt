@@ -346,7 +346,11 @@ Here is a list of mapping for rebasing.
 
     normal      grc     Continue through the rebase until input is needed.
 
-    normal      gre     Edit the current rebase todo-list.
+    normal      gre     Edit the current rebase todo-list. If no rebase is
+                        started and there are commits marked for rebase
+                        instructions, prints the list of marked commits and
+                        their instructions. If rebase is not started and no
+                        commits are marked, does nothing.
 
 Here is a list of mappings for bisecting.
 
