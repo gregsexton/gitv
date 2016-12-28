@@ -1553,15 +1553,20 @@ fu! s:RebaseToggle(ref) "{{{
         " jump to two commits before so we can stop and edit
         let jump = '~2'
     endif
-    let g:result=s:RunGitCommand('rebase --preserve-merges --interactive '.a:ref.jump, 0)[0]
+    let result=s:RunGitCommand('rebase --preserve-merges --interactive '.a:ref.jump, 0)[0]
     let hasError = v:shell_error
     let hasInstructions = s:RebaseHasInstructions()
     call s:RebaseClearInstructions()
     call s:RebaseUpdateView()
     let $GIT_SEQUENCE_EDITOR=""
     if hasError
-        echoerr split(g:result, '\n')[0]
-        return
+        let result = split(result, '\n')[0]
+        if hasInstructions
+            echo result
+        else
+            echoerr result
+            return
+        endif
     endif
     if hasInstructions
         call s:RebaseContinueCleanup()
