@@ -1515,6 +1515,7 @@ fu! s:RebaseToggle(ref) "{{{
         echo 'Abort current rebase? (y/n) '
         if nr2char(getchar()) == 'y'
             call s:RunGitCommand('rebase --abort', 0)
+            call s:RebaseUpdateView()
         endif
         return
     endif
