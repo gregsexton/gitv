@@ -309,12 +309,38 @@ Here is a list of mapping for rebasing.
     normal      grr     Rebase the current HEAD onto the ref or commit under
                         the cursor. A choice will be given of multiple refs.
 
-    normal      grs     Start or stop an interactive commit. If starting the
-                        commit, it begins at the commit before the commit
+    normal      grR     Mark the commit under the line for reword. In visual
+                        mode, marks every commit in the range.
+
+    normal      grE     Mark the commit under the line for edit. In visual
+                        mode, marks every commit in the range.
+
+    normal      grS     Mark the commit under the line for squash. In visual
+                        mode, marks every commit in the range.
+
+    normal      grF     Mark the commit under the line for fixup. In visual
+                        mode, marks every commit in the range.
+
+    normal      grE     Mark the commit under the line for exec. In visual
+                        mode, marks every commit in the range.
+
+    normal      grD     Mark the commit under the line for dropping. In visual
+                        mode, marks every commit in the range.
+
+    normal      grP     Mark the commit under the line for picking. In visual
+                        mode, marks every commit in the range. Since this is
+                        the default instruction, if every commit is marked for
+                        picking, no commits will be considered marked.
+
+    normal      grs     Start or stop an interactive rebase. If starting the
+                        rebase, it begins at the commit before the commit
                         under the cursor in edit mode. This is a limitation of
                         interactive rebasing. Interactive rebasing is only
                         available in browser mode. Merge commits are
-                        preserved.
+                        preserved. If any commits have been marked for an
+                        instruction, automatically runs the interactive
+                        rebase. If no commits have been marked for
+                        instructions, opens the rebase todo list for editing.
 
     normal      grn     Go to the next commit in the current rebase (skip).
 
@@ -576,6 +602,25 @@ result in bindings equivalent to the defaults.
       \'vrevert': 'rev',
       \'delete': 'd',
       \'vdelete': 'd',
+      \'rebase': 'grr',
+      \'rebasePick': 'grP',
+      \'vrebasePick': 'grP',
+      \'rebaseReword': 'grR',
+      \'vrebaseReword': 'grR',
+      \'rebaseMarkEdit': 'grF',
+      \'vrebaseMarkEdit': 'grF',
+      \'rebaseSquash': 'grF',
+      \'vrebaseSquash': 'grF',
+      \'rebaseFixup': 'grF',
+      \'vrebaseFixup': 'grF',
+      \'rebaseExec': 'grF',
+      \'vrebaseExec': 'grF',
+      \'rebaseDrop': 'grF',
+      \'vrebaseDrop': 'grF',
+      \'rebaseToggle': 'grs',
+      \'rebaseSkip': 'grn',
+      \'rebaseContinue': 'grc',
+      \'rebaseEdit': 'gre',
       \'bisectStart': 'gbs',
       \'vbisectStart': 'gbs',
       \'bisectGood': 'gbg',
