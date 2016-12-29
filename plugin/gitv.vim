@@ -742,6 +742,11 @@ fu! s:SetDefaultMappings() "{{{
         \'cmd': ':call <SID>Rebase()<cr>',
         \'bindings': 'grr'
     \}
+    let s:defaultMappings.vrebase = {
+        \'mapCmd': 'vmap',
+        \'cmd': ':call <SID>Rebase()<cr>',
+        \'bindings': 'grr'
+    \}
     let s:defaultMappings.rebasePick = {
         \'cmd': ':call <SID>RebaseSetInstruction("p")<cr>',
         \'bindings': 'grP'
@@ -806,7 +811,12 @@ fu! s:SetDefaultMappings() "{{{
         \'bindings': 'grD'
     \}
     let s:defaultMappings.rebaseToggle = {
-        \'cmd': ':call <SID>RebaseToggle(gitv#util#line#sha("."))<cr>',
+        \'cmd': ':call <SID>RebaseToggle()<cr>',
+        \'bindings': 'grs'
+    \}
+    let s:defaultMappings.vrebaseToggle = {
+        \'mapCmd': 'vmap',
+        \'cmd': ':call <SID>RebaseToggle()<cr>',
         \'bindings': 'grs'
     \}
     let s:defaultMappings.rebaseSkip = {
@@ -1481,20 +1491,108 @@ endf "}}}
 fu! s:RebaseHasStarted() "{{{
     return !empty(glob(fugitive#buffer().repo().tree().'/.git/rebase-merge'))
 endf "}}}
-fu! s:Rebase() "{{{
+fu! s:RebaseGetRefs(line) "{{{
+    let sha = gitv#util#line#sha(a:line)
+    if sha == ""
+        return []
+    endif
+    return gitv#util#line#refs(a:line) + [sha]
+endf "}}}
+fu! s:RebaseGetChoice(refs, purpose) "{{{
+    let msg = "Choose destination to rebase ".a:purpose.":"
+    let choice = confirm(msg, s:GetConfirmString(a:refs, "Cancel"))
+    if choice == 0 || choice > len(a:refs)
+        return ''
+    endif
+    let choice = a:refs[choice - 1]
+    let choice = substitute(choice, "^t:", "", "")
+    let choice = substitute(choice, "^r:", "", "")
+    return choice
+endf "}}}
+fu! s:RebaseGetRange(first, last, fromPlaceholder, ontoPlaceholder) "{{{
+    " will attempt to grab a reference from a range of lines
+    " if the range is 0, will only grab one reference and use a placeholder for the other
+    " at least one placeholder must be given
+    " the placeholder can be an empty string
+    " for no placeholder, use a number
+    if a:first != a:last
+        let msg = 'Rebase from top or bottom?'
+        let choice = confirm(msg, "&top\n&bottom\n&cancel")
+        if choice == 0 || choice == 3
+            return []
+        endif
+    else
+        let choice = 1
+    endif
+    if choice == 1
+        let from = a:first
+        let onto = a:last
+    else
+        let from = a:last
+        let onto = a:first
+    endif
+
+    " get refs
+    if a:first != a:last || type(a:fromPlaceholder) != 1 " string
+        let from = s:RebaseGetRefs(from)
+        if !len(from)
+            return []
+        endif
+    endif
+    if a:first != a:last || type(a:ontoPlaceholder) != 1
+        let onto = s:RebaseGetRefs(onto)
+        if !len(onto)
+            return []
+        endif
+    endif
+
+    " set placeholder
+    if a:first == a:last
+        if type(a:fromPlaceholder) == 1
+            let from = a:fromPlaceholder
+        elseif type(a:ontoPlaceholder) == 1
+            let onto = a:ontoPlaceholder
+        else
+            echoerr 'A default must be given.'
+            return []
+        endif
+    endif
+
+    " get choices
+    if a:first != a:last || type(a:fromPlaceholder) != 1
+        let from = s:RebaseGetChoice(from, 'from')
+        if from == ''
+            return []
+        endif
+    endif
+    if a:first != a:last || type(a:ontoPlaceholder) != 1
+        let onto = s:RebaseGetChoice(onto, 'onto')
+        if onto == ''
+            return []
+        endif
+    endif
+
+    return [from, onto]
+endf "}}}
+fu! s:Rebase() range "{{{
+    if s:IsFileMode()
+        return
+    endif
     if s:RebaseHasStarted()
         echoerr "Rebase already in progress."
         return
     endif
-    let refs = gitv#util#line#refs('.')
-    let choice = confirm("Choose branch to rebase onto:", s:GetConfirmString(refs, "Cancel"))
-    if choice == 0
+    let choice = s:RebaseGetRange(a:firstline, a:lastline, 'HEAD', 0)
+    if !len(choice)
+        redraw
+        echo "Not rebasing."
         return
     endif
-    let result=s:RunGitCommand('rebase HEAD '.refs[choice - 1], 0)[0]
+    let result = s:RunGitCommand('rebase '.choice[0].' '.choice[1], 0)[0]
     let hasError = v:shell_error
     call s:RebaseUpdateView()
     if hasError
+        redraw
         echoerr split(result, '\n')[0]
     endif
 endf "}}}
@@ -1551,7 +1649,7 @@ fu! s:RebaseUpdateView() "{{{
         call s:NormalCmd('update', s:defaultMappings)
     endif
 endf "}}}
-fu! s:RebaseToggle(ref) "{{{
+fu! s:RebaseToggle() range "{{{
     if s:IsFileMode()
         return
     endif
@@ -1563,17 +1661,25 @@ fu! s:RebaseToggle(ref) "{{{
         endif
         return
     endif
+    let choice = s:RebaseGetRange(a:firstline, a:lastline, 0, '')
+    if !len(choice)
+        redraw
+        echo "Not rebasing."
+        return
+    endif
     call s:SetRebaseEditor()
+    let cmd = 'rebase --preserve-merges --interactive '.choice[0]
     if s:RebaseHasInstructions()
         " we don't know what the instructions are, treat it like a continue
         call s:RebaseContinueSetup()
         " only jump to the commit before this
-        let jump = '^'
+        let cmd .= '^'
     else
         " jump to two commits before so we can stop and edit
-        let jump = '~2'
+        let cmd .= '~2'
     endif
-    let result=s:RunGitCommand('rebase --preserve-merges --interactive '.a:ref.jump, 0)[0]
+    let cmd .= ' '.choice[1]
+    let result=s:RunGitCommand(cmd, 0)[0]
     let result = split(result, '\n')[0]
     let hasError = v:shell_error
     let hasInstructions = s:RebaseHasInstructions()
