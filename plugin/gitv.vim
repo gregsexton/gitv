@@ -1499,7 +1499,9 @@ fu! s:Rebase() "{{{
     endif
 endf "}}}
 fu! s:SetRebaseEditor() "{{{
+    " override the default editor used for interactive rebasing
     if  s:RebaseHasInstructions()
+        " replace default instructions with stored instructions
         let $GIT_SEQUENCE_EDITOR='function gitv_edit() {'
         for sha in keys(b:rebaseInstructions)
             let instruction = b:rebaseInstructions[sha].instruction
@@ -1541,6 +1543,7 @@ fu! s:SetRebaseEditor() "{{{
     endif
 endf "}}}
 fu! s:RebaseUpdateView() "{{{
+    " attempt to move out of the rebase/commit/preview window and update
     wincmd j
     wincmd h
     wincmd j
@@ -1563,6 +1566,7 @@ fu! s:RebaseToggle(ref) "{{{
     endif
     call s:SetRebaseEditor()
     if s:RebaseHasInstructions()
+        " we don't know what the instructions are, treat it like a continue
         call s:RebaseContinueSetup()
         " only jump to the commit before this
         let jump = '^'
@@ -1579,6 +1583,7 @@ fu! s:RebaseToggle(ref) "{{{
     if hasError
         let result = split(result, '\n')[0]
         if hasInstructions
+            " errors are expected as in continue mode
             echo result
         else
             echoerr result
@@ -1612,6 +1617,7 @@ fu! s:GetRebaseMode() "{{{
     return output[length - 1][0]
 endf "}}}
 fu! s:RebaseContinueSetup() "{{{
+    " override the commit editor in a way that lets us take over rebase
     let $GIT_EDITOR='exit 1'
 endf "}}}
 fu! s:RebaseContinue() "{{{
@@ -1620,6 +1626,7 @@ fu! s:RebaseContinue() "{{{
     endif
     call s:RebaseContinueSetup()
     let result = split(s:RunGitCommand('rebase --continue', 0)[0], '\n')[0]
+    " we expect an error because of what we did with exit
     if !v:shell_error
         echo result
     endif
@@ -1633,6 +1640,8 @@ fu! s:RebaseContinueCleanup() "{{{
     endif
     let mode = s:GetRebaseMode()
     if mode == 's'
+        " errors with squash cause us to fall through to the next commit
+        " the desired commit message is still in place when we fall through
         call writefile([], s:workingFile)
         call writefile(readfile(s:GetCommitMsg()), s:workingFile)
         let result = s:RunGitCommand('reset --soft HEAD~1', 0)[0]
@@ -1665,6 +1674,7 @@ fu! s:GetRebaseTodo() "{{{
 endf "}}}
 fu! s:RebaseEdit() "{{{
     if s:RebaseHasInstructions()
+        " rebase should not be started, but we have set instructions to view
         let output = []
         for key in keys(b:rebaseInstructions)
             let line = b:rebaseInstructions[key].instruction.' '.key
