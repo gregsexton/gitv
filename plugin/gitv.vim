@@ -1622,10 +1622,10 @@ fu! s:RebaseContinue() "{{{
         return
     endif
     call s:RebaseContinueSetup()
-    let result = split(s:RunGitCommand('rebase --continue', 0)[0], '\n')[0]
+    let result = s:RunGitCommand('rebase --continue', 0)[0]
     " we expect an error because of what we did with exit
     if !v:shell_error
-        echo result
+        echo split(result, '\n')[0]
     endif
     call s:RebaseUpdateView()
     call s:RebaseContinueCleanup()
@@ -1834,18 +1834,18 @@ fu! s:BisectLog() "{{{
         return
     endif
     let fname = input('Enter a filename to save the log to: ', '', 'file')
-    let result = split(s:RunGitCommand('bisect log', 0)[0], '\n')
+    let result = s:RunGitCommand('bisect log', 0)[0]
     if v:shell_error
-        echoerr result[0]
+        echoerr split(result, '\n')[0]
         return
     endif
     call writefile(result, fname)
 endf "}}}
 fu! s:BisectReplay() "{{{
     let fname = input('Enter a filename to replay: ', '', 'file')
-    let result = split(s:RunGitCommand('bisect replay ' . fname, 0)[0], '\n')
+    let result = s:RunGitCommand('bisect replay ' . fname, 0)[0]
     if v:shell_error
-        echoerr result[0]
+        echoerr split(result, '\n')[0]
         return
     endif
     let b:Bisecting = 1
@@ -2013,7 +2013,7 @@ fu! s:Revert() range "{{{
     let cmd = 'revert --no-commit ' . mergearg . ' ' . refs
     let result = s:RunGitCommand(cmd, 0)[0]
     if result != ''
-        throw split(result)[0]
+        throw split(result, '\n')[0]
         return
     endif
     exec 'Gcommit'
