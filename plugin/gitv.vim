@@ -1599,9 +1599,10 @@ fu! s:RebaseSkip() "{{{
     if !s:RebaseHasStarted()
         return
     endif
-    let result = s:RunGitCommand('rebase --skip', 0)[0]
-    let result = split(result, '\n')[0]
-    if v:shell_error
+    let result = split(s:RunGitCommand('rebase --skip', 0)[0], '\n')[0]
+    let hasError = v:shell_error
+    call s:RebaseUpdateView()
+    if hasError
         echoerr result
     else
         echo result
