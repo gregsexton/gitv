@@ -1437,7 +1437,7 @@ fu! s:RebaseClearInstructions() "{{{
     let b:rebaseInstructions = {}
 endf "}}}
 fu! s:RebaseSetInstruction(instruction) range "{{{
-    if s:RebaseHasStarted()
+    if s:RebaseHasStarted() || s:IsFileMode()
         return
     endif
     if a:instruction == 'x'
