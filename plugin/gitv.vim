@@ -565,14 +565,14 @@ fu! s:SetDefaultMappings() "{{{
 
     " convenience
     let s:defaultMappings.quit = {
-        \'cmd': ':call <SID>CloseGitv()<cr>', 'bindings': 'q'
+        \'cmd': ':<C-U>call <SID>CloseGitv()<cr>', 'bindings': 'q'
     \}
     let s:defaultMappings.update = {
-        \'cmd': ':call <SID>LoadGitv("", 1, b:Gitv_CommitCount, b:Gitv_ExtraArgs, <SID>GetRelativeFilePath(), <SID>GetRange())<cr>',
+        \'cmd': ':<C-U>call <SID>LoadGitv("", 1, b:Gitv_CommitCount, b:Gitv_ExtraArgs, <SID>GetRelativeFilePath(), <SID>GetRange())<cr>',
         \'bindings': 'u'
     \}
     let s:defaultMappings.toggleAll = {
-        \'cmd': ':call <SID>LoadGitv("", 0, b:Gitv_CommitCount, <SID>ToggleArg(b:Gitv_ExtraArgs, "--all"), <SID>GetRelativeFilePath(), <SID>GetRange())<cr>',
+        \'cmd': ':<C-U>call <SID>LoadGitv("", 0, b:Gitv_CommitCount, <SID>ToggleArg(b:Gitv_ExtraArgs, "--all"), <SID>GetRelativeFilePath(), <SID>GetRange())<cr>',
         \'bindings': 'a'
     \}
 
@@ -594,38 +594,38 @@ fu! s:SetDefaultMappings() "{{{
         \'bindings': 'R'
     \}
     let s:defaultMappings.head = {
-        \'cmd': ':call <SID>JumpToHead()<cr>',
+        \'cmd': ':<C-U>call <SID>JumpToHead()<cr>',
         \'bindings': 'P'
     \}
     let s:defaultMappings.parent = {
-        \'cmd': ':<c-u>call <SID>JumpToParent()<cr>',
+        \'cmd': ':call <SID>JumpToParent()<cr>',
         \'bindings': 'p'
     \}
     let s:defaultMappings.toggleWindow = {
-        \'cmd': ':<c-u>call <SID>SwitchBetweenWindows()<cr>',
+        \'cmd': ':<C-U>call <SID>SwitchBetweenWindows()<cr>',
         \'bindings': 'gw'
     \}
 
     " viewing commits
     let s:defaultMappings.editCommit = {
-        \'cmd': ':call <SID>OpenGitvCommit("Gedit", 0)<cr>',
+        \'cmd': ':<C-U>call <SID>OpenGitvCommit("Gedit", 0)<cr>',
         \'bindings': [
             \'<cr>', { 'keys': '<LeftMouse>', 'prefix': '<LeftMouse>' }
         \],
     \}
     " <Plug>(gitv-*) are fuzzyfinder style keymappings
     let s:defaultMappings.splitCommit = {
-        \'cmd': ':call <SID>OpenGitvCommit("Gsplit", 0)<cr>',
+        \'cmd': ':<C-U>call <SID>OpenGitvCommit("Gsplit", 0)<cr>',
         \'bindings': 'o',
         \'permanentBindings': '<Plug>(gitv-split)'
     \}
     let s:defaultMappings.tabeCommit = {
-        \'cmd': ':call <SID>OpenGitvCommit("Gtabedit", 0)<cr>',
+        \'cmd': ':<C-U>call <SID>OpenGitvCommit("Gtabedit", 0)<cr>',
         \'bindings': 'O' ,
         \'permanentBindings': '<Plug>(gitv-tabedit)'
     \}
     let s:defaultMappings.vsplitCommit = {
-        \'cmd': ':call <SID>OpenGitvCommit("Gvsplit", 0)<cr>',
+        \'cmd': ':<C-U>call <SID>OpenGitvCommit("Gvsplit", 0)<cr>',
         \'bindings': 's',
         \'permanentBindings': '<Plug>(gitv-vsplit)'
     \}
@@ -641,12 +641,12 @@ fu! s:SetDefaultMappings() "{{{
     \}
     " force opening the fugitive buffer for the commit
     let s:defaultMappings.editCommitDetails = {
-        \'cmd': ':call <SID>OpenGitvCommit("Gedit", 1)<cr>',
+        \'cmd': ':<C-U>call <SID>OpenGitvCommit("Gedit", 1)<cr>',
         \'bindings': 'i',
         \'permanentBindings': '<Plug>(gitv-edit)'
     \}
     let s:defaultMappings.diff = {
-        \'cmd': ':call <SID>DiffGitvCommit()<cr>',
+        \'cmd': ':<C-U>call <SID>DiffGitvCommit()<cr>',
         \'bindings': 'D'
     \}
     let s:defaultMappings.vdiff = {
@@ -655,21 +655,21 @@ fu! s:SetDefaultMappings() "{{{
         \'bindings': 'D'
     \}
     let s:defaultMappings.stat = {
-        \'cmd': ':call <SID>StatGitvCommit()<cr>',
+        \'cmd': ':<C-U>call <SID>StatGitvCommit()<cr>',
         \'bindings': 'S'
     \}
     let s:defaultMappings.vstat = {
         \'mapCmd': 'vnoremap',
-        \'cmd': ':call <SID>StatGitvCommit()<cr>',
+        \'cmd': ':<C-U>call <SID>StatGitvCommit()<cr>',
         \'bindings': 'S'
     \}
 
     " general git commands
     let s:defaultMappings.checkout = {
-        \'cmd': ':call <SID>CheckOutGitvCommit()<cr>', 'bindings': 'co'
+        \'cmd': ':<C-U>call <SID>CheckOutGitvCommit()<cr>', 'bindings': 'co'
     \}
     let s:defaultMappings.merge = {
-        \'cmd': ':call <SID>MergeToCurrent()<cr>', 'bindings': '<leader>m'
+        \'cmd': ':<C-U>call <SID>MergeToCurrent()<cr>', 'bindings': '<leader>m'
     \}
     let s:defaultMappings.vmerge = {
         \'mapCmd': 'vnoremap',
@@ -678,7 +678,7 @@ fu! s:SetDefaultMappings() "{{{
     \}
     let s:defaultMappings.cherryPick = {
         \'mapCmd': 'nmap',
-        \'cmd': ':call <SID>CherryPick()<cr>',
+        \'cmd': ':<C-U>call <SID>CherryPick()<cr>',
         \'bindings': 'cp'
     \}
     let s:defaultMappings.vcherryPick = {
@@ -688,7 +688,7 @@ fu! s:SetDefaultMappings() "{{{
     \}
     let s:defaultMappings.reset = {
         \'mapCmd': 'nmap',
-        \'cmd': ':call <SID>ResetBranch("--mixed")<cr>',
+        \'cmd': ':<C-U>call <SID>ResetBranch("--mixed")<cr>',
         \'bindings': 'rb'
     \}
     let s:defaultMappings.vreset = {
@@ -698,7 +698,7 @@ fu! s:SetDefaultMappings() "{{{
     \}
     let s:defaultMappings.resetSoft = {
         \'mapCmd': 'nmap',
-        \'cmd': ':call <SID>ResetBranch("--soft")<cr>',
+        \'cmd': ':<C-U>call <SID>ResetBranch("--soft")<cr>',
         \'bindings': 'rbs'
     \}
     let s:defaultMappings.vresetSoft = {
@@ -708,7 +708,7 @@ fu! s:SetDefaultMappings() "{{{
     \}
     let s:defaultMappings.resetHard = {
         \'mapCmd': 'nmap',
-        \'cmd': ':call <SID>ResetBranch("--hard")<cr>',
+        \'cmd': ':<C-U>call <SID>ResetBranch("--hard")<cr>',
         \'bindings': 'rbh'
     \}
     let s:defaultMappings.vresetHard = {
@@ -718,7 +718,7 @@ fu! s:SetDefaultMappings() "{{{
     \}
     let s:defaultMappings.revert = {
         \'mapCmd': 'nmap',
-        \'cmd': ':call <SID>Revert()<cr>',
+        \'cmd': ':<C-U>call <SID>Revert()<cr>',
         \'bindings': 'rev'
     \}
     let s:defaultMappings.vrevert = {
@@ -728,7 +728,7 @@ fu! s:SetDefaultMappings() "{{{
     \}
     let s:defaultMappings.delete = {
         \'mapCmd': 'nmap',
-        \'cmd': ':call <SID>DeleteRef()<cr>',
+        \'cmd': ':<C-U>call <SID>DeleteRef()<cr>',
         \'bindings': 'd'
     \}
     let s:defaultMappings.vdelete = {
@@ -739,7 +739,7 @@ fu! s:SetDefaultMappings() "{{{
 
     " rebasing
     let s:defaultMappings.rebase = {
-        \'cmd': ':call <SID>Rebase()<cr>',
+        \'cmd': ':<C-U>call <SID>Rebase()<cr>',
         \'bindings': 'grr'
     \}
     let s:defaultMappings.vrebase = {
@@ -748,7 +748,7 @@ fu! s:SetDefaultMappings() "{{{
         \'bindings': 'grr'
     \}
     let s:defaultMappings.rebasePick = {
-        \'cmd': ':call <SID>RebaseSetInstruction("p")<cr>',
+        \'cmd': ':<C-U>call <SID>RebaseSetInstruction("p")<cr>',
         \'bindings': 'grP'
     \}
     let s:defaultMappings.vrebasePick = {
@@ -757,7 +757,7 @@ fu! s:SetDefaultMappings() "{{{
         \'bindings': 'grP'
     \}
     let s:defaultMappings.rebaseReword = {
-        \'cmd': ':call <SID>RebaseSetInstruction("r")<cr>',
+        \'cmd': ':<C-U>call <SID>RebaseSetInstruction("r")<cr>',
         \'bindings': 'grR'
     \}
     let s:defaultMappings.vrebaseReword = {
@@ -766,7 +766,7 @@ fu! s:SetDefaultMappings() "{{{
         \'bindings': 'grR'
     \}
     let s:defaultMappings.rebaseMarkEdit = {
-        \'cmd': ':call <SID>RebaseSetInstruction("e")<cr>',
+        \'cmd': ':<C-U>call <SID>RebaseSetInstruction("e")<cr>',
         \'bindings': 'grE'
     \}
     let s:defaultMappings.vrebaseMarkEdit = {
@@ -775,7 +775,7 @@ fu! s:SetDefaultMappings() "{{{
         \'bindings': 'grE'
     \}
     let s:defaultMappings.rebaseSquash = {
-        \'cmd': ':call <SID>RebaseSetInstruction("s")<cr>',
+        \'cmd': ':<C-U>call <SID>RebaseSetInstruction("s")<cr>',
         \'bindings': 'grS'
     \}
     let s:defaultMappings.vrebaseSquash = {
@@ -784,7 +784,7 @@ fu! s:SetDefaultMappings() "{{{
         \'bindings': 'grS'
     \}
     let s:defaultMappings.rebaseFixup = {
-        \'cmd': ':call <SID>RebaseSetInstruction("f")<cr>',
+        \'cmd': ':<C-U>call <SID>RebaseSetInstruction("f")<cr>',
         \'bindings': 'grF'
     \}
     let s:defaultMappings.vrebaseFixup = {
@@ -793,7 +793,7 @@ fu! s:SetDefaultMappings() "{{{
         \'bindings': 'grF'
     \}
     let s:defaultMappings.rebaseExec = {
-        \'cmd': ':call <SID>RebaseSetInstruction("x")<cr>',
+        \'cmd': ':<C-U>call <SID>RebaseSetInstruction("x")<cr>',
         \'bindings': 'grX'
     \}
     let s:defaultMappings.vrebaseExec = {
@@ -802,7 +802,7 @@ fu! s:SetDefaultMappings() "{{{
         \'bindings': 'grX'
     \}
     let s:defaultMappings.rebaseDrop = {
-        \'cmd': ':call <SID>RebaseSetInstruction("d")<cr>',
+        \'cmd': ':<C-U>call <SID>RebaseSetInstruction("d")<cr>',
         \'bindings': 'grD'
     \}
     let s:defaultMappings.vrebaseDrop = {
@@ -811,7 +811,7 @@ fu! s:SetDefaultMappings() "{{{
         \'bindings': 'grD'
     \}
     let s:defaultMappings.rebaseToggle = {
-        \'cmd': ':call <SID>RebaseToggle()<cr>',
+        \'cmd': ':<C-U>call <SID>RebaseToggle()<cr>',
         \'bindings': 'grs'
     \}
     let s:defaultMappings.vrebaseToggle = {
@@ -820,22 +820,22 @@ fu! s:SetDefaultMappings() "{{{
         \'bindings': 'grs'
     \}
     let s:defaultMappings.rebaseSkip = {
-        \'cmd': ':<C-U>call <SID>RebaseSkip()<cr>',
+        \'cmd': ':call <SID>RebaseSkip()<cr>',
         \'bindings': 'grn'
     \}
     let s:defaultMappings.rebaseContinue = {
-        \'cmd': ':call <SID>RebaseContinue()<cr>',
+        \'cmd': ':<C-U>call <SID>RebaseContinue()<cr>',
         \'bindings': 'grc'
     \}
     let s:defaultMappings.rebaseEdit = {
-        \'cmd': ':call <SID>RebaseEdit()<cr>',
+        \'cmd': ':<C-U>call <SID>RebaseEdit()<cr>',
         \'bindings': 'gre'
     \}
 
     " bisecting
     let s:defaultMappings.bisectStart = {
         \'mapCmd': 'nmap',
-        \'cmd': ':call <SID>BisectStart("n")<cr>',
+        \'cmd': ':<C-U>call <SID>BisectStart("n")<cr>',
         \'bindings': 'gbs'
     \}
     let s:defaultMappings.vbisectStart = {
@@ -875,17 +875,17 @@ fu! s:SetDefaultMappings() "{{{
     \}
     let s:defaultMappings.bisectReset = {
         \'mapCmd': 'nmap',
-        \'cmd': ':call <SID>BisectReset()<cr>',
+        \'cmd': ':<C-U>call <SID>BisectReset()<cr>',
         \'bindings': 'gbr'
     \}
     let s:defaultMappings.bisectLog = {
         \'mapCmd': 'nmap',
-        \'cmd': ':call <SID>BisectLog()<cr>',
+        \'cmd': ':<C-U>call <SID>BisectLog()<cr>',
         \'bindings': 'gbl'
     \}
     let s:defaultMappings.bisectReplay = {
         \'mapCmd': 'nmap',
-        \'cmd': ':call <SID>BisectReplay()<cr>',
+        \'cmd': ':<C-U>call <SID>BisectReplay()<cr>',
         \'bindings': 'gbp'
     \}
 
