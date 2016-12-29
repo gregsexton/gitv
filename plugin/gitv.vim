@@ -1465,6 +1465,18 @@ fu! s:RebaseSetInstruction(instruction) range "{{{
             endif
         endif
     endfor
+    let ncommits = a:lastline - a:firstline + 1
+    if ncommits > 1
+        let prettyCommit = ncommits .' commits'
+    else
+        let prettyCommit = gitv#util#line#sha('.')
+    endif
+    if exists('cmd')
+        redraw
+        echo cmd 'will be executed after' prettyCommit.'.'
+    else
+        echo prettyCommit.' marked with "'.a:instruction.'".'
+    endif
 endf "}}}
 fu! s:RebaseHasStarted() "{{{
     return !empty(glob(fugitive#buffer().repo().tree().'/.git/rebase-merge'))
@@ -1480,6 +1492,11 @@ fu! s:Rebase() "{{{
         return
     endif
     let result=s:RunGitCommand('rebase HEAD '.refs[choice - 1], 0)[0]
+    let hasError = v:shell_error
+    call s:RebaseUpdateView()
+    if hasError
+        echoerr split(result, '\n')[0]
+    endif
 endf "}}}
 fu! s:SetRebaseEditor() "{{{
     if  s:RebaseHasInstructions()
