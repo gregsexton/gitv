@@ -820,7 +820,7 @@ fu! s:SetDefaultMappings() "{{{
         \'bindings': 'grs'
     \}
     let s:defaultMappings.rebaseSkip = {
-        \'cmd': ':call <SID>RebaseSkip()<cr>',
+        \'cmd': ':<C-U>call <SID>RebaseSkip()<cr>',
         \'bindings': 'grn'
     \}
     let s:defaultMappings.rebaseContinue = {
@@ -1702,14 +1702,19 @@ fu! s:RebaseSkip() "{{{
     if !s:RebaseHasStarted()
         return
     endif
-    let result = split(s:RunGitCommand('rebase --skip', 0)[0], '\n')[0]
-    let hasError = v:shell_error
-    call s:RebaseUpdateView()
-    if hasError
-        echoerr result
-    else
-        echo result
-    endif
+    for i in range(0, v:count)
+        let result = split(s:RunGitCommand('rebase --skip', 0)[0], '\n')[0]
+        let hasError = v:shell_error
+        if i == v:count || hasError
+            call s:RebaseUpdateView()
+        endif
+        if hasError
+            echoerr result
+            return
+        else
+            echo result
+        endif
+    endfor
 endf "}}}
 fu! s:GetRebaseMode() "{{{
     let output = readfile(s:GetRebaseDone())

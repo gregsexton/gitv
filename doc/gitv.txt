@@ -341,6 +341,7 @@ Here is a list of mapping for rebasing.
                         instructions, opens the rebase todo list for editing.
 
     normal      grn     Go to the next commit in the current rebase (skip).
+                        Accepts a count.
 
     normal      grc     Continue through the rebase until input is needed.
 
