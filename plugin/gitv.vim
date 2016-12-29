@@ -1432,7 +1432,7 @@ endfu "}}}
 " Rebase: "{{{
 fu! s:RebaseHasInstructions() "{{{
     return len(keys(b:rebaseInstructions)) > 0
-endf
+endf "}}}
 fu! s:RebaseClearInstructions() "{{{
     let b:rebaseInstructions = {}
 endf "}}}
