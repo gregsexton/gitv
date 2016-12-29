@@ -309,33 +309,26 @@ Here is a list of mapping for rebasing.
     normal      grr     Rebase the current HEAD onto the ref or commit under
                         the cursor. A choice will be given of multiple refs.
 
-    normal      grR     Mark the commit under the line for reword. In visual
-                        mode, marks every commit in the range.
+    normal      grR     Mark the commit under the line for reword.
 
-    normal      grE     Mark the commit under the line for edit. In visual
-                        mode, marks every commit in the range.
+    normal      grE     Mark the commit under the line for edit.
 
-    normal      grS     Mark the commit under the line for squash. In visual
-                        mode, marks every commit in the range.
+    normal      grS     Mark the commit under the line for squash.
 
-    normal      grF     Mark the commit under the line for fixup. In visual
-                        mode, marks every commit in the range.
+    normal      grF     Mark the commit under the line for fixup.
 
-    normal      grX     Mark the commit under the line for exec. In visual
-                        mode, marks every commit in the range. A command must
+    normal      grX     Mark the commit under the line for exec. A command must
                         be entered to be executed. The command will be
                         executed after performing an instruction on the
                         commit. By default, the commit will be picked.
 
-    normal      grD     Mark the commit under the line for dropping. In visual
-                        mode, marks every commit in the range.
+    normal      grD     Mark the commit under the line for dropping.
 
-    normal      grP     Mark the commit under the line for picking. In visual
-                        mode, marks every commit in the range. Since this is
-                        the default instruction, if every commit is marked for
-                        picking, no commits will be considered marked. This
-                        also removes exec commands from marking commits with
-                        grX.
+    normal      grP     Mark the commit under the line for picking. Since this
+                        is the default instruction, if every commit is marked
+                        for picking, no commits will be considered marked.
+                        This also removes exec commands from marking commits
+                        with grX.
 
     normal      grs     Start or stop an interactive rebase. If starting the
                         rebase, it begins at the commit before the commit
@@ -356,6 +349,18 @@ Here is a list of mapping for rebasing.
                         instructions, prints the list of marked commits and
                         their instructions. If rebase is not started and no
                         commits are marked, does nothing.
+
+    visual      grR,    Same as normal mode, but marks every commit.
+                grE,
+                grS,
+                grF,
+                grX,
+                grD,
+                grP
+
+    visual      grs,    Same as normal mode, but will attempt to rebase from
+                grr     a ref at the top or bottom to the other end of the
+                        selection.
 
 Here is a list of mappings for bisecting.
 
@@ -612,6 +617,7 @@ result in bindings equivalent to the defaults.
       \'delete': 'd',
       \'vdelete': 'd',
       \'rebase': 'grr',
+      \'vrebase': 'grr',
       \'rebasePick': 'grP',
       \'vrebasePick': 'grP',
       \'rebaseReword': 'grR',
@@ -627,6 +633,7 @@ result in bindings equivalent to the defaults.
       \'rebaseDrop': 'grF',
       \'vrebaseDrop': 'grF',
       \'rebaseToggle': 'grs',
+      \'vrebaseToggle': 'grs',
       \'rebaseSkip': 'grn',
       \'rebaseContinue': 'grc',
       \'rebaseEdit': 'gre',
