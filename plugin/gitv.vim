@@ -1574,20 +1574,17 @@ fu! s:RebaseToggle(ref) "{{{
         let jump = '~2'
     endif
     let result=s:RunGitCommand('rebase --preserve-merges --interactive '.a:ref.jump, 0)[0]
+    let result = split(result, '\n')[0]
     let hasError = v:shell_error
     let hasInstructions = s:RebaseHasInstructions()
     call s:RebaseClearInstructions()
     call s:RebaseUpdateView()
     let $GIT_SEQUENCE_EDITOR=""
-    if hasError
-        let result = split(result, '\n')[0]
-        if hasInstructions
-            " errors are expected as in continue mode
-            echo result
-        else
-            echoerr result
-            return
-        endif
+    if hasError && !hasInstructions
+        echoerr result
+        return
+    elseif !hasError && hasInstructions
+        echo result
     endif
     if hasInstructions
         call s:RebaseContinueCleanup()
