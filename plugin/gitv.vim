@@ -1831,8 +1831,14 @@ fu! s:RebaseViewInstructions() "{{{
 endf "}}}
 fu! s:RebaseEditTodo() "{{{
     exec 'edit' s:GetRebaseTodo()
-    set modifiable
-    set noreadonly
+    if &ft == 'gitrebase'
+        silent setlocal modifiable
+        silent setlocal noreadonly
+        silent setlocal buftype=nofile
+        silent setlocal nobuflisted
+        silent setlocal noswapfile
+        silent setlocal bufhidden=wipe
+    endif
 endf "}}
 fu! s:RebaseEdit() "{{{
     if s:RebaseHasInstructions()
