@@ -210,11 +210,16 @@ fu! s:SanitizeReservedArgs(extraArgs) "{{{
     endwhile
     return [join(splitArgs[0:-len(selectedFiles) - 1], ' '), join(selectedFiles, ' ')]
 endfu "}}}
-fu! s:ReapplyReservedArgs(extraArgs) "{{{
+fu! s:ReapplyReservedArgs(extraArgs, filePath) "{{{
     let options = a:extraArgs[0]
     if exists('b:Bisecting')
-        let options .= " --bisect"
-        let options = s:FilterArgs(options, ['--all', '--first-parent'])
+        if a:filePath != '' && !s:IsBisectingFile(a:filePath)
+            echoerr "No longer bisecting file."
+            let b:Bisecting = 0
+        else
+            let options .= " --bisect"
+            let options = s:FilterArgs(options, ['--all', '--first-parent'])
+        endif
     endif
     return [options, a:extraArgs[1]]
 endfu "}}}
@@ -354,7 +359,7 @@ fu! s:ToggleArg(args, toggle) "{{{
 endf "}}}
 fu! s:ConstructAndExecuteCmd(direction, commitCount, extraArgs, filePath, range) "{{{
     if a:range == [] "no range, setup and execute the command
-        let extraArgs = s:ReapplyReservedArgs(a:extraArgs)
+        let extraArgs = s:ReapplyReservedArgs(a:extraArgs, a:filePath)
         let cmd  = "log " 
         let cmd .= " --no-color --decorate=full --pretty=format:\"%d__START__ %s__SEP__%ar__SEP__%an__SEP__[%h]\" --graph -"
         let cmd .= a:commitCount
@@ -384,7 +389,7 @@ fu! s:ConstructRangeBuffer(commitCount, extraArgs, filePath, range) "{{{
     %delete
 
     "necessary as order is important; can't just iterate over keys(slices)
-    let extraArgs = s:ReapplyReservedArgs(a:extraArgs)
+    let extraArgs = s:ReapplyReservedArgs(a:extraArgs, a:filePath)
     let hashCmd       = "log " . extraArgs[0]
     let hashCmd      .= " --no-color --pretty=format:%H -".a:commitCount." -- " . a:filePath
     let [result, cmd] = s:RunGitCommand(hashCmd, 0)
@@ -1869,6 +1874,13 @@ fu! s:RebaseEdit() "{{{
     wincmd l
 endf "}}} }}}
 "Bisect: "{{{
+fu! s:IsBisectingFile(filePath) "{{{
+    let path = fugitive#buffer().repo().tree().'/.git/BISECT_NAMES'
+    if empty(glob(path))
+        return 0
+    endif
+    return readfile(path) == [" '".a:filePath."'"]
+endf "}}}
 fu! s:BisectHasStarted() "{{{
     call s:RunGitCommand('bisect log', 0)
     return !v:shell_error
@@ -1880,7 +1892,11 @@ fu! s:BisectStart(mode) range "{{{
         endif
         unlet! b:Bisecting
     elseif !s:BisectHasStarted()
-        let result = s:RunGitCommand('bisect start', 0)[0]
+        let cmd = 'bisect start'
+        if s:IsFileMode()
+            let cmd .= ' '.b:Gitv_FileModeRelPath
+        endif
+        let result = s:RunGitCommand(cmd, 0)[0]
         if v:shell_error
             echoerr split(result, '\n')[0]
             return
@@ -1896,6 +1912,10 @@ fu! s:BisectStart(mode) range "{{{
             echom 'Bisect started'
         endif
     else
+        if s:IsFileMode() && !s:IsBisectingFile(b:Gitv_FileModeRelPath)
+            echoerr "Not bisecting the current file, cannot enable."
+            return
+        endif
         let b:Bisecting = 1
         if g:Gitv_QuietBisect == 0
             echom 'Bisect enabled'
@@ -2006,9 +2026,9 @@ fu! s:BisectLog() "{{{
         return
     endif
     let fname = input('Enter a filename to save the log to: ', '', 'file')
-    let result = s:RunGitCommand('bisect log', 0)[0]
+    let result = split(s:RunGitCommand('bisect log', 0)[0], '\n')
     if v:shell_error
-        echoerr split(result, '\n')[0]
+        echoerr result[0]
         return
     endif
     call writefile(result, fname)
