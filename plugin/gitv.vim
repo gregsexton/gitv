@@ -1628,6 +1628,10 @@ fu! s:Rebase() range "{{{
     if s:IsFileMode()
         return
     endif
+    if exists('b:Bisecting') || s:BisectHasStarted()
+        echo "Cannot rebase in bisect mode."
+        return
+    endif
     if s:RebaseHasStarted()
         echoerr "Rebase already in progress."
         return
@@ -1701,6 +1705,10 @@ fu! s:RebaseUpdateView() "{{{
 endf "}}}
 fu! s:RebaseToggle() range "{{{
     if s:IsFileMode()
+        return
+    endif
+    if exists('b:Bisecting') || s:BisectHasStarted()
+        echo "Cannot rebase in bisect mode."
         return
     endif
     if s:RebaseHasStarted()
@@ -1886,6 +1894,10 @@ fu! s:BisectHasStarted() "{{{
     return !v:shell_error
 endf "}}}
 fu! s:BisectStart(mode) range "{{{
+    if s:RebaseHasInstructions() || s:RebaseHasStarted()
+        echo "Cannot bisect in rebase mode."
+        return
+    endif
     if exists('b:Bisecting')
         if g:Gitv_QuietBisect == 0
             echom 'Bisect disabled'
