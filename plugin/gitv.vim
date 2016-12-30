@@ -505,7 +505,7 @@ fu! s:SetupBuffer(commitCount, extraArgs, filePath, range) "{{{
     call s:AddLoadMore()
     call s:AddLocalNodes(a:filePath)
     call s:AddFileModeSpecific(a:filePath, a:range, a:commitCount)
-    call s:AddRebaseMessage()
+    call s:AddRebaseMessage(a:filePath)
 
     " run any autocmds the user may have defined to hook in here
     silent doautocmd User GitvSetupBuffer
@@ -536,9 +536,8 @@ fu! s:CleanupRebasePreview() "{{{
         bdelete
     endif
 endf "}}}
-fu! s:AddRebaseMessage() "{{{
-    if s:IsFileMode()
-        call s:MoveIntoPreviewAndExecute('call s:CleanupRebasePreview()', 0)
+fu! s:AddRebaseMessage(filePath) "{{{
+    if a:filePath != ''
         return
     endif
     if s:RebaseHasInstructions()
