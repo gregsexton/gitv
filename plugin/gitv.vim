@@ -1658,7 +1658,7 @@ fu! s:SetRebaseEditor() "{{{
                     \ if [[ ${!key} != "" ]]; then
                     \ cmd=CMD_$sha;
                     \ echo ${!key} ${line:5};
-                    \ if [[ $cmd != "" ]]; then
+                    \ if [[ ${!cmd} != "" ]]; then
                     \ echo x ${!cmd};
                     \ fi;
                     \ else
