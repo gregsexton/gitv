@@ -472,7 +472,7 @@ fu! s:GetFinalOutputForHashes(hashes) "{{{
         let cmd      .= "do "
         let cmd      .= git.' log'
         let cmd      .= extraArgs[0]
-        let cmd      .=' --no-color --decorate=full --pretty=format:"%d %s__SEP__%ar__SEP__%an__SEP__[%h]%n" --graph -1 ${hash}; '
+        let cmd      .=' --no-color --decorate=full --pretty=format:"%d__START__ %s__SEP__%ar__SEP__%an__SEP__[%h]%n" --graph -1 ${hash}; '
         let cmd      .= 'done'
         let finalCmd  = "bash -c " . shellescape(cmd)
 
