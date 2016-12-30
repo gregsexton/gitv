@@ -13,6 +13,7 @@ endif
 
 syn match gitvSubject /.*/ 
 
+syn match gitvRebaseTag /\[[sfper]x\?\]/ contained containedin=gitvSubject
 syn match gitvDate /\(\d\+ years\?, \)\?\d\+ \%(second\|minute\|hour\|day\|week\|month\|year\)s\? ago/ contained containedin=gitvSubject
 syn match gitvHash /\[[0-9a-f]\{7}\]$/ contained containedin=gitvSubject
 
@@ -51,6 +52,7 @@ syn match gitvRemovedMarks /\d\+\ze ->/ contained containedin=gitvAddedMarks
 syn match gitvSeperatorMarks /\s\+->\s\+/ contained containedin=gitvAddedMarks
 
 hi def link gitvHash              Number
+hi def link gitvRebaseTag         Identifier
 hi def link gitvRef               Directory
 hi def link gitvRefTag            String
 hi def link gitvRefRemote         Statement
