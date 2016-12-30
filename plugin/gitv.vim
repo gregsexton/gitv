@@ -1501,6 +1501,9 @@ fu! s:RebaseSetInstruction(instruction) range "{{{
             return
         endif
         if a:instruction == 'p' || a:instruction == 'pick' || a:instruction == ''
+            if !exists('b:rebaseInstructions[sha]')
+                continue
+            endif
             call remove(b:rebaseInstructions, sha)
         else
             if exists('cmd')
