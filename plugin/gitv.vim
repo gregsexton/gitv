@@ -1503,11 +1503,13 @@ fu! s:RebaseSetInstruction(instruction) range "{{{
             return
         endif
     endif
+    let ncommits = 0
     for line in range(a:firstline, a:lastline)
         let sha = gitv#util#line#sha(line)
         if sha == ''
-            return
+            continue
         endif
+        let ncommits += 1
         if a:instruction == 'p' || a:instruction == 'pick' || a:instruction == ''
             if !exists('b:rebaseInstructions[sha]')
                 continue
@@ -1524,19 +1526,21 @@ fu! s:RebaseSetInstruction(instruction) range "{{{
             endif
         endif
     endfor
-    let ncommits = a:lastline - a:firstline + 1
-    if ncommits > 1
+    if ncommits < 1
+        echo "No commits marked."
+        return
+    elseif ncommits > 1
         let prettyCommit = ncommits .' commits'
     else
         let prettyCommit = gitv#util#line#sha('.')
     endif
+    call s:RebaseUpdateView()
     if exists('cmd')
         redraw
         echo cmd 'will be executed after' prettyCommit.'.'
     else
         echo prettyCommit.' marked with "'.a:instruction.'".'
     endif
-    call s:RebaseUpdateView()
 endf "}}}
 fu! s:RebaseHasStarted() "{{{
     return !empty(glob(fugitive#buffer().repo().tree().'/.git/rebase-merge'))
