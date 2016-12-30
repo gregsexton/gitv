@@ -74,6 +74,9 @@ let g:Gitv_InstanceCounter = 0
 let s:localUncommitedMsg = 'Local uncommitted changes, not checked in to index.'
 let s:localCommitedMsg   = 'Local changes checked in to index but not committed.'
 
+let s:pendingRebaseMsg = 'View pending rebase instructions'
+let s:rebaseMsg = 'Edit rebase todo'
+
 command! -nargs=* -range -bang -complete=custom,s:CompleteGitv Gitv call s:OpenGitv(s:EscapeGitvArgs(<q-args>), <bang>0, <line1>, <line2>)
 cabbrev gitv <c-r>=(getcmdtype()==':' && getcmdpos()==1 ? 'Gitv' : 'gitv')<CR>
 
@@ -353,7 +356,7 @@ fu! s:ConstructAndExecuteCmd(direction, commitCount, extraArgs, filePath, range)
     if a:range == [] "no range, setup and execute the command
         let extraArgs = s:ReapplyReservedArgs(a:extraArgs)
         let cmd  = "log " 
-        let cmd .= " --no-color --decorate=full --pretty=format:\"%d %s__SEP__%ar__SEP__%an__SEP__[%h]\" --graph -"
+        let cmd .= " --no-color --decorate=full --pretty=format:\"%d__START__ %s__SEP__%ar__SEP__%an__SEP__[%h]\" --graph -"
         let cmd .= a:commitCount
         let cmd .= " " . extraArgs[0]
         if a:filePath != ''
@@ -502,15 +505,49 @@ fu! s:SetupBuffer(commitCount, extraArgs, filePath, range) "{{{
     call s:AddLoadMore()
     call s:AddLocalNodes(a:filePath)
     call s:AddFileModeSpecific(a:filePath, a:range, a:commitCount)
+    call s:AddRebaseMessage()
 
     " run any autocmds the user may have defined to hook in here
     silent doautocmd User GitvSetupBuffer
 
+    silent call s:InsertRebaseInstructions()
     silent %call s:Align("__SEP__", a:filePath)
     silent %s/\s\+$//e
     silent setlocal nomodifiable
     silent setlocal readonly
     silent setlocal cursorline
+endf "}}}
+fu! s:InsertRebaseInstructions() "{{{
+    if s:RebaseHasInstructions()
+        for key in keys(b:rebaseInstructions)
+            let search = '__START__\ze.*\['.key.'\]$'
+            let replace = ' ['.b:rebaseInstructions[key].instruction
+            if exists('b:rebaseInstructions[key].cmd')
+                let replace .= 'x'
+            endif
+            let replace .= ']'
+            exec '%s/'.search.'/'.replace
+        endfor
+    endif
+    %s/__START__//
+endf "}}}
+fu! s:CleanupRebasePreview() "{{{
+    if &syntax == 'gitrebase'
+        bdelete
+    endif
+endf "}}}
+fu! s:AddRebaseMessage() "{{{
+    if s:IsFileMode()
+        call s:MoveIntoPreviewAndExecute('call s:CleanupRebasePreview()', 0)
+        return
+    endif
+    if s:RebaseHasInstructions()
+        call append(0, '= '.s:pendingRebaseMsg)
+    elseif s:RebaseHasStarted()
+        call append(0, '= '.s:rebaseMsg)
+    else
+        call s:MoveIntoPreviewAndExecute('call s:CleanupRebasePreview()', 0)
+    endif
 endf "}}}
 fu! s:AddLocalNodes(filePath) "{{{
     let suffix = a:filePath == '' ? '' : ' -- '.a:filePath
@@ -826,10 +863,6 @@ fu! s:SetDefaultMappings() "{{{
     let s:defaultMappings.rebaseContinue = {
         \'cmd': ':<C-U>call <SID>RebaseContinue()<cr>',
         \'bindings': 'grc'
-    \}
-    let s:defaultMappings.rebaseEdit = {
-        \'cmd': ':<C-U>call <SID>RebaseEdit()<cr>',
-        \'bindings': 'gre'
     \}
 
     " bisecting
@@ -1354,26 +1387,31 @@ fu! s:GetCommitMsg() "{{{
 endf "}}}
 fu! s:OpenGitvCommit(geditForm, forceOpenFugitive) "{{{
     let bindingsCmd = 'call s:MoveIntoPreviewAndExecute("call s:SetupMapping('."'".'toggleWindow'."'".', s:defaultMappings)", 0)'
-    if getline('.') == "-- Load More --"
+    let line = getline('.')
+    if line == "-- Load More --"
         call s:LoadGitv('', 1, b:Gitv_CommitCount+g:Gitv_CommitStep, b:Gitv_ExtraArgs, s:GetRelativeFilePath(), s:GetRange())
         return
     endif
-    if s:IsFileMode() && getline('.') =~ "^-- \\[.*\\] --$"
+    if s:IsFileMode() && line =~ "^-- \\[.*\\] --$"
         call s:OpenWorkingCopy(a:geditForm)
         return
     endif
-    if getline('.') =~ s:localUncommitedMsg.'$'
+    if line =~ s:pendingRebaseMsg.'$' || line =~ s:rebaseMsg.'$'
+        call s:RebaseEdit()
+        return
+    endif
+    if line =~ s:localUncommitedMsg.'$'
         call s:OpenWorkingDiff(a:geditForm, 0)
         exec bindingsCmd
         return
     endif
-    if getline('.') =~ s:localCommitedMsg.'$'
+    if line =~ s:localCommitedMsg.'$'
         call s:OpenWorkingDiff(a:geditForm, 1)
         exec bindingsCmd
         return
     endif
-    if s:IsFileMode() && getline('.') =~ '^-- /.*/$'
-        if s:EditRange(matchstr(getline('.'), '^-- /\zs.*\ze/$'))
+    if s:IsFileMode() && line =~ '^-- /.*/$'
+        if s:EditRange(matchstr(line, '^-- /\zs.*\ze/$'))
             call s:NormalCmd('update', s:defaultMappings)
         endif
         return
@@ -1441,7 +1479,7 @@ fu! s:EditRange(rangeDelimiter)
 endfu "}}}
 " Rebase: "{{{
 fu! s:RebaseHasInstructions() "{{{
-    return len(keys(b:rebaseInstructions)) > 0
+    return exists('b:rebaseInstructions') && len(keys(b:rebaseInstructions)) > 0
 endf "}}}
 fu! s:RebaseClearInstructions() "{{{
     let b:rebaseInstructions = {}
@@ -1487,6 +1525,7 @@ fu! s:RebaseSetInstruction(instruction) range "{{{
     else
         echo prettyCommit.' marked with "'.a:instruction.'".'
     endif
+    call s:RebaseUpdateView()
 endf "}}}
 fu! s:RebaseHasStarted() "{{{
     return !empty(glob(fugitive#buffer().repo().tree().'/.git/rebase-merge'))
@@ -1780,6 +1819,18 @@ endf "}}}
 fu! s:GetRebaseTodo() "{{{
     return fugitive#buffer().repo().tree().'/.git/rebase-merge/git-rebase-todo'
 endf "}}}
+fu! s:RebaseViewInstructions() "{{{
+    exec 'edit' s:workingFile
+    if expand('%') == s:workingFile
+        set syntax=gitrebase
+        set nomodifiable
+    endif
+endf "}}}
+fu! s:RebaseEditTodo() "{{{
+    exec 'edit' s:GetRebaseTodo()
+    set modifiable
+    set noreadonly
+endf "}}
 fu! s:RebaseEdit() "{{{
     if s:RebaseHasInstructions()
         " rebase should not be started, but we have set instructions to view
@@ -1792,10 +1843,7 @@ fu! s:RebaseEdit() "{{{
             call add(output, line)
         endfor
         call writefile(output, s:workingFile)
-        exec 'split' s:workingFile
-        set syntax=gitrebase
-        set nomodifiable
-        return
+        call s:MoveIntoPreviewAndExecute('call s:RebaseViewInstructions()', 1)
     endif
     if !s:RebaseHasStarted()
         return
@@ -1805,7 +1853,8 @@ fu! s:RebaseEdit() "{{{
         echoerr 'No interactive rebase in progress.'
         return
     endif
-    execute 'split' todo
+    call s:MoveIntoPreviewAndExecute('call s:RebaseEditTodo()', 1)
+    wincmd l
 endf "}}} }}}
 "Bisect: "{{{
 fu! s:BisectHasStarted() "{{{
