@@ -366,6 +366,8 @@ Here is a list of mappings for bisecting.
                         If the bisecting process has already been enabled,
                         disables bisecting mode.
                         Works in both modes.
+                        If file names have been specified, only bisects the
+                        selected files.
                         Mnemonic- git bisect start/git bisect stop.
 
     visual      gbs     Same as normal mode, but if the bisecting process has

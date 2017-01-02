@@ -200,21 +200,33 @@ fu! s:SanitizeReservedArgs(extraArgs) "{{{
     let selectedFiles = []
     let splitArgs = split(sanitizedArgs, ' ')
     let index = len(splitArgs)
+    let root = fugitive#buffer().repo().tree().'/'
     while index
         let index -= 1
-        if !empty(glob(splitArgs[index]))
-            let selectedFiles += [fnamemodify(splitArgs[index], ':p')]
+        let path = splitArgs[index]
+        if !empty(globpath('.', path))
+            " transform the path relative to the git directory
+            let path = fnamemodify(path, ':p')
+            let splitPath = split(path, root)
+            if splitPath[0] == path
+                echoerr "Not in git repo:" path
+                break
+            endif
+            " join the relroot back in case we split more than one off
+            let path = join(splitPath, root)
+            let selectedFiles += [path]
         else
             break
         endif
     endwhile
+    let selectedFiles = sort(selectedFiles)
     return [join(splitArgs[0:-len(selectedFiles) - 1], ' '), join(selectedFiles, ' ')]
 endfu "}}}
 fu! s:ReapplyReservedArgs(extraArgs, filePath) "{{{
     let options = a:extraArgs[0]
     if exists('b:Bisecting')
-        if a:filePath != '' && !s:IsBisectingFile(a:filePath)
-            echoerr "No longer bisecting file."
+        if !s:IsBisectingCurrentFiles()
+            echoerr "Not bisecting specified files."
             let b:Bisecting = 0
         else
             let options .= " --bisect"
@@ -1886,12 +1898,25 @@ fu! s:RebaseEdit() "{{{
     wincmd l
 endf "}}} }}}
 "Bisect: "{{{
-fu! s:IsBisectingFile(filePath) "{{{
+fu! s:IsBisectingFiles(filePaths) "{{{
     let path = fugitive#buffer().repo().tree().'/.git/BISECT_NAMES'
     if empty(glob(path))
         return 0
     endif
-    return readfile(path) == [" '".a:filePath."'"]
+    let paths = ''
+    for filePath in a:filePaths
+        let paths .= " '".filePath."'"
+    endfor
+    return join(readfile(path), ' ') == paths
+endf "}}}
+fu! s:IsBisectingCurrentFiles() "{{{
+    if s:IsFileMode() && !s:IsBisectingFiles([b:Gitv_FileModeRelPath])
+        return 0
+    endif
+    if b:Gitv_ExtraArgs[1] != '' && !s:IsBisectingFiles(split(b:Gitv_ExtraArgs[1], ' '))
+        return 0
+    endif
+    return 1
 endf "}}}
 fu! s:BisectHasStarted() "{{{
     call s:RunGitCommand('bisect log', 0)
@@ -1907,9 +1932,12 @@ fu! s:BisectStart(mode) range "{{{
             echom 'Bisect disabled'
         endif
         unlet! b:Bisecting
+        return
     elseif !s:BisectHasStarted()
         let cmd = 'bisect start'
-        if s:IsFileMode()
+        if b:Gitv_ExtraArgs[1] != ''
+            let cmd .= join(b:Gitv_ExtraArgs, ' ')
+        elseif s:IsFileMode()
             let cmd .= ' '.b:Gitv_FileModeRelPath
         endif
         let result = s:RunGitCommand(cmd, 0)[0]
@@ -1928,8 +1956,8 @@ fu! s:BisectStart(mode) range "{{{
             echom 'Bisect started'
         endif
     else
-        if s:IsFileMode() && !s:IsBisectingFile(b:Gitv_FileModeRelPath)
-            echoerr "Not bisecting the current file, cannot enable."
+        if !s:IsBisectingCurrentFiles()
+            echoerr "Not bisecting the current files, cannot enable."
             return
         endif
         let b:Bisecting = 1
