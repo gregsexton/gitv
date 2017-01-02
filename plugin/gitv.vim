@@ -316,7 +316,7 @@ fu! s:OpenBrowserMode(extraArgs) "{{{
         return 0
     endif
     call s:SetupBufferCommands(0)
-    let b:rebaseInstructions = {}
+    let b:Gitv_RebaseInstructions = {}
     "open the first commit
     if g:Gitv_OpenPreviewOnLaunch
         silent call s:OpenGitvCommit("Gedit", 0)
@@ -542,10 +542,10 @@ fu! s:SetupBuffer(commitCount, extraArgs, filePath, range) "{{{
 endf "}}}
 fu! s:InsertRebaseInstructions() "{{{
     if s:RebaseHasInstructions()
-        for key in keys(b:rebaseInstructions)
+        for key in keys(b:Gitv_RebaseInstructions)
             let search = '__START__\ze.*\['.key.'\]$'
-            let replace = ' ['.b:rebaseInstructions[key].instruction
-            if exists('b:rebaseInstructions[key].cmd')
+            let replace = ' ['.b:Gitv_RebaseInstructions[key].instruction
+            if exists('b:Gitv_RebaseInstructions[key].cmd')
                 let replace .= 'x'
             endif
             let replace .= ']'
@@ -1505,10 +1505,10 @@ fu! s:EditRange(rangeDelimiter)
 endfu "}}}
 " Rebase: "{{{
 fu! s:RebaseHasInstructions() "{{{
-    return exists('b:rebaseInstructions') && len(keys(b:rebaseInstructions)) > 0
+    return exists('b:Gitv_RebaseInstructions') && len(keys(b:Gitv_RebaseInstructions)) > 0
 endf "}}}
 fu! s:RebaseClearInstructions() "{{{
-    let b:rebaseInstructions = {}
+    let b:Gitv_RebaseInstructions = {}
 endf "}}}
 fu! s:RebaseSetInstruction(instruction) range "{{{
     if s:IsFileMode()
@@ -1537,18 +1537,18 @@ fu! s:RebaseSetInstruction(instruction) range "{{{
         endif
         let ncommits += 1
         if a:instruction == 'p' || a:instruction == 'pick' || a:instruction == ''
-            if !exists('b:rebaseInstructions[sha]')
+            if !exists('b:Gitv_RebaseInstructions[sha]')
                 continue
             endif
-            call remove(b:rebaseInstructions, sha)
+            call remove(b:Gitv_RebaseInstructions, sha)
         else
             if exists('cmd')
-                if !exists('b:rebaseInstructions[sha]')
-                    let b:rebaseInstructions[sha] = { 'instruction': 'p' }
+                if !exists('b:Gitv_RebaseInstructions[sha]')
+                    let b:Gitv_RebaseInstructions[sha] = { 'instruction': 'p' }
                 endif
-                let b:rebaseInstructions[sha].cmd = cmd
+                let b:Gitv_RebaseInstructions[sha].cmd = cmd
             else
-                let b:rebaseInstructions[sha] = { 'instruction': a:instruction }
+                let b:Gitv_RebaseInstructions[sha] = { 'instruction': a:instruction }
             endif
         endif
     endfor
@@ -1685,11 +1685,11 @@ fu! s:SetRebaseEditor() "{{{
     if  s:RebaseHasInstructions()
         " replace default instructions with stored instructions
         let $GIT_SEQUENCE_EDITOR='function gitv_edit() {'
-        for sha in keys(b:rebaseInstructions)
-            let instruction = b:rebaseInstructions[sha].instruction
+        for sha in keys(b:Gitv_RebaseInstructions)
+            let instruction = b:Gitv_RebaseInstructions[sha].instruction
             let $GIT_SEQUENCE_EDITOR .= ' SHA_'.sha.'='.instruction.';'
-            if exists('b:rebaseInstructions[sha].cmd')
-                let cmd = b:rebaseInstructions[sha].cmd
+            if exists('b:Gitv_RebaseInstructions[sha].cmd')
+                let cmd = b:Gitv_RebaseInstructions[sha].cmd
                 let $GIT_SEQUENCE_EDITOR .= ' CMD_'.sha.'='.shellescape(cmd).';'
             endif
         endfor
@@ -1748,7 +1748,7 @@ endf "}}}
 fu! s:RebaseUpdate() "{{{
     if s:RebaseHasInstructions() && (exists('b:Gitv_Bisecting') || s:RebaseHasStarted() || s:BisectHasStarted())
         echoerr "Mode changed elsewhere, dropping rebase instructions."
-        let b:rebaseInstructions = {}
+        let b:Gitv_RebaseInstructions = {}
     endif
     if !s:RebaseHasStarted() && s:RebaseIsEnabled()
         let b:Gitv_Rebasing = 0
@@ -1915,10 +1915,10 @@ fu! s:RebaseEdit() "{{{
     if s:RebaseHasInstructions()
         " rebase should not be started, but we have set instructions to view
         let output = []
-        for key in keys(b:rebaseInstructions)
-            let line = b:rebaseInstructions[key].instruction.' '.key
-            if exists('b:rebaseInstructions[key].cmd')
-                let line .= ' '.b:rebaseInstructions[key].cmd
+        for key in keys(b:Gitv_RebaseInstructions)
+            let line = b:Gitv_RebaseInstructions[key].instruction.' '.key
+            if exists('b:Gitv_RebaseInstructions[key].cmd')
+                let line .= ' '.b:Gitv_RebaseInstructions[key].cmd
             endif
             call add(output, line)
         endfor
