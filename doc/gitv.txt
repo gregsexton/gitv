@@ -330,15 +330,21 @@ Here is a list of mapping for rebasing.
                         This also removes exec commands from marking commits
                         with grX.
 
-    normal      grs     Start or stop an interactive rebase. If starting the
-                        rebase, it begins at the commit before the commit
-                        under the cursor in edit mode. This is a limitation of
-                        interactive rebasing. Interactive rebasing is only
-                        available in browser mode. Merge commits are
-                        preserved. If any commits have been marked for an
-                        instruction, automatically runs the interactive
-                        rebase. If no commits have been marked for
-                        instructions, opens the rebase todo list for editing.
+    normal      grs     Start or stop (disable) an interactive rebase.
+                        Interactive rebasing is only available in browser mode.
+                        Merge commits are preserved.
+                        If the rebase has already been started, merely enables
+                        rebase mode.
+                        If starting the rebase without instructions, it begins
+                        at the commit before the commit under the cursor in
+                        edit mode. This is a limitation of interactive
+                        rebasing.
+                        If any commits have been marked for an instruction,
+                        automatically runs the interactive rebase.
+                        If enabled in browser mode with files specified, will
+                        drop the file names while the rebase is in progress.
+
+    normal      gra     Abort the current rebase.
 
     normal      grn     Go to the next commit in the current rebase (skip).
                         Accepts a count.
@@ -629,6 +635,7 @@ result in bindings equivalent to the defaults.
       \'vrebaseExec': 'grF',
       \'rebaseDrop': 'grF',
       \'vrebaseDrop': 'grF',
+      \'rebaseAbort': 'gra',
       \'rebaseToggle': 'grs',
       \'vrebaseToggle': 'grs',
       \'rebaseSkip': 'grn',

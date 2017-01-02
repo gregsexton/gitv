@@ -224,13 +224,13 @@ fu! s:SanitizeReservedArgs(extraArgs) "{{{
 endfu "}}}
 fu! s:ReapplyReservedArgs(extraArgs, filePath) "{{{
     let options = a:extraArgs[0]
-    if s:RebaseHasStarted()
+    if s:RebaseIsEnabled()
         return [options, '']
     endif
     if exists('b:Gitv_Bisecting')
         if !s:IsBisectingCurrentFiles()
             echoerr "Not bisecting specified files."
-            let b:Gitv_Bisecting = 0
+            unlet b:Gitv_Bisecting
         else
             let options .= " --bisect"
             let options = s:FilterArgs(options, ['--all', '--first-parent'])
@@ -339,6 +339,11 @@ fu! s:OpenFileMode(extraArgs, rangeStart, rangeEnd) "{{{
     call s:SetupBufferCommands(1)
 endf "}}}
 fu! s:LoadGitv(direction, reload, commitCount, extraArgs, filePath, range) "{{{
+    if s:RebaseHasInstructions() && (exists('b:Gitv_Bisecting') || s:RebaseHasStarted())
+        echoerr "Mode changed elsewhere, dropping rebase instructions"
+        unlet b:rebaseInstructions
+    endif
+
     if a:reload
         let jumpTo = line('.') "this is for repositioning the cursor after reload
     endif
@@ -562,7 +567,7 @@ fu! s:AddRebaseMessage(filePath) "{{{
     endif
     if s:RebaseHasInstructions()
         call append(0, '= '.s:pendingRebaseMsg)
-    elseif s:RebaseHasStarted()
+    elseif s:RebaseIsEnabled()
         call append(0, '= '.s:rebaseMsg)
     else
         call s:MoveIntoPreviewAndExecute('call s:CleanupRebasePreview()', 0)
@@ -865,6 +870,10 @@ fu! s:SetDefaultMappings() "{{{
         \'mapCmd': 'vmap',
         \'cmd': ':call <SID>RebaseSetInstruction("d")<cr>',
         \'bindings': 'grD'
+    \}
+    let s:defaultMappings.rebaseAbort = {
+        \'cmd': ':<C-U>call <SID>RebaseAbort()<cr>',
+        \'bindings': 'gra'
     \}
     let s:defaultMappings.rebaseToggle = {
         \'cmd': ':<C-U>call <SID>RebaseToggle()<cr>',
@@ -1507,7 +1516,7 @@ fu! s:RebaseSetInstruction(instruction) range "{{{
     if s:IsFileMode()
         return
     endif
-    if s:RebaseHasStarted()
+    if s:RebaseIsEnabled()
         echo "Rebase already in progress."
         return
     endif
@@ -1722,14 +1731,7 @@ fu! s:RebaseUpdateView() "{{{
         call s:NormalCmd('update', s:defaultMappings)
     endif
 endf "}}}
-fu! s:RebaseToggle() range "{{{
-    if s:IsFileMode()
-        return
-    endif
-    if exists('b:Gitv_Bisecting') || s:BisectHasStarted()
-        echo "Cannot rebase in bisect mode."
-        return
-    endif
+fu! s:RebaseAbort() "{{{
     if s:RebaseHasStarted()
         echo 'Abort current rebase? (y/n) '
         if nr2char(getchar()) == 'y'
@@ -1738,12 +1740,36 @@ fu! s:RebaseToggle() range "{{{
         endif
         return
     endif
+endf "}}}
+fu! s:RebaseIsEnabled() "{{{
+    if !s:RebaseHasStarted()
+        let b:Gitv_Rebasing = 0
+    endif
+    return exists('b:Gitv_Rebasing') && b:Gitv_Rebasing == 1
+endf "}}}
+fu! s:RebaseToggle() range "{{{
+    if s:IsFileMode()
+        return
+    endif
+    if s:RebaseIsEnabled()
+        let b:Gitv_Rebasing = 0
+        call s:RebaseUpdateView()
+        return
+    elseif s:RebaseHasStarted()
+        let b:Gitv_Rebasing = 1
+        call s:RebaseUpdateView()
+        return
+    elseif exists('b:Gitv_Bisecting') || s:BisectHasStarted()
+        echoerr "Cannot rebase in bisect mode."
+        return
+    endif
     let choice = s:RebaseGetRange(a:firstline, a:lastline, 0, '')
     if !len(choice)
         redraw
         echo "Not rebasing."
         return
     endif
+    let b:Gitv_Rebasing = 1
     call s:SetRebaseEditor()
     let cmd = 'rebase --preserve-merges --interactive '.choice[0]
     if s:RebaseHasInstructions()
@@ -1776,7 +1802,7 @@ fu! s:RebaseToggle() range "{{{
     endif
 endf "}}}
 fu! s:RebaseSkip() "{{{
-    if !s:RebaseHasStarted()
+    if !s:RebaseIsEnabled()
         return
     endif
     for i in range(0, v:count)
@@ -1806,7 +1832,7 @@ fu! s:RebaseContinueSetup() "{{{
     let $GIT_EDITOR='exit 1'
 endf "}}}
 fu! s:RebaseContinue() "{{{
-    if !s:RebaseHasStarted()
+    if !s:RebaseIsEnabled()
         return
     endif
     call s:RebaseContinueSetup()
@@ -1820,7 +1846,7 @@ fu! s:RebaseContinue() "{{{
 endf "}}}
 fu! s:RebaseContinueCleanup() "{{{
     let $GIT_EDITOR=""
-    if !s:RebaseHasStarted()
+    if !s:RebaseIsEnabled()
         return
     endif
     let mode = s:GetRebaseMode()
@@ -1869,7 +1895,7 @@ fu! s:RebaseEditTodo() "{{{
     if &ft == 'gitrebase'
         silent setlocal modifiable
         silent setlocal noreadonly
-        silent setlocal buftype=nofile
+        silent setlocal buftype
         silent setlocal nobuflisted
         silent setlocal noswapfile
         silent setlocal bufhidden=wipe
