@@ -339,10 +339,8 @@ fu! s:OpenFileMode(extraArgs, rangeStart, rangeEnd) "{{{
     call s:SetupBufferCommands(1)
 endf "}}}
 fu! s:LoadGitv(direction, reload, commitCount, extraArgs, filePath, range) "{{{
-    if s:RebaseHasInstructions() && (exists('b:Gitv_Bisecting') || s:RebaseHasStarted())
-        echoerr "Mode changed elsewhere, dropping rebase instructions"
-        unlet b:rebaseInstructions
-    endif
+    call s:RebaseUpdate()
+    call s:BisectUpdate()
 
     if a:reload
         let jumpTo = line('.') "this is for repositioning the cursor after reload
@@ -1516,6 +1514,10 @@ fu! s:RebaseSetInstruction(instruction) range "{{{
     if s:IsFileMode()
         return
     endif
+    if s:BisectHasStarted()
+        echo "Cannot set rebase instructions in bisect mode."
+        return
+    endif
     if s:RebaseIsEnabled()
         echo "Rebase already in progress."
         return
@@ -1739,12 +1741,20 @@ fu! s:RebaseAbort() "{{{
             call s:RebaseUpdateView()
         endif
         return
+    else
+        echo 'Rebase not in progress.'
+    endif
+endf "}}}
+fu! s:RebaseUpdate() "{{{
+    if s:RebaseHasInstructions() && (exists('b:Gitv_Bisecting') || s:RebaseHasStarted() || s:BisectHasStarted())
+        echoerr "Mode changed elsewhere, dropping rebase instructions."
+        let b:rebaseInstructions = {}
+    endif
+    if !s:RebaseHasStarted() && s:RebaseIsEnabled()
+        let b:Gitv_Rebasing = 0
     endif
 endf "}}}
 fu! s:RebaseIsEnabled() "{{{
-    if !s:RebaseHasStarted()
-        let b:Gitv_Rebasing = 0
-    endif
     return exists('b:Gitv_Rebasing') && b:Gitv_Rebasing == 1
 endf "}}}
 fu! s:RebaseToggle() range "{{{
@@ -1946,6 +1956,12 @@ fu! s:IsBisectingCurrentFiles() "{{{
         return 0
     endif
     return 1
+endf "}}}
+fu! s:BisectUpdate() "{{{
+    if exists('b:Gitv_Bisecting') && !s:BisectHasStarted()
+        echoerr "Mode changed elsewhere, dropping bisect."
+        unlet b:Gitv_Bisecting
+    endif
 endf "}}}
 fu! s:BisectHasStarted() "{{{
     call s:RunGitCommand('bisect log', 0)
