@@ -193,7 +193,7 @@ fu! s:SanitizeReservedArgs(extraArgs) "{{{
     if match(sanitizedArgs, ' --bisect') >= 0
         let sanitizedArgs = substitute(sanitizedArgs, ' --bisect', '', 'g')
         if s:BisectHasStarted()
-            let b:Bisecting = 1
+            let b:Gitv_Bisecting = 1
         endif
     endif
     " store files
@@ -224,10 +224,13 @@ fu! s:SanitizeReservedArgs(extraArgs) "{{{
 endfu "}}}
 fu! s:ReapplyReservedArgs(extraArgs, filePath) "{{{
     let options = a:extraArgs[0]
-    if exists('b:Bisecting')
+    if s:RebaseHasStarted()
+        return [options, '']
+    endif
+    if exists('b:Gitv_Bisecting')
         if !s:IsBisectingCurrentFiles()
             echoerr "Not bisecting specified files."
-            let b:Bisecting = 0
+            let b:Gitv_Bisecting = 0
         else
             let options .= " --bisect"
             let options = s:FilterArgs(options, ['--all', '--first-parent'])
@@ -1644,7 +1647,7 @@ fu! s:Rebase() range "{{{
     if s:IsFileMode()
         return
     endif
-    if exists('b:Bisecting') || s:BisectHasStarted()
+    if exists('b:Gitv_Bisecting') || s:BisectHasStarted()
         echo "Cannot rebase in bisect mode."
         return
     endif
@@ -1723,7 +1726,7 @@ fu! s:RebaseToggle() range "{{{
     if s:IsFileMode()
         return
     endif
-    if exists('b:Bisecting') || s:BisectHasStarted()
+    if exists('b:Gitv_Bisecting') || s:BisectHasStarted()
         echo "Cannot rebase in bisect mode."
         return
     endif
@@ -1927,11 +1930,11 @@ fu! s:BisectStart(mode) range "{{{
         echo "Cannot bisect in rebase mode."
         return
     endif
-    if exists('b:Bisecting')
+    if exists('b:Gitv_Bisecting')
         if g:Gitv_QuietBisect == 0
             echom 'Bisect disabled'
         endif
-        unlet! b:Bisecting
+        unlet! b:Gitv_Bisecting
         return
     elseif !s:BisectHasStarted()
         let cmd = 'bisect start'
@@ -1951,7 +1954,7 @@ fu! s:BisectStart(mode) range "{{{
                 call s:RunGitCommand('bisect good ' . gitv#util#line#sha(a:lastline), 0)[0]
             endif
         endif
-        let b:Bisecting = 1
+        let b:Gitv_Bisecting = 1
         if g:Gitv_QuietBisect == 0
             echom 'Bisect started'
         endif
@@ -1960,7 +1963,7 @@ fu! s:BisectStart(mode) range "{{{
             echoerr "Not bisecting the current files, cannot enable."
             return
         endif
-        let b:Bisecting = 1
+        let b:Gitv_Bisecting = 1
         if g:Gitv_QuietBisect == 0
             echom 'Bisect enabled'
         endif
@@ -1968,8 +1971,8 @@ fu! s:BisectStart(mode) range "{{{
     call s:LoadGitv('', 1, b:Gitv_CommitCount, b:Gitv_ExtraArgs, s:GetRelativeFilePath(), s:GetRange())
 endf "}}}
 fu! s:BisectReset() "{{{
-    if exists('b:Bisecting')
-        unlet! b:Bisecting
+    if exists('b:Gitv_Bisecting')
+        unlet! b:Gitv_Bisecting
     endif
     if s:BisectHasStarted()
         call s:RunGitCommand('bisect reset', 0)
@@ -1985,7 +1988,7 @@ fu! s:BisectReset() "{{{
 endf "}}}
 fu! s:BisectGoodBad(goodbad) range "{{{
     let goodbad = a:goodbad . ' '
-    if exists('b:Bisecting') && s:BisectHasStarted()
+    if exists('b:Gitv_Bisecting') && s:BisectHasStarted()
         let result = ''
         if a:firstline == a:lastline
             let ref = gitv#util#line#sha('.')
@@ -2026,7 +2029,7 @@ fu! s:BisectGoodBad(goodbad) range "{{{
     endif
 endf "}}}
 fu! s:BisectSkip(mode) range "{{{
-    if exists('b:Bisecting') && s:BisectHasStarted()
+    if exists('b:Gitv_Bisecting') && s:BisectHasStarted()
         if a:mode == 'n' && v:count
             let loops = abs(v:count)
             let loop = 0
@@ -2084,7 +2087,7 @@ fu! s:BisectReplay() "{{{
         echoerr split(result, '\n')[0]
         return
     endif
-    let b:Bisecting = 1
+    let b:Gitv_Bisecting = 1
     call s:LoadGitv('', 1, b:Gitv_CommitCount, b:Gitv_ExtraArgs, s:GetRelativeFilePath(), s:GetRange())
 endf "}}} }}}
 fu! s:CheckOutGitvCommit() "{{{
