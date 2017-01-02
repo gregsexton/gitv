@@ -1877,6 +1877,7 @@ fu! s:RebaseContinueCleanup() "{{{
         else
             Gcommit
         endif
+        set modifiable
         if &ft == 'gitcommit'
             if mode == 's'
                 call writefile(readfile(s:workingFile), s:GetCommitMsg())
@@ -1896,8 +1897,8 @@ endf "}}}
 fu! s:RebaseViewInstructions() "{{{
     exec 'edit' s:workingFile
     if expand('%') == s:workingFile
-        set syntax=gitrebase
-        set nomodifiable
+        silent setlocal syntax=gitrebase
+        silent setlocal nomodifiable
     endif
 endf "}}}
 fu! s:RebaseEditTodo() "{{{
