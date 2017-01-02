@@ -288,7 +288,7 @@ fu! s:CompleteGitv(arglead, cmdline, pos) "{{{
         if match(a:arglead, '\/$') >= 0
             let paths = "\n".globpath(a:arglead, '*')
         else
-            let paths = "\n".globpath(a:arglead.'*', '')
+            let paths = "\n".glob(a:arglead.'*')
         endif
 
         let refs = fugitive#buffer().repo().git_chomp('rev-parse', '--symbolic', '--branches', '--tags', '--remotes')
