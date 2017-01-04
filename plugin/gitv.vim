@@ -1022,9 +1022,10 @@ fu! s:TransformBindings(bindings) "{{{
     endif
     let newBindings = []
     for binding in bindings
-        let newBinding = binding
-        if type(newBinding) != 4 " dictionary
+        if type(binding) != 4 " dictionary
             let newBinding = { 'keys': newBinding }
+        else
+            let newBinding = binding
         endif
         if !exists('newBinding.prefix')
             let newBinding.prefix = ''
