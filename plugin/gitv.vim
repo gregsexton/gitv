@@ -1023,7 +1023,7 @@ fu! s:TransformBindings(bindings) "{{{
     let newBindings = []
     for binding in bindings
         if type(binding) != 4 " dictionary
-            let newBinding = { 'keys': newBinding }
+            let newBinding = { 'keys': binding }
         else
             let newBinding = binding
         endif
@@ -1031,6 +1031,7 @@ fu! s:TransformBindings(bindings) "{{{
             let newBinding.prefix = ''
         endif
         call add(newBindings, newBinding)
+        unlet binding
     endfor
     return newBindings
 endf "}}}
