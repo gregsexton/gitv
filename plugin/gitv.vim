@@ -372,7 +372,7 @@ fu! s:ToggleArg(args, toggle) "{{{
     else
       let NewArgs = substitute(a:args[0], ' ' . a:toggle, '', '')
     endif
-    let b:Gitv_ExtraArgs = NewArgs
+    let b:Gitv_ExtraArgs = [NewArgs, a:args[1]]
     return [NewArgs, a:args[1]]
 endf "}}}
 fu! s:ConstructAndExecuteCmd(direction, commitCount, extraArgs, filePath, range) "{{{
