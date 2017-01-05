@@ -362,7 +362,7 @@ endf "}}}
 fu! s:FilterArgs(args, sanitize) "{{{
     let newArgs = a:args
     for arg in a:sanitize
-        let newArgs = substitute(newArgs, ' ' . arg, '', 'g')
+        let newArgs = substitute(newArgs, '\( \|^\)' . arg, '', 'g')
     endfor
     return newArgs
 endf "}}}
@@ -370,7 +370,7 @@ fu! s:ToggleArg(args, toggle) "{{{
     if matchstr(a:args[0], a:toggle) == ''
       let NewArgs = a:args[0] . ' ' . a:toggle
     else
-      let NewArgs = substitute(a:args[0], ' ' . a:toggle, '', '')
+      let NewArgs = substitute(a:args[0], '\( \|^\)' . a:toggle, '', '')
     endif
     let b:Gitv_ExtraArgs = [NewArgs, a:args[1]]
     return [NewArgs, a:args[1]]
