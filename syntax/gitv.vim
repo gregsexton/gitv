@@ -15,7 +15,7 @@ syn match gitvSubject /.*/
 
 syn match gitvRebaseTag /\[[sfper]x\?\]/ contained containedin=gitvSubject
 syn match gitvDate /\(\d\+ years\?, \)\?\d\+ \%(second\|minute\|hour\|day\|week\|month\|year\)s\? ago/ contained containedin=gitvSubject
-syn match gitvHash /\[[0-9a-f]\{7}\]$/ contained containedin=gitvSubject
+syn match gitvHash /\[[0-9a-f]\{7,9}\]$/ contained containedin=gitvSubject
 
 syn match  gitvGraphEdge9 /_\?\(|\|-\(-\|\.\)\|\/|\?\|\\\|\*\|+\|=\)\s\?/ nextgroup=gitvGraphEdge0,gitvRef,gitvSubject skipwhite
 syn match  gitvGraphEdge8 /_\?\(|\|-\(-\|\.\)\|\/|\?\|\\\|\*\|+\|=\)\s\?/ nextgroup=gitvGraphEdge9,gitvRef,gitvSubject skipwhite
