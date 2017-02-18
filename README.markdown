@@ -15,9 +15,6 @@ as you move from commit to commit. For more information see the gitv
 documentation. If you have any problems with this new feature be sure
 to add them to the issues tracker.
 
-You can see screenshots of the new range feature in action
-[here](http://www.gregsexton.org/2011/05/gitv-range/).
-
 ##Introduction
 
 gitv is a 'gitk clone' plugin for the text editor Vim. The goal is
@@ -57,12 +54,12 @@ highlighting for many Git file types. **You will also need the
 
 ## Screenshots and Links
 
-Here is a screenshot to keep you going.
+Here are some screenshots.
 
 ![gitv](http://www.gregsexton.org/images/gitk-vim.jpg)
-
-More can be found at the homepage for gitv:
-http://www.gregsexton.org/portfolio/gitv/
+![gitvdiff](http://www.gregsexton.org/images/gitv/gitv-diff.jpg)
+![gitvfilediff](http://www.gregsexton.org/images/gitv/gitv-file-diff.jpg)
+![gitvstat](http://www.gregsexton.org/images/gitv/gitv-stat.jpg)
 
 You can download stable release versions (and vote for gitv!) at
 [gitv’s page](http://www.vim.org/scripts/script.php?script_id=3574) on
