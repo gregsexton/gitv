@@ -1616,24 +1616,30 @@ fu! s:RebaseGetRange(first, last, fromPlaceholder, ontoPlaceholder) "{{{
 
     " get refs
     if a:first != a:last || type(a:fromPlaceholder) != 1 " string
-        let from = s:RebaseGetRefs(from)
-        if !len(from)
+        let fromRefs = s:RebaseGetRefs(from)
+        if !len(fromRefs)
             return []
         endif
+    else
+        let fromRefs = from
     endif
     if a:first != a:last || type(a:ontoPlaceholder) != 1
-        let onto = s:RebaseGetRefs(onto)
+        let ontoRefs = s:RebaseGetRefs(onto)
         if !len(onto)
             return []
         endif
+    else
+        let ontoRefs = onto
     endif
 
     " set placeholder
     if a:first == a:last
         if type(a:fromPlaceholder) == 1
-            let from = a:fromPlaceholder
+            unlet fromRefs
+            let fromRefs = a:fromPlaceholder
         elseif type(a:ontoPlaceholder) == 1
-            let onto = a:ontoPlaceholder
+            unlet ontoRefs
+            let ontoRefs = a:ontoPlaceholder
         else
             echoerr 'A default must be given.'
             return []
@@ -1642,19 +1648,23 @@ fu! s:RebaseGetRange(first, last, fromPlaceholder, ontoPlaceholder) "{{{
 
     " get choices
     if a:first != a:last || type(a:fromPlaceholder) != 1
-        let from = s:RebaseGetChoice(from, 'from')
-        if from == ''
+        let fromChoice = s:RebaseGetChoice(fromRefs, 'from')
+        if fromChoice == ''
             return []
         endif
+    else
+        let fromChoice = fromRefs
     endif
     if a:first != a:last || type(a:ontoPlaceholder) != 1
-        let onto = s:RebaseGetChoice(onto, 'onto')
-        if onto == ''
+        let ontoChoice = s:RebaseGetChoice(onto, 'onto')
+        if ontoChoice == ''
             return []
         endif
+    else
+        let ontoChoice = ontoRefs
     endif
 
-    return [from, onto]
+    return [fromChoice, ontoChoice]
 endf "}}}
 fu! s:Rebase() range "{{{
     if s:IsFileMode()
