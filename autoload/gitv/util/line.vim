@@ -7,7 +7,7 @@ let g:autoloaded_gitv_util_line = 1
 
 fu! gitv#util#line#sha(lineNumber) "{{{
     let l = getline(a:lineNumber)
-    let sha = matchstr(l, "\\[\\zs[0-9a-f]\\{7,9}\\ze\\]$")
+    let sha = matchstr(l, "\\[\\zs[0-9a-f]\\{7,10}\\ze\\]$")
     return sha
 endf "}}}
 
