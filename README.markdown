@@ -1,4 +1,4 @@
-#Readme
+# Readme
 
 This repository represents the latest bleeding-edge changes to gitv.
 Please help me find and remove any bugs by adding any problems you have
@@ -15,7 +15,7 @@ as you move from commit to commit. For more information see the gitv
 documentation. If you have any problems with this new feature be sure
 to add them to the issues tracker.
 
-##Introduction
+## Introduction
 
 gitv is a 'gitk clone' plugin for the text editor Vim. The goal is
 to give you a similar set of functionality as a repository viewer.
