@@ -657,7 +657,7 @@ fu! s:SetDefaultMappings() "{{{
         \'bindings': 'P'
     \}
     let s:defaultMappings.parent = {
-        \'cmd': ':call <SID>JumpToParent()<cr>',
+        \'cmd': ':<C-U>call <SID>JumpToParent()<cr>',
         \'bindings': 'p'
     \}
     let s:defaultMappings.toggleWindow = {
