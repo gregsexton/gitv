@@ -169,17 +169,20 @@ modes.
                           current working copy of the focused file.
 
     normal      <c-n>     In either browser or file mode, this moves down to
-                          the next commit and opens it. This allows you to
+                J         the next commit and opens it. This allows you to
                           quickly move from commit to commit and view either
                           the commit details or the file itself, depending on
                           the mode, in one action.
 
     normal      <c-p>     The same as <c-n> but move back a commit.
+                K
 
     normal      o         The same as <cr> but opens in a new |split|.
                 <c-j>
+
     normal      O         The same as <cr> but opens in a new |tab|.
                 <c-l>
+
     normal      s         The same as <cr> but opens in a new |vsplit|.
                 <c-k>
 
@@ -246,14 +249,23 @@ modes.
 
     visual      cp        Cherry-Picks the selected commits to the active
                           branch.
-    normal      cp        same as visual cp
+
+    normal      cp        Same as visual cp
 
     visual      rb        Reset (mixed) the active branch to the top of the
-                          selected commits
-    normal      rb        same as visual rb
+                          selected commits.
+
+    normal      rb        Same as visual rb
+
+    visual      rbs       Reset (soft) the active branch to the top of the
+                          selected commits.
+
+    normal      rbs       Same as visual rbs
+
     visual      rbh       Reset (hard) the active branch to the top of the
-                          selected commits
-    normal      rbh       same as visual rbh
+                          selected commits.
+
+    normal      rbh       Same as visual rbh
 
     normal      rev       Revert the commit. If the commit is a merge, selects
                           the first parent for reverting to.
@@ -263,7 +275,8 @@ modes.
 
     visual      d         Delete a branch or tag on the selected line. You will
                           be asked which branch/tag to use.
-    normal      d         same as visual d
+
+    normal      d         Same as visual d
 
     normal      <leader>m Merges the first ref found on the current line in to
                           the branch currently pointed to by HEAD. This will
@@ -598,7 +611,10 @@ result in bindings equivalent to the defaults.
       \'editCommit': [
         \'<cr>', { 'keys': '<LeftMouse>', 'prefix', '<LeftMouse>' }
       \],
+      \'previousCommit': 'J',
+      \'nextCommit': 'K',
       \'splitCommit': 'o',
+      \'vsplitCommit': 's',
       \'tabeCommit': 'O',
       \'let': 's',
       \'editCommitDetails': 'i',
@@ -613,6 +629,8 @@ result in bindings equivalent to the defaults.
       \'vcherryPick': 'cp',
       \'reset': 'rb',
       \'vreset': 'rb',
+      \'resetSoft': 'rbs',
+      \'vresetSoft': 'rbs',
       \'resetHard': 'rbh',
       \'vresetHard': 'rbh',
       \'revert': 'rev',
@@ -654,6 +672,7 @@ result in bindings equivalent to the defaults.
       \'bisectReplay': 'gbp',
       \'head': 'P',
       \'parent': 'p',
+      \'toggleWindow': 'gw',
       \'git': 'git',
       \'yank': 'yc'
     \}
