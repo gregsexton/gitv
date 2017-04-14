@@ -14,6 +14,10 @@ and a robust key remapping system. View `:help gitv` for more. If you encounter
 any bugs or have any suggestions for this system (which we are actively looking
 for for a future release), be sure to add them to the issues tracker.
 
+You can download stable release versions (and vote for gitv!) at
+[gitv’s page](http://www.vim.org/scripts/script.php?script_id=3574) on
+Vim.org.
+
 ## Introduction
 
 gitv is a 'gitk clone' plugin for the text editor Vim. The goal is
@@ -52,16 +56,10 @@ ships with syntax highlighting for many Git file types.
 **You will also need the
 [tpope/fugitive](https://github.com/tpope/vim-fugitive) plugin installed and working for gitv to work.**
 
-## Screenshots and Links
-
-Here are some screenshots.
+## Screenshots
 
 ![gitv file mode commit preview](http://raw.github.com/gregsexton/gitv/master/img/gitv-file-commit.png)
 ![gitv file mode diffsplit](http://raw.github.com/gregsexton/gitv/master/img/gitv-file-diffsplit.png)
 ![gitv file mode diffstat](http://raw.github.com/gregsexton/gitv/master/img/gitv-file-diffstat.png)
 ![gitv interactive bisecting](http://raw.github.com/gregsexton/gitv/master/img/gitv-bisecting.png)
 ![gitv interactive rebasing](http://raw.github.com/gregsexton/gitv/master/img/gitv-rebasing.png)
-
-You can download stable release versions (and vote for gitv!) at
-[gitv’s page](http://www.vim.org/scripts/script.php?script_id=3574) on
-Vim.org.
