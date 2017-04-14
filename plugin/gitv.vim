@@ -690,13 +690,13 @@ fu! s:SetDefaultMappings() "{{{
     \}
     let s:defaultMappings.previousCommit = {
         \'cmd': ':<C-U>call <SID>JumpToCommit(0)<cr>',
-        \'preventCustomBindings': 1,
-        \'bindings': '<Plug>(gitv-previous-commit)'
+        \'bindings': 'J',
+        \'permanentBindings': '<Plug>(gitv-previous-commit)'
     \}
     let s:defaultMappings.nextCommit = {
         \'cmd': ':<C-U>call <SID>JumpToCommit(1)<cr>',
-        \'preventCustomBindings': 1,
-        \'bindings': '<Plug>(gitv-next-commit)'
+        \'bindings': 'K',
+        \'permanentBindings': '<Plug>(gitv-next-commit)'
     \}
     " force opening the fugitive buffer for the commit
     let s:defaultMappings.editCommitDetails = {
