@@ -2207,7 +2207,35 @@ fu! s:DiffGitvCommit() range "{{{
     endif
     call s:MoveIntoPreviewAndExecute("Gdiff " . shalast, a:firstline != a:lastline)
 endf "}}}
-fu! s:MergeBranches() range "{{{
+fu! s:GetMergeArguments(from, to, verbose) "{{{
+    if exists('g:Gitv_MergeArgs') && type(g:Gitv_MergeArgs) == 1
+        if a:verbose
+            echom "Merging '" . a:from . "' in to '" . a:to . "' with arguments '" . g:Gitv_MergeArgs . "'."
+        endif
+        " safely pad with spaces to avoid returning base value, put space before merge ref
+        return g:Gitv_MergeArgs . ' '
+    endif
+
+    let choices = "&Yes\n&No\n&Cancel"
+    let ff = confirm("Use fast-forward, if possible, to merge '". a:from . "' in to '" . a:to ."'?", choices)
+    if ff == 0 || ff == 3 | return "" | endif
+    let ff = ff == 1 ? ff : 0
+
+    if a:verbose
+        if ff
+            echom "Merging '" . a:from . "' in to '" . a:to . "' with fast-forward."
+        else
+            echom "Merging '" . a:from . "' in to '" . a:to . "' without fast-forward."
+        endif
+    endif
+
+    if ff
+        return '--ff '
+    else
+        return '--no-ff '
+    endif
+endfu
+fu! s:MergeBranches() range
     if a:firstline == a:lastline
         echom 'Already up to date.'
         return
@@ -2229,21 +2257,14 @@ fu! s:MergeBranches() range "{{{
     let merge = refs[merge-1]
     let merge = substitute(merge, "^[tr]:", "", "")
 
-    let choices = "&Yes\n&No\n&Cancel"
-    let ff = confirm("Use fast-forward, if possible, to merge '". merge . "' in to '" . target ."'?", choices)
-    if ff == 0 || ff == 3 | return | endif
-    let ff = ff == 1 ? ff : 0
+    let mergeArgs = s:GetMergeArguments(merge, target, 1)
+    if mergeArgs == "" | return | endif
 
-    if ff
-        echom "Merging '" . merge . "' in to '" . target . "' with fast-forward."
-    else
-        echom "Merging '" . merge . "' in to '" . target . "' without fast-forward."
-    endif
-    call s:PerformMerge(target, merge, ff)
+    call s:PerformMerge(target, merge, args)
 endfu
-fu! s:PerformMerge(target, mergeBranch, ff) abort
+fu! s:PerformMerge(target, mergeBranch, mergeArgs) abort
     exec 'Git checkout ' . a:target
-    exec 'Git merge ' . (a:ff ? '--ff ' : '--no-ff ') . a:mergeBranch
+    exec 'Git merge ' . a:mergeArgs . a:mergeBranch
 
     if g:Gitv_PromptToDeleteMergeBranch
         let choices = "&Yes\n&No\n&Cancel"
@@ -2265,12 +2286,10 @@ fu! s:MergeToCurrent()
     let target = refs[0]
     let target = substitute(target, "^[tr]:", "", "")
 
-    let choices = "&Yes\n&No\n&Cancel"
-    let ff = confirm("Use fast-forward, if possible, to merge '". target . "' in to 'HEAD'?", choices)
-    if ff == 0 || ff == 3 | return | endif
-    let ff = ff == 1 ? ff : 0
+    let mergeArgs = s:GetMergeArguments(target, 'HEAD', 0)
+    if mergeArgs == "" | return | endif
 
-    call s:PerformMerge("HEAD", target, ff)
+    call s:PerformMerge("HEAD", target, mergeArgs)
 endfu "}}}
 fu! s:CherryPick() range "{{{
     let refs2 = gitv#util#line#sha(a:firstline)

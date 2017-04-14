@@ -239,8 +239,10 @@ modes.
                           the selection into the commit specified by the other
                           end of the selection. This uses prompts to guide you
                           through the merge process and should be fairly
-                          intuitive. It will also ask for confirmation if you
-                          wish to perform a fast-forward merge or not.
+                          intuitive. By default, it will also ask for
+                          confirmation if you wish to perform a fast-forward
+                          merge or not. If you have defined g:Gitv_MergeArgs,
+                          you will not be prompted to fast forward.
 
                           gitv does not allow you to merge arbitrary commits.
                           The lines at the top and bottom of the selection
@@ -279,8 +281,10 @@ modes.
     normal      d         Same as visual d
 
     normal      <leader>m Merges the first ref found on the current line in to
-                          the branch currently pointed to by HEAD. This will
-                          prompt you if you wish to use a fast-forward merge.
+                          the branch currently pointed to by HEAD. By default,
+                          this will prompt you if you wish to use a fast-forward
+                          merge. If you have defined g:Gitv_MergeArgs, you
+                          will not be prompted to fast forward.
 
     normal      git       Enters command mode with ":Git " already typed for
                           you. Just a convenient shortcut for executing git
@@ -577,8 +581,27 @@ and rarely wish to delete branches, set this to 0. The default is 0.
 >
     let g:Gitv_PromptToDeleteMergeBranch = 0
 <
+4.9 Custom merge arguments
 
-4.9 Do not map the control key
+The purpose of this option is to customize the merging behaviour. To use the
+default merge behaviour, unset this variable. To not confirm for fast forward,
+set this to an empty string. By default, this is undefined.
+>
+    unset! g:Gitv_MergeArgs
+<
+
+Example: if you wish to use a different merge strategy, you can use this.
+>
+    fu! MergeOurs()
+      let g:Gitv_MergeArgs = '--strategy=ours'
+      " Escape put in because of :normal quirks with space
+      execute "normal \<Esc> m"
+      " Put whatever your default is here
+      unlet! g:Gitv_MergeArgs
+    enfu
+    autocmd FileType gitv nno Mo :<C-U>call MergeOurs()<C-M>
+<
+4.10 Do not map the control key
 
 If this is set then no mappings that use the control key will be created. The
 control key mappings are all alternatives and so can be disabled without
@@ -587,7 +610,7 @@ losing functionality. The default is to create the mappings.
     let g:Gitv_DoNotMapCtrlKey = 1
 >
 
-4.10 Do not log bisect actions
+4.11 Do not log bisect actions
 
 If this is set then no bisect mappings will log their actions. This will
 prevent the need to press enter after every bisect action, but could cause
@@ -595,7 +618,7 @@ confusion. Errors will still be shown.
 >
     let g:Gitv_QuietBisect = 1
 
-4.11 Custom key mappings                       *gitv-custom-browser-mappings*
+4.12 Custom key mappings                       *gitv-custom-browser-mappings*
 
 Set custom key mappings which will overwrite the defaults. The following would
 result in bindings equivalent to the defaults.
@@ -681,7 +704,7 @@ result in bindings equivalent to the defaults.
 Bindings that use the ctrl modifier are kept internal and disabled when
 g:Gitv_DoNotMapCtrlKey is set.
 
-4.12 Change The Behaviour Of The Preview Window
+4.13 Change The Behaviour Of The Preview Window
 
 Set custom options for the preview window. These options are passed directly
 to |git-show|.
