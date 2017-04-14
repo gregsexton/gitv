@@ -587,7 +587,7 @@ losing functionality. The default is to create the mappings.
     let g:Gitv_DoNotMapCtrlKey = 1
 >
 
-4.9 Do not log bisect actions
+4.10 Do not log bisect actions
 
 If this is set then no bisect mappings will log their actions. This will
 prevent the need to press enter after every bisect action, but could cause
@@ -595,7 +595,7 @@ confusion. Errors will still be shown.
 >
     let g:Gitv_QuietBisect = 1
 
-4.10 Custom key mappings                       *gitv-custom-browser-mappings*
+4.11 Custom key mappings                       *gitv-custom-browser-mappings*
 
 Set custom key mappings which will overwrite the defaults. The following would
 result in bindings equivalent to the defaults.
@@ -681,7 +681,7 @@ result in bindings equivalent to the defaults.
 Bindings that use the ctrl modifier are kept internal and disabled when
 g:Gitv_DoNotMapCtrlKey is set.
 
-4.11 Change The Behaviour Of The Preview Window
+4.12 Change The Behaviour Of The Preview Window
 
 Set custom options for the preview window. These options are passed directly
 to |git-show|.
