@@ -6,14 +6,13 @@ to the issues tracker of this repository. Suggestions, pull requests and
 patches are also all very welcome. To download the latest stable release
 see the [gitv page on vim.org](http://www.vim.org/scripts/script.php?script_id=3574).
 
-I have added a new feature that allows you to pass a range to gitv.
-This has no effect in browser mode. In file mode however, only commits
-that affect at least one line in the range will be displayed. This is
-useful, for example, to view the commit history for a function and all
-of the changes made to it. You can easily watch the function 'evolve'
-as you move from commit to commit. For more information see the gitv
-documentation. If you have any problems with this new feature be sure
-to add them to the issues tracker.
+Future changes are viewable in [the roadmap](https://github.com/gregsexton/gitv/blob/master/roadmap.md).
+A tentative release schedule is available in [the milestone view](https://github.com/gregsexton/gitv/milestones).
+
+The newest features to gitv are interactive rebasing, interactive bisecting,
+and a robust key remapping system. View `:help gitv` for more. If you encounter
+any bugs or have any suggestions for this system (which we are actively looking
+for for a future release), be sure to add them to the issues tracker.
 
 ## Introduction
 
@@ -44,12 +43,13 @@ I hope you like it!
 ## Installation
 
 Install in ~/.vim, or in ~\vimfiles if you're on Windows. This
-plugin should be fully pathogen compatible if you want to install
-it this way.
+plugin should be fully compatible with any plugin managers that
+support git if you want to install it this way.
 
-gitv was developed against Vim 7.3 but earlier versions of Vim
-should work.  Vim 7.2+ is recommended as it ships with syntax
-highlighting for many Git file types. **You will also need the
+gitv was developed against Vim 7.3 and later 8.0 but earlier
+versions of Vim should work.  Vim 7.2+ is recommended as it
+ships with syntax highlighting for many Git file types.
+**You will also need the
 [tpope/fugitive](https://github.com/tpope/vim-fugitive) plugin installed and working for gitv to work.**
 
 ## Screenshots and Links
