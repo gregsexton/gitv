@@ -58,8 +58,22 @@ ships with syntax highlighting for many Git file types.
 
 ## Screenshots
 
+### commit preview
+
 ![gitv file mode commit preview](http://raw.github.com/gregsexton/gitv/master/img/gitv-file-commit.png)
+
+### diff splitting
+
 ![gitv file mode diffsplit](http://raw.github.com/gregsexton/gitv/master/img/gitv-file-diffsplit.png)
+
+### diff stat-ing
+
 ![gitv file mode diffstat](http://raw.github.com/gregsexton/gitv/master/img/gitv-file-diffstat.png)
+
+### interactive bisecting
+
 ![gitv interactive bisecting](http://raw.github.com/gregsexton/gitv/master/img/gitv-bisecting.png)
+
+### interactive rebasing
+
 ![gitv interactive rebasing](http://raw.github.com/gregsexton/gitv/master/img/gitv-rebasing.png)
