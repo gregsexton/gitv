@@ -56,10 +56,11 @@ ships with syntax highlighting for many Git file types.
 
 Here are some screenshots.
 
-![gitv](http://www.gregsexton.org/images/gitk-vim.jpg)
-![gitvdiff](http://www.gregsexton.org/images/gitv/gitv-diff.jpg)
-![gitvfilediff](http://www.gregsexton.org/images/gitv/gitv-file-diff.jpg)
-![gitvstat](http://www.gregsexton.org/images/gitv/gitv-stat.jpg)
+![gitv file mode commit preview](http://raw.github.com/gregsexton/gitv/master/img/gitv-file-commit.png)
+![gitv file mode diffsplit](http://raw.github.com/gregsexton/gitv/master/img/gitv-file-diffsplit.png)
+![gitv file mode diffstat](http://raw.github.com/gregsexton/gitv/master/img/gitv-file-diffstat.png)
+![gitv interactive bisecting](http://raw.github.com/gregsexton/gitv/master/img/gitv-bisecting.png)
+![gitv interactive rebasing](http://raw.github.com/gregsexton/gitv/master/img/gitv-rebasing.png)
 
 You can download stable release versions (and vote for gitv!) at
 [gitv’s page](http://www.vim.org/scripts/script.php?script_id=3574) on
