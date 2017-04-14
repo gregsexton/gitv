@@ -658,6 +658,10 @@ result in bindings equivalent to the defaults.
       \'yank': 'yc'
     \}
 <
+
+Bindings that use the ctrl modifier are kept internal and disabled when
+g:Gitv_DoNotMapCtrlKey is set.
+
 4.11 Change The Behaviour Of The Preview Window
 
 Set custom options for the preview window. These options are passed directly
