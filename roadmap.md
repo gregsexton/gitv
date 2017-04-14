@@ -11,7 +11,7 @@ Gitv has a tentative 6 month release schedule, depending on availability.
       <th>Features</th>
     </tr>
     <tr>
-      <td>1.3.1 (<b>in progress</b>)</td>
+      <td><s>1.3.1</s> (complete)</td>
       <td>Incorporate new features present in other branch viewers and fix long standing bugs</td>
       <td>
         <ul>
@@ -22,7 +22,7 @@ Gitv has a tentative 6 month release schedule, depending on availability.
       </td>
     </tr>
     <tr>
-      <td>1.4 (<i>stable</i>)</td>
+      <td>1.4 (<i>stable</i>, <b>in progress</b>)</td>
       <td>Improve stability of new features and incorporate community feedback</td>
       <td><i>Pending community feedback</i></td>
     </tr>
