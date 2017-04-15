@@ -1,74 +1,76 @@
 # Readme
 
-This repository represents the latest bleeding-edge changes to gitv.
-Please help me find and remove any bugs by adding any problems you have
-to the issues tracker of this repository. Suggestions, pull requests and
-patches are also all very welcome. To download the latest stable release
-see the [gitv page on vim.org](http://www.vim.org/scripts/script.php?script_id=3574).
+gitv is a repository viewer similar to gitk. It is an extension of the
+[fugitive git plugin][5] for vim. It allows you to perform operations on a git
+repository tree interactively.
 
-Click [here](https://riot.im/app/#/room/#gitv:matrix.org) for help on our
-official [matrix.org](http://matrix.org/) server.
+This repo has the most bleeding edge version of gitv. Stable versions are
+available at [the vim.org page][1].
 
-Future changes are viewable in [the roadmap](https://github.com/gregsexton/gitv/blob/master/roadmap.md).
-A tentative release schedule is available in [the milestone view](https://github.com/gregsexton/gitv/milestones).
+[Bugs, suggestions,][2] [pull requests and patches][3] are all very welcome.
 
-The newest features to gitv are interactive rebasing, interactive bisecting,
-and a robust key remapping system. View `:help gitv` for more. If you encounter
-any bugs or have any suggestions for this system (which we are actively looking
-for for a future release), be sure to add them to the issues tracker.
+We are currently actively looking for feature requests and bugs regarding the
+latest [pre-release][4].
 
-You can download stable release versions (and vote for gitv!) at
-[gitv’s page](http://www.vim.org/scripts/script.php?script_id=3574) on
-Vim.org.
-
-## Introduction
-
-gitv is a 'gitk clone' plugin for the text editor Vim. The goal is
-to give you a similar set of functionality as a repository viewer.
-Using this plugin you can view a repository's history including
-branching and merging, you can see which commits refs point to.
-You can quickly and easily view what changed to which files and
-when. You can perform arbitrary diffs (using Vim's excellent built
-in diff functionality) and you can easily check out whole commits
-and branches or just individual files if need be.
-
-Throw in the fact that it is running in Vim and you get for free:
-the ability to move over repository history quickly and precisely
-using Vim's built in movement operators. You get excellent code
-syntax highlighting due to Vim's built in ability. You can open up
-all sorts of repository views in multiple windows and position
-them exactly how you like. You can take advantage of Vim's
-registers to copy multiple fragments of code from previous
-commits. The list goes on.
+## Basic usage
 
 Start the plugin by running :Gitv in Vim when viewing a file in a git repository.
 
-This plugin is an extension of the [tpope/fugitive](https://github.com/tpope/vim-fugitive) plugin.
+This plugin is an extension of the [fugitive git plugin][5] by Tim Pope.
 
 I hope you like it!
 
-## Compatibility
-
-gitv was developed against Vim 7.3 and later 8.0 but earlier
-versions of Vim should work.  Vim 7.2+ is recommended as it
-ships with syntax highlighting for many Git file types.
-
-gitv is known not to interract well with neovim yet.
-
 ## Installation
 
-You will need the [tpope/fugitive](https://github.com/tpope/vim-fugitive) plugin installed and working for gitv to work.
+You will need the [tpope/fugitive][5] plugin installed and working for gitv to work.
 
 For Windows, use the `~\vimfiles` directory instead of `~/.vim`
 
 
-| Method                                               | Instalation instructions                                                                                       |
-| ---------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
-| Manual                                               | Merge the `autoload`, `doc`, `ftplugin`, `plugin`, and `syntax` folders into their respective `~/.vim` folders |
-| [NeoBundle](https://github.com/Shougo/neobundle.vim) | Add `NeoBundle 'gregsexton/gitv'` to `.vimrc`                                                                  |
-| [Pathogen](https://github.com/tpope/vim-pathogen)    | Run `git clone https://github.com/gregsexton/gitv ~/.vim/bundle/gitv`                                          |
-| [Plug](https://github.com/junegunn/vim-plug)         | Add `Plug 'gregsexton/gitv'` to `.vimrc`                                                                       |
-| [Vundle](https://github.com/gmarik/vundle)           | Add `Plugin 'gregsexton/gitv'` to `.vimrc`                                                                     |
+| Method         | Instalation instructions                                                                                       |
+| -------------- | -------------------------------------------------------------------------------------------------------------- |
+| Manual         | Merge the `autoload`, `doc`, `ftplugin`, `plugin`, and `syntax` folders into their respective `~/.vim` folders |
+| [NeoBundle][6] | Add `NeoBundle 'gregsexton/gitv'` to `.vimrc`                                                                  |
+| [Pathogen][7]  | Run `git clone https://github.com/gregsexton/gitv ~/.vim/bundle/gitv`                                          |
+| [Plug][8]      | Add `Plug 'gregsexton/gitv'` to `.vimrc`                                                                       |
+| [Vundle][9]    | Add `Plugin 'gregsexton/gitv'` to `.vimrc`                                                                     |
+
+### Compatibility
+
+gitv was developed against Vim 7.3 and later 8.0 but earlier versions of Vim
+should work. Vim 7.2+ is recommended as it ships with syntax highlighting for
+many Git file types.
+
+gitv is known not to interract well with neovim yet.
+
+## Purpose
+
+gitv is a 'gitk clone' plugin for the text editor Vim. The goal is to give you
+a similar set of functionality as a repository viewer. Using this plugin you
+can view a repository's history including branching and merging, you can see
+which commits refs point to. You can quickly and easily view what changed to
+which files and when. You can perform arbitrary diffs (using Vim's excellent
+built in diff functionality) and you can easily check out whole commits and
+branches or just individual files if need be.
+
+Throw in the fact that it is running in Vim and you get for free: the ability
+to move over repository history quickly and precisely using Vim's built in
+movement operators. You get excellent code syntax highlighting due to Vim's
+built in ability. You can open up all sorts of repository views in multiple
+windows and position them exactly how you like. You can take advantage of Vim's
+registers to copy multiple fragments of code from previous commits. The list
+goes on.
+
+## Links
+
+Click [here][10] for help on our official [matrix.org][11] server.
+
+Future changes are viewable in [the roadmap][12].
+
+A tentative release schedule is available in [the milestone view][13].
+
+You can download stable release versions (and vote for gitv!) at
+[gitv’s page][1] on `vim.org`.
 
 ## Screenshots
 
@@ -91,3 +93,18 @@ For Windows, use the `~\vimfiles` directory instead of `~/.vim`
 ### interactive rebasing
 
 ![gitv interactive rebasing](http://raw.github.com/gregsexton/gitv/master/img/gitv-rebasing.png)
+
+[1]: http://www.vim.org/scripts/script.php?script_id=3574
+[2]: https://github.com/gregsexton/gitv/issues
+[3]: https://github.com/gregsexton/gitv/pulls
+[4]: https://github.com/gregsexton/gitv/releases/tag/v1.3.1
+[5]: https://github.com/tpope/vim-fugitive
+[6]: https://github.com/Shougo/neobundle.vim
+[7]: https://github.com/tpope/vim-pathogen
+[8]: https://github.com/junegunn/vim-plug
+[9]: https://github.com/gmarik/vundle
+[10]: https://riot.im/app/#/room/#gitv:matrix.org
+[11]: http://matrix.org/
+[12]: https://github.com/gregsexton/gitv/blob/master/roadmap.md
+[13]: https://github.com/gregsexton/gitv/milestones
+[15]: http://www.vim.org/scripts/script.php?script_id=3574
