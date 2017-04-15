@@ -1,8 +1,12 @@
 # Readme
 
 gitv is a repository viewer similar to gitk. It is an extension of the
-[fugitive git plugin][5] for vim. It allows you to perform operations on a git
-repository tree interactively.
+[fugitive git plugin][5] for vim. It is essentially a wrapper around
+`git log --graph`, allowing you to see your branching history. It allows you to
+view commits, diffstats, inline diffs, and file or folder specific history, and
+more. It allows you to perform operations on the commit tree interactively,
+such as merges, cherry picks, reversions, resets, deletions, checkouts,
+bisections, and rebase operations.
 
 This repo has the most bleeding edge version of gitv. Stable versions are
 available at [the vim.org page][1].
