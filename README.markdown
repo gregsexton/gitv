@@ -47,17 +47,28 @@ This plugin is an extension of the [tpope/fugitive](https://github.com/tpope/vim
 
 I hope you like it!
 
-## Installation
-
-Install in ~/.vim, or in ~\vimfiles if you're on Windows. This
-plugin should be fully compatible with any plugin managers that
-support git if you want to install it this way.
+## Compatibility
 
 gitv was developed against Vim 7.3 and later 8.0 but earlier
 versions of Vim should work.  Vim 7.2+ is recommended as it
 ships with syntax highlighting for many Git file types.
-**You will also need the
-[tpope/fugitive](https://github.com/tpope/vim-fugitive) plugin installed and working for gitv to work.**
+
+gitv is known not to interract well with neovim yet.
+
+## Installation
+
+You will need the [tpope/fugitive](https://github.com/tpope/vim-fugitive) plugin installed and working for gitv to work.
+
+For Windows, use the `~\vimfiles` directory instead of `~/.vim`
+
+
+| Method                                               | Instalation instructions                                                                                       |
+| ---------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| Manual                                               | Merge the `autoload`, `doc`, `ftplugin`, `plugin`, and `syntax` folders into their respective `~/.vim` folders |
+| [NeoBundle](https://github.com/Shougo/neobundle.vim) | Add `NeoBundle 'gregsexton/gitv'` to `.vimrc`                                                                  |
+| [Pathogen](https://github.com/tpope/vim-pathogen)    | Run `git clone https://github.com/gregsexton/gitv ~/.vim/bundle/gitv`                                          |
+| [Plug](https://github.com/junegunn/vim-plug)         | Add `Plug 'gregsexton/gitv'` to `.vimrc`                                                                       |
+| [Vundle](https://github.com/gmarik/vundle)           | Add `Plugin 'gregsexton/gitv'` to `.vimrc`                                                                     |
 
 ## Screenshots
 
