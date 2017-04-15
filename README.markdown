@@ -6,6 +6,9 @@ to the issues tracker of this repository. Suggestions, pull requests and
 patches are also all very welcome. To download the latest stable release
 see the [gitv page on vim.org](http://www.vim.org/scripts/script.php?script_id=3574).
 
+Click [here](https://riot.im/app/#/room/#gitv:matrix.org) for help on our
+official [matrix.org](http://matrix.org/) server.
+
 Future changes are viewable in [the roadmap](https://github.com/gregsexton/gitv/blob/master/roadmap.md).
 A tentative release schedule is available in [the milestone view](https://github.com/gregsexton/gitv/milestones).
 
