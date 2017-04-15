@@ -43,7 +43,7 @@ For Windows, use the `~\vimfiles` directory instead of `~/.vim`
 
 gitv was developed against Vim 7.3 and later 8.0 but earlier versions of Vim
 should work. Vim 7.2+ is recommended as it ships with syntax highlighting for
-many Git file types.
+many Git file types. Vim 7.3+ is recommended for UTF-8 support.
 
 gitv is known not to interract well with neovim yet.
 
