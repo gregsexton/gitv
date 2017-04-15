@@ -76,15 +76,15 @@ You can download stable release versions (and vote for gitv!) at
 
 ### commit preview
 
-![gitv file mode commit preview](http://raw.github.com/gregsexton/gitv/master/img/gitv-file-commit.png)
+![gitv commit preview](http://raw.github.com/gregsexton/gitv/master/img/gitv-commit.png)
 
 ### diff splitting
 
-![gitv file mode diffsplit](http://raw.github.com/gregsexton/gitv/master/img/gitv-file-diffsplit.png)
+![gitv diffsplit](http://raw.github.com/gregsexton/gitv/master/img/gitv-diffsplit.png)
 
 ### diff stat-ing
 
-![gitv file mode diffstat](http://raw.github.com/gregsexton/gitv/master/img/gitv-file-diffstat.png)
+![gitv diffstat](http://raw.github.com/gregsexton/gitv/master/img/gitv-diffstat.png)
 
 ### interactive bisecting
 
