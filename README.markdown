@@ -36,7 +36,7 @@ For Windows, use the `~\vimfiles` directory instead of `~/.vim`
 | Manual         | Merge the `autoload`, `doc`, `ftplugin`, `plugin`, and `syntax` folders into their respective `~/.vim` folders |
 | [NeoBundle][6] | Add `NeoBundle 'gregsexton/gitv'` to `.vimrc`                                                                  |
 | [Pathogen][7]  | Run `git clone https://github.com/gregsexton/gitv ~/.vim/bundle/gitv`                                          |
-| [Plug][8]      | Add `Plug 'gregsexton/gitv'` to `.vimrc`                                                                       |
+| [Plug][8]      | Add `Plug 'gregsexton/gitv', {'on': ['Gitv']}` to `.vimrc`                                                                       |
 | [Vundle][9]    | Add `Plugin 'gregsexton/gitv'` to `.vimrc`                                                                     |
 
 ### Compatibility
