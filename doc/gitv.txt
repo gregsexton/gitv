@@ -639,7 +639,6 @@ result in bindings equivalent to the defaults.
       \'splitCommit': 'o',
       \'vsplitCommit': 's',
       \'tabeCommit': 'O',
-      \'let': 's',
       \'editCommitDetails': 'i',
       \'diff': 'D',
       \'vdiff': 'D',
