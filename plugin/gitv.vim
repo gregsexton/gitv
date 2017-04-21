@@ -684,7 +684,7 @@ fu! s:SetDefaultMappings() "{{{
         \'bindings': 'O' ,
         \'permanentBindings': '<Plug>(gitv-tabedit)'
     \}
-    let s:defaultMappings.vsplitCommit = {
+    let s:defaultMappings.vertSplitCommit = {
         \'cmd': ':<C-U>call <SID>OpenGitvCommit("Gvsplit", 0)<cr>',
         \'bindings': 's',
         \'permanentBindings': '<Plug>(gitv-vsplit)'

@@ -637,7 +637,7 @@ result in bindings equivalent to the defaults.
       \'prevCommit': 'J',
       \'nextCommit': 'K',
       \'splitCommit': 'o',
-      \'vsplitCommit': 's',
+      \'vertSplitCommit': 's',
       \'tabeCommit': 'O',
       \'editCommitDetails': 'i',
       \'diff': 'D',
