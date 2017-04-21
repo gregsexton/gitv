@@ -634,7 +634,7 @@ result in bindings equivalent to the defaults.
       \'editCommit': [
         \'<cr>', { 'keys': '<LeftMouse>', 'prefix', '<LeftMouse>' }
       \],
-      \'previousCommit': 'J',
+      \'prevCommit': 'J',
       \'nextCommit': 'K',
       \'splitCommit': 'o',
       \'vsplitCommit': 's',

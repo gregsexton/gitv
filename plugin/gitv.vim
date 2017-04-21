@@ -568,6 +568,7 @@ fu! s:AddRebaseMessage(filePath) "{{{
     elseif s:RebaseIsEnabled()
         call append(0, '= '.s:rebaseMsg)
     else
+        " TODO: this will fail if there's no preview window
         call s:MoveIntoPreviewAndExecute('call s:CleanupRebasePreview()', 0)
     endif
 endf "}}}
@@ -688,7 +689,7 @@ fu! s:SetDefaultMappings() "{{{
         \'bindings': 's',
         \'permanentBindings': '<Plug>(gitv-vsplit)'
     \}
-    let s:defaultMappings.previousCommit = {
+    let s:defaultMappings.prevCommit = {
         \'cmd': ':<C-U>call <SID>JumpToCommit(0)<cr>',
         \'bindings': 'J',
         \'permanentBindings': '<Plug>(gitv-previous-commit)'
