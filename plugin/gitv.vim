@@ -720,7 +720,7 @@ fu! s:SetDefaultMappings() "{{{
     \}
     let s:defaultMappings.vstat = {
         \'mapCmd': 'vnoremap',
-        \'cmd': ':<C-U>call <SID>StatGitvCommit()<cr>',
+        \'cmd': ':call <SID>StatGitvCommit()<cr>',
         \'bindings': 'S'
     \}
 
