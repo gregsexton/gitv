@@ -1626,7 +1626,7 @@ fu! s:RebaseGetRange(first, last, fromPlaceholder, ontoPlaceholder) "{{{
     endif
     if a:first != a:last || type(a:ontoPlaceholder) != 1
         let ontoRefs = s:RebaseGetRefs(onto)
-        if !len(onto)
+        if !len(ontoRefs)
             return []
         endif
     else
@@ -1657,7 +1657,7 @@ fu! s:RebaseGetRange(first, last, fromPlaceholder, ontoPlaceholder) "{{{
         let fromChoice = fromRefs
     endif
     if a:first != a:last || type(a:ontoPlaceholder) != 1
-        let ontoChoice = s:RebaseGetChoice(onto, 'onto')
+        let ontoChoice = s:RebaseGetChoice(ontoRefs, 'onto')
         if ontoChoice == ''
             return []
         endif
