@@ -14,7 +14,7 @@ endf "}}}
 fu! gitv#util#line#refs(line) "{{{
     let l = getline(a:line)
     let refstr = matchstr(l, "^\\(\\(|\\|\\/\\|\\\\\\|\\*\\)\\s\\?\\)*\\s\\+(\\zs.\\{-}\\ze)")
-    let refs = split(refstr, ', ')
+    let refs = split(refstr, ', \| -> ')
     return refs
 endf "}}}
 
