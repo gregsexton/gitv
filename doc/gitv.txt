@@ -319,7 +319,7 @@ around a repository history in the browser window.
                         current line.  When on a merge commit, a |count|
                         may be used to choose a parent other than the first.
 
-Here is a list of mapping for rebasing.
+Here is a list of mappings for rebasing.
 
     Mode        Map     Description~
 
