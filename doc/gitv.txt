@@ -405,9 +405,8 @@ Here is a list of mappings for bisecting.
 
     visual      gbb     Mark selected commits as bad.
 
-    normal      gbn     Skip the commit under the cursor. Accepts a count. If
-                        a count is given, ignores the commit under the cursor
-                        and starts at the currently checked out commit.
+    normal      gbn     Skip the current commit. Accepts a count. If a count
+                        is given, skips the number of times specified.
                         Mnemonic- git bisect next.
 
     visual      gbn     Skip the selected range of commits.

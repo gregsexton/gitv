@@ -2090,8 +2090,8 @@ fu! s:BisectGoodBad(goodbad) range "{{{
 endf "}}}
 fu! s:BisectSkip(mode) range "{{{
     if s:BisectIsEnabled() && s:BisectHasStarted()
-        if a:mode == 'n' && v:count
-            let loops = abs(v:count)
+        if a:mode == 'n'
+            let loops = abs(v:count || 1)
             let loop = 0
             let errors = 0
             while loop < loops
