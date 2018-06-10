@@ -494,6 +494,91 @@ g:Gitv_CommitStep number, if you don't get any matches you could try pressing
 <cr> on the 'load more' line. This command may be slow if you choose a large
 range and have a large g:Gitv_CommitStep.
 
+3.9 Bisecting                                               *gitv-bisecting*
+
+gitv provides several bisecting instructions that essentially send it into a
+separate mode. It is intended that this mode can be enabled/disabled at will
+so as to use gitv as normal if desired. This also allows entering into the
+bisecting mode at any time. Since gitv is a visual branch manager, bisecting
+mode offers its most useful capabilities via visual selection.
+
+When gitv is in bisecting mode, only the range of commits being bisected is
+shown. This is why capabilities are given to disable bisecting mode and
+explore branches as normal while bisecting. This is a wrapper around the
+`git log --bisect` command.
+
+When the repository is not in bisecting mode, pressing `gbs` or the keybinding
+to `bisectStart` will start the bisecting process. It is recommended that for
+small ranges of commits, you start the bisecting process using visual mode.
+
+When the repository is in visual mode and gitv is not, pressing `gbs` will
+only put gitv into bisecting mode.
+
+However bisecting mode has been enabled, it can always be disabled again using
+`gbs` and enabled again in the same way. It does not keeep stateful
+information about the bisecting process.
+
+You should be able to see which commits have been marked as good, bad, or to
+skip via the output from the `--bisect` command. You should also see the
+current commit marked with `HEAD`. If you need to perform operations on the
+current head, you can jump to it via `P` key or the keybinding to `head`.
+
+`gbr` will call `git bisect --reset` and stop the bisecting process, as
+opposed to just disabling it.
+
+3.10 Rebasing                                                *gitv-rebasing*
+
+Similar to bisecting, rebasing in gitv provides a separate mode which can be
+easily toggled on and off as to jump into the rebasing process at any time. It
+also provides useful visual commands.
+
+There are three ways to start a rebase with gitv if rebasing is not already in
+process in the repository. The most simple, non interactive way, is to use
+`grr`. This is the same as calling `git rebase (ref)` or
+`git rebase (ref1) (ref2)` for a range.
+
+The rest of the ways to start rebasing are wrappers around the
+`git rebase --interactive` command, which allows performing special
+instructions on commits.
+
+The first way to interactively rebase is to call `gbs` when the cursor is on
+the desired ref or commit to rebase without doing anything else first. This
+opens up the file normally used for entering in `--interactive` instructions.
+After you enter in your instructions and save, rebasing does not continue
+automatically.  This is to allow you to re-edit your instructions via
+selecting `Edit rebase todo` in the branch viewer. You must use `grc` or the
+keybinding to `rebaseContinue` to confirm you wish to proceed. You may re-edit
+instructions at any time during the rebasing procedure.
+
+In case it is useful to view the branch history structure while editing rebase
+instructions, a third method is provided for entering rebase mode. By staging
+instructions using the `grR`, `grE`, `grS`, `grF`, `grX`, `grD`, and `grP`
+commands or custom bindings, you can skip editing the initial todo file.
+However, you must still press `grs` on the ref or commit you wish to begin
+rebasing on. Be advised that after you press `grs`, you will not get another
+chance to confirm with `grc`. However, you can still edit the todo at any time
+during the rebasing process. Staged instructions can be cleared using `grP`.
+
+If you are already in the process of an interactive rebase and you enter gitv,
+`grs` will enable rebasing mode instead of starting it.
+
+Once rebasing mode is enabled, `grc` may do one of several things. If the
+rebasing instruction would normally trigger a commit, the fugitive commit
+window will automatically open. If you are not sure why the window has opened,
+please view the comments in the commit window. If the window is closed, it can
+always be reopened with `Gcommit`. gitv may also do nothing. This indicates
+that you have a chance to edit the commit.
+
+You can continue with the rebase process at any interactive instruction with
+`grc` whenever you are ready. When the rebasing ends, gitv will automatically
+return to normal mode.
+
+You may cancel the rebasing process at any time with `gra` or the
+`git rebase --abort` command.
+
+If you git into an undesirable state after rebasing, you may use `git reflog`
+to recover.
+
 ==============================================================================
 4. Configuration Options                               *gitv-config-options*
 
