@@ -37,4 +37,4 @@ before contributing, or to get an idea of what to help out with.
 [1]: https://github.com/gregsexton/gitv/issues
 [2]: https://riot.im/app/#/room/#gitv:matrix.org
 [3]: https://github.com/gregsexton/gitv/pulls
-[4]: https://github.com/gregsexton/gitv/blob/master/roadmap.md
+[4]: https://github.com/gregsexton/gitv/blob/master/ROADMAP.md
