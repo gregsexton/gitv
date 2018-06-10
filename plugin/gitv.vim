@@ -164,7 +164,7 @@ fu! Gitv_GetDebugInfo() "{{{
     echo '### Basic information'
     echo ''
     echo '```'
-    echo 'Version: 1.3.1.21'
+    echo 'Version: 1.3.1.22'
     echo ''
     echo strftime('%c')
     echo '```'
