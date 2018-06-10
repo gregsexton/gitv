@@ -43,6 +43,8 @@ fu! BranchFoldText() "{{{
 endf "}}}
 setlocal foldtext=BranchFoldText()
 setlocal foldlevel=99
+setlocal nosplitbelow
+setlocal nosplitright
 
 let &cpo = s:cpo_save
 unlet s:cpo_save
