@@ -152,6 +152,87 @@ fu! Gitv_OpenGitCommand(command, windowCmd, ...) "{{{
         1
         return 1
     endif
+endf "}}}
+fu! Gitv_GetDebugInfo() "{{{
+    if has('clipboard')
+        redir @+
+    endif
+
+    echo '## Gitv debug output'
+    echo ''
+
+    echo '### Basic information'
+    echo ''
+    echo '```'
+    echo 'Version: 1.3.1.21'
+    echo ''
+    echo strftime('%c')
+    echo '```'
+    echo ''
+
+    echo '### Settings'
+    echo ''
+    echo '```'
+    set
+    echo '```'
+    echo ''
+
+    echo '### Vim version'
+    echo ''
+    echo '```'
+    version
+    echo '```'
+    echo ''
+
+    echo '### Git output'
+    echo ''
+    echo '```'
+
+    try
+        echo '$ git --version'
+        echo s:RunCommandRelativeToGitRepo('git --version')[0]
+        echo '$ git status'
+        echo s:RunCommandRelativeToGitRepo('git status')[0]
+        echo '$ git remote --verbose'
+        echo s:RunCommandRelativeToGitRepo('git remote --verbose')[0]
+    catch
+        echo 'Gitv_GetDebugInfo exception:'
+        echo v:exception
+    endtry
+
+    echo '```'
+    echo ''
+
+    echo '### Fugitive version'
+    echo ''
+    echo '```'
+
+    try
+        let filename = s:GetFugitiveInfo()[1]
+        " Make sure redirection is still set up
+        if has('clipboard')
+            redir @+
+        endif
+        for line in readfile(filename)
+            if line =~ 'Version:' || line =~ 'GetLatestVimScripts:'
+                echo line
+            endif
+        endfor
+    catch
+        echo 'Gitv_GetDebugInfo exception:'
+        echo v:exception
+    endtry
+
+    echo '```'
+    echo ''
+
+    redir END
+
+    if has('clipboard')
+        echo 'Debug information has been copied to your clipboard. Please attach this information to your submitted issue.'
+    else
+        echo 'Please copy the contents above and add them to your submitted issue.'
+    endif
 endf "}}} }}}
 "General Git Functions: "{{{
 fu! s:RunGitCommand(command, verbatim) "{{{
@@ -2543,16 +2624,25 @@ fu! s:MaxLengths(colls) "{{{
     return lengths
 endfu "}}} }}}
 "Fugitive Functions: "{{{
-fu! s:GetFugitiveSid() "{{{
+" Returns an array with script number and path
+fu! s:GetFugitiveInfo() "{{{
     redir => scriptnames
     silent! scriptnames
     redir END
     for script in split(l:scriptnames, "\n")
         if l:script =~ 'fugitive'
-            return str2nr(split(l:script, ":")[0])
+            let info = split(l:script, ":")
+            " Parse the script number
+            let info[0] = str2nr(info[0])
+            " Parse the script path
+            let info[1] = expand(info[1][1:])
+            return info
         endif
     endfor
     throw 'Unable to find fugitive'
+endfu "}}}
+fu! s:GetFugitiveSid() "{{{
+    return s:GetFugitiveInfo()[0]
 endfu "}}} }}}
 
 let &cpo = s:savecpo
