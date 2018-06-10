@@ -1,3 +1,7 @@
+"AUTHOR:     Greg Sexton <gregsexton@gmail.com>
+"MAINTAINER: Roger Bongers <r.l.bongers@gmail.com>
+"WEBSITE:    http://www.gregsexton.org/portfolio/gitv/
+"LICENSE:    Same terms as Vim itself (see :help license).
 " Gitv line-related utility functions
 
 if exists('g:autoloaded_gitv_util_line')

@@ -1,8 +1,9 @@
 " Vim syntax file
-" Language:	Custom git log output
-" Maintainer:	Greg Sexton <gregsexton@gmail.com>
-" Last Change:	2011-04-08
-"
+"LANGUAGE:   Custom git log output
+"AUTHOR:     Greg Sexton <gregsexton@gmail.com>
+"MAINTAINER: Roger Bongers <r.l.bongers@gmail.com>
+"WEBSITE:    http://www.gregsexton.org/portfolio/gitv/
+"LICENSE:    Same terms as Vim itself (see :help license).
 
 if exists("b:current_syntax")
     finish

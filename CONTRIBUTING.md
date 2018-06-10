@@ -17,8 +17,8 @@ your clipboard into the pull request.
 
 We are in need of testers across various platforms, especially OSX and Windows.
 
-If you are interested in testing, please contact the `gmail.com` address
-`r.l.bongers` or get in touch via [matrix][2].
+If you are interested in testing, please [email][5] or get in touch via
+[matrix][2].
 
 ## Questions, Feature Requests
 
@@ -38,3 +38,4 @@ before contributing, or to get an idea of what to help out with.
 [2]: https://riot.im/app/#/room/#gitv:matrix.org
 [3]: https://github.com/gregsexton/gitv/pulls
 [4]: https://github.com/gregsexton/gitv/blob/master/ROADMAP.md
+[5]: mailto:r.l.bongers@gmail.com

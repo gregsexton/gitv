@@ -1,11 +1,12 @@
 gitv -- gitk for vim.
 
-AUTHOR:   Greg Sexton <gregsexton@gmail.com>                      *gitv-author*
-WEBSITE:  http://www.gregsexton.org/portfolio/gitv/
-LICENSE:  Same terms as Vim itself (see :help license).
-NOTES:    Much of the credit for gitv goes to Tim Pope and the fugitive plugin
-          where this plugin either uses functionality directly or was inspired
-          heavily.
+AUTHOR:     Greg Sexton <gregsexton@gmail.com>                      *gitv-author*
+MAINTAINER: Roger Bongers <r.l.bongers@gmail.com>
+WEBSITE:    http://www.gregsexton.org/portfolio/gitv/
+LICENSE:    Same terms as Vim itself (see :help license).
+NOTES:      Much of the credit for gitv goes to Tim Pope and the fugitive plugin
+            where this plugin either uses functionality directly or was inspired
+            heavily.
 
 gitv                                                                     *gitv*
 
@@ -821,34 +822,6 @@ The vmap equivalent for file mode is to make dealing with ranges easier. It
 allows you to visually select a range of lines to view the commit history for
 that section of the file.
 
-The following abbreviation makes running arbitrary git commands much easier.
->
-    cabbrev git Git
-<
-
-The function: 'Gitv_OpenGitCommand(command, windowCmd)' is provided to allow
-the more advanced user to create their own commands. This function will
-execute the git command provided in the new window created using windowCmd.
-
-By using this function you get for free: the buffer set up for read only git
-output, including syntax highlighting and many other tailored options. You
-also get mappings for 'u' to update the output and 'q' to easily close the
-window.
-
-Here is an example of getting diff output both cached and not, in a vertical
-and horizontal split respectively.
->
-    call Gitv_OpenGitCommand("diff --no-color --cached", 'vnew')
-    call Gitv_OpenGitCommand("diff --no-color", 'new')
-<
-
-I like my diff colors to be green for added lines and red for removed lines,
-just like in the shell. Adding this to your vimrc will accomplish this.
->
-    highlight diffAdded guifg=#00bf00
-    highlight diffRemoved guifg=#bf0000
-<
-
 I highly recommend adding to your vimrc:
 >
     set lazyredraw
@@ -868,13 +841,30 @@ You can grab the ref with
     gitv#util#line#refs('.')
 <
 
-6.3 Bugs, issues, features and contributing.
+The function: 'Gitv_OpenGitCommand(command, windowCmd)' is provided to allow
+the more advanced user to create their own commands. This function will
+execute the git command provided in the new window created using windowCmd.
 
-There are no known bugs. Hopefully there are not too many unknown. Please see
-below to help.
+By using this function you get for free: the buffer set up for read only git
+output, including syntax highlighting and many other tailored options. You
+also get mappings for 'u' to update the output and 'q' to easily close the
+window.
+
+Here is an example of getting diff output both cached and not, in a vertical
+and horizontal split respectively.
+>
+    call Gitv_OpenGitCommand("diff --no-color --cached", 'vnew')
+    call Gitv_OpenGitCommand("diff --no-color", 'new')
+
+Use this command at your own risk. gitv currently makes certain assumptions
+about window layout, and custom layouts could break certain functions.
+
+6.3 Bugs, issues, features and contributing.
 
 Bugs, suggestions, pull requests and patches are all very welcome. If you find
 issues with |gitv| please add them to the issues page on the github project.
-Anything else, feel free to email me: gregsexton@gmail.com.
+Anything else, feel free to email me at r.l.bongers@gmail.com
+
+Please run `Gitv_GetDebugInfo()` and post your clipboard output for bugs.
 
  vim:tw=78:ts=8:ft=help:norl:

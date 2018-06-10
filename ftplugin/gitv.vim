@@ -1,8 +1,9 @@
-"AUTHOR:   Greg Sexton <gregsexton@gmail.com>
-"WEBSITE:  http://www.gregsexton.org/portfolio/gitv/
-"LICENSE:  Same terms as Vim itself (see :help license).
-"NOTES:    Much of the credit for gitv goes to Tim Pope and the fugitive plugin
-"          where this plugin either uses functionality directly or was inspired heavily.
+"AUTHOR:     Greg Sexton <gregsexton@gmail.com>
+"MAINTAINER: Roger Bongers <r.l.bongers@gmail.com>
+"WEBSITE:    http://www.gregsexton.org/portfolio/gitv/
+"LICENSE:    Same terms as Vim itself (see :help license).
+"NOTES:      Much of the credit for gitv goes to Tim Pope and the fugitive plugin
+"            where this plugin either uses functionality directly or was inspired heavily.
 
 "enabling these next lines breaks settings when reloading the buffer
 "if exists("b:did_ftplugin") | finish | endif
