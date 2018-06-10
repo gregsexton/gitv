@@ -1090,8 +1090,12 @@ fu! s:SetDefaultMappings() "{{{
     endif
 endf "}}}
 fu! s:NormalCmd(mapId, mappings) "{{{
+    " Normal commands can sometimes be invoked after git commands with output
+    " This means we may have to move out of the terminal to execute them
+    let terminalStatus = s:MoveOutOfNvimTerminal()
     let bindings = s:GetBindings(a:mapId, a:mappings)
     exec 'normal '.bindings[0].keys
+    call s:MoveIntoNvimTerminal(terminalStatus)
 endfu "}}}
 fu! s:TransformBindings(bindings) "{{{
     " a:bindings can be a string or list of (in)complete binding descriptors
@@ -1226,6 +1230,18 @@ fu! s:ResizeWindow(fileMode) "{{{
     endif
 endf "}}} }}}
 "Utilities:"{{{
+" nvim sometimes opens a new window to execute commands.
+" These utilities allow for temporarily exiting and re-entering the terminal.
+" The terminal should ultimately be re-focused immediately after executing some command in gitv.
+" This will show the output to the user.
+fu! s:MoveOutOfNvimTerminal() "{{{
+    let terminalIsOpen = has('nvim') && &buftype == 'terminal'
+    if terminalIsOpen | tabn | endif
+    return terminalIsOpen
+endf "}}}
+fu! s:MoveIntoNvimTerminal(terminalIsOpen) "{{{
+    if a:terminalIsOpen | tabp | endif
+endf "}}}
 fu! s:GetParentSha(sha, parentNum) "{{{
     if a:parentNum < 1
         return
@@ -1411,11 +1427,16 @@ fu! s:MoveIntoPreviewAndExecute(cmd, tryToOpenNewWin) "{{{
     endif
 
     silent exec a:cmd
+    let terminalStatus = s:MoveOutOfNvimTerminal()
+
+    " Move back into the branch viewer
     if horiz || filem
         wincmd k
     else
         wincmd h
     endif
+
+    call s:MoveIntoNvimTerminal(terminalStatus)
 endfu "}}}
 fu! s:AttemptToCreateAPreviewWindow(shouldAttempt, cmd, shouldWarn) "{{{
     if a:shouldAttempt
