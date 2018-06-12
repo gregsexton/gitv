@@ -326,7 +326,7 @@ fu! s:EscapeGitvArgs(extraArgs) "{{{
         return shellescape(a:extraArgs)
     else
         return a:extraArgs
-    fi
+    endif
 endfu "}}}
 fu! s:OpenGitv(extraArgs, fileMode, rangeStart, rangeEnd) "{{{
     if !exists('s:fugitiveSid')
@@ -383,6 +383,7 @@ fu! s:CompleteGitv(arglead, cmdline, pos) "{{{
         else
             return substitute( refs, "\\v(^|\n)\\zs", prefix, 'g' ).paths
         endif
+    endif
 endf "}}}
 fu! s:OpenBrowserMode(extraArgs) "{{{
     "this throws an exception if not a git repo which is caught immediately
@@ -2112,9 +2113,9 @@ fu! s:BisectStart(mode) range "{{{
             return
         endif
         if a:mode == 'v'
-            call s:RunGitCommand('bisect bad ' . gitv#util#line#sha(a:firstline), 0)[0]
+            call s:RunGitCommand('bisect bad ' . gitv#util#line#sha(a:firstline), 0)
             if a:firstline != a:lastline
-                call s:RunGitCommand('bisect good ' . gitv#util#line#sha(a:lastline), 0)[0]
+                call s:RunGitCommand('bisect good ' . gitv#util#line#sha(a:lastline), 0)
             endif
         endif
         let b:Gitv_Bisecting = 1
@@ -2178,7 +2179,7 @@ fu! s:BisectGoodBad(goodbad) range "{{{
                 let result = s:RunGitCommand('bisect ' . goodbad . ref, 0)[0]
                 if v:shell_error
                     echoerr split(result, '\n')[0]
-                    errors += 1
+                    let errors = errors + 1
                 endif
             endfor
             if g:Gitv_QuietBisect == 0
