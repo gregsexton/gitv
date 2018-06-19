@@ -332,12 +332,12 @@ fu! s:OpenGitv(extraArgs, fileMode, rangeStart, rangeEnd) "{{{
     if !exists('s:fugitiveSid')
         let s:fugitiveSid = s:GetFugitiveSid()
     endif
-    let sanitizedArgs = s:SanitizeReservedArgs(a:extraArgs)
-    let g:Gitv_InstanceCounter += 1
-    if !s:IsCompatible() "this outputs specific errors
-        return
-    endif
     try
+        let sanitizedArgs = s:SanitizeReservedArgs(a:extraArgs)
+        let g:Gitv_InstanceCounter += 1
+        if !s:IsCompatible() "this outputs specific errors
+            return
+        endif
         if a:fileMode
             call s:OpenFileMode(sanitizedArgs, a:rangeStart, a:rangeEnd)
         else
