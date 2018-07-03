@@ -2260,18 +2260,20 @@ fu! s:CheckOutGitvCommit() "{{{
         return
     endif
 
-    " Add refs to create and checkout a new branch for remote-only branches
-    let origrefs = []
+    " Add refs to create and checkout a new local branch for remote-only branches
+    let remoterefs = []
+    let localrefs = []
     for ref in allrefs
-        if match(ref, '^\(r:\)\|\(refs/remotes/\)origin/') == 0 && match(ref, '/HEAD$') == -1
-            let origrefs += [ref]
+        if match(ref, '^r:') == 0
+            let remoterefs += [ref]
+        else
+            let localrefs += [ref]
         endif
     endfor
     let newrefs = []
-    for origref in origrefs
-        let ref = substitute(origref, '^r:origin/\(.*\)', '\1', '')
-        let ref = substitute(ref, '^refs/remotes/origin/\(.*\)', '\1', '')
-        if count(allrefs, ref) == 0
+    for remoteref in remoterefs
+        let ref = substitute(remoteref, '^r:\(\w\+\)/\(.*\)', '\2', '')
+        if count(localrefs, ref) == 0
             let newrefs += [ref]
         endif
     endfor
