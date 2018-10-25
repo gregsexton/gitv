@@ -2264,7 +2264,7 @@ fu! s:CheckOutGitvCommit() "{{{
     let remoterefs = []
     let localrefs = []
     for ref in allrefs
-        if match(ref, '^r:') == 0
+        if (match(ref, '^r:') == 0) || (match(ref, '^refs/remotes/') == 0)
             let remoterefs += [ref]
         else
             let localrefs += [ref]
@@ -2273,6 +2273,7 @@ fu! s:CheckOutGitvCommit() "{{{
     let newrefs = []
     for remoteref in remoterefs
         let ref = substitute(remoteref, '^r:\(\w\+\)/\(.*\)', '\2', '')
+        let ref = substitute(ref, '^refs\/remotes\/\(\w\+\)/\(.*\)', '\2', '')
         if count(localrefs, ref) == 0
             let newrefs += [ref]
         endif
