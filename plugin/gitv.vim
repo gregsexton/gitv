@@ -326,7 +326,7 @@ fu! s:EscapeGitvArgs(extraArgs) "{{{
         return shellescape(a:extraArgs)
     else
         return a:extraArgs
-    fi
+    endif
 endfu "}}}
 fu! s:OpenGitv(extraArgs, fileMode, rangeStart, rangeEnd) "{{{
     if !exists('s:fugitiveSid')
