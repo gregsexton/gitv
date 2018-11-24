@@ -108,11 +108,7 @@ fu! Gitv_OpenGitCommand(command, windowCmd, ...) "{{{
             let workingDir     = fugitive#buffer().repo().tree()
             let cd             = exists('*haslocaldir') && haslocaldir() ? 'lcd ' : 'cd '
             let bufferDir      = getcwd()
-            let tempSplitBelow = &splitbelow
-            let tempSplitRight = &splitright
             try
-                set nosplitbelow
-                set nosplitright
                 execute cd.'`=workingDir`'
                 exec a:windowCmd
                 let newWindow = winnr()
@@ -122,8 +118,6 @@ fu! Gitv_OpenGitCommand(command, windowCmd, ...) "{{{
                 if exists('newWindow')
                     exec newWindow . 'wincmd w'
                 endif
-                exec 'set '. (tempSplitBelow ? '' : 'no') . 'splitbelow'
-                exec 'set '. (tempSplitRight ? '' : 'no') . 'splitright'
             endtry
         endif
         if !(&modifiable)
@@ -390,9 +384,9 @@ fu! s:OpenBrowserMode(extraArgs) "{{{
     silent Gtabedit HEAD:
 
     if s:IsHorizontal()
-        let direction = 'new gitv'.'-'.g:Gitv_InstanceCounter
+        let direction = 'aboveleft new gitv'.'-'.g:Gitv_InstanceCounter
     else
-        let direction = 'vnew gitv'.'-'.g:Gitv_InstanceCounter
+        let direction = 'aboveleft vnew gitv'.'-'.g:Gitv_InstanceCounter
     endif
     if !s:LoadGitv(direction, 0, g:Gitv_CommitStep, a:extraArgs, '', [])
         return 0
@@ -410,7 +404,7 @@ fu! s:OpenFileMode(extraArgs, rangeStart, rangeEnd) "{{{
     let relPath = fugitive#buffer().path()
     pclose!
     let range = a:rangeStart != a:rangeEnd ? s:GetRegexRange(a:rangeStart, a:rangeEnd) : []
-    if !s:LoadGitv(&previewheight . "new gitv".'-'.g:Gitv_InstanceCounter, 0, g:Gitv_CommitStep, a:extraArgs, relPath, range)
+    if !s:LoadGitv(&previewheight . "aboveleft new gitv".'-'.g:Gitv_InstanceCounter, 0, g:Gitv_CommitStep, a:extraArgs, relPath, range)
         return 0
     endif
     set previewwindow
@@ -757,7 +751,7 @@ fu! s:SetDefaultMappings() "{{{
     \}
     " <Plug>(gitv-*) are fuzzyfinder style keymappings
     let s:defaultMappings.splitCommit = {
-        \'cmd': ':<C-U>call <SID>OpenGitvCommit("Gsplit", 0)<cr>',
+        \'cmd': ':<C-U>call <SID>OpenGitvCommit("aboveleft Gsplit", 0)<cr>',
         \'bindings': 'o',
         \'permanentBindings': '<Plug>(gitv-split)'
     \}
@@ -767,7 +761,7 @@ fu! s:SetDefaultMappings() "{{{
         \'permanentBindings': '<Plug>(gitv-tabedit)'
     \}
     let s:defaultMappings.vertSplitCommit = {
-        \'cmd': ':<C-U>call <SID>OpenGitvCommit("Gvsplit", 0)<cr>',
+        \'cmd': ':<C-U>call <SID>OpenGitvCommit("aboveleft Gvsplit", 0)<cr>',
         \'bindings': 's',
         \'permanentBindings': '<Plug>(gitv-vsplit)'
     \}
@@ -1452,9 +1446,9 @@ fu! s:CreateNewPreviewWindow() "{{{
     let horiz      = s:IsHorizontal()
     let filem      = s:IsFileMode()
     if horiz || filem
-        Gsplit HEAD
+        aboveleft Gsplit HEAD
     else
-        Gvsplit HEAD
+        aboveleft Gvsplit HEAD
     endif
     wincmd x
 endfu "}}}
@@ -1582,7 +1576,7 @@ fu! s:OpenWorkingDiff(geditForm, staged)
         let fp = s:GetRelativeFilePath()
         let suffix = ' -- '.fp
         let g:Gitv_InstanceCounter += 1
-        let winCmd = 'new gitv'.'-'.g:Gitv_InstanceCounter
+        let winCmd = 'aboveleft new gitv'.'-'.g:Gitv_InstanceCounter
     else
         let suffix = ''
     endif
@@ -1990,9 +1984,9 @@ fu! s:RebaseContinueCleanup() "{{{
     endif
     if mode == 'r' || mode == 's'
         if mode == 'r'
-            Gcommit --amend
+            aboveleft Gcommit --amend
         else
-            Gcommit
+            aboveleft Gcommit
         endif
         set modifiable
         if &ft == 'gitcommit'
@@ -2309,7 +2303,7 @@ fu! s:DiffGitvCommit() range "{{{
     if a:firstline != a:lastline
         call s:OpenRelativeFilePath(shafirst, "Gedit")
     endif
-    call s:MoveIntoPreviewAndExecute("Gdiff " . shalast, a:firstline != a:lastline)
+    call s:MoveIntoPreviewAndExecute("aboveleft Gdiff " . shalast, a:firstline != a:lastline)
 endf "}}}
 fu! s:GetMergeArguments(from, to, verbose) "{{{
     if exists('g:Gitv_MergeArgs') && type(g:Gitv_MergeArgs) == 1
@@ -2437,7 +2431,7 @@ fu! s:Revert() range "{{{
         throw split(result, '\n')[0]
         return
     endif
-    exec 'Gcommit'
+    exec 'aboveleft Gcommit'
 endfu "}}}
 fu! s:DeleteRef() range "{{{
     let refs = gitv#util#line#refs(a:firstline)
@@ -2484,7 +2478,7 @@ fu! s:StatGitvCommit() range "{{{
     endif
 endf
 fu! s:SetupStatBuffer(cmd)
-    silent let res = Gitv_OpenGitCommand(a:cmd, s:IsFileMode()?'vnew':'')
+    silent let res = Gitv_OpenGitCommand(a:cmd, s:IsFileMode()?'aboveleft vnew':'')
     if res
         silent set filetype=gitv
     endif
