@@ -104,8 +104,8 @@ fu! Gitv_OpenGitCommand(command, windowCmd, ...) "{{{
             1,$ d _
         else
             let goBackTo       = winnr()
-            let dir            = fugitive#buffer().repo().dir()
-            let workingDir     = fugitive#buffer().repo().tree()
+            let dir            = fugitive#repo().dir()
+            let workingDir     = fugitive#repo().tree()
             let cd             = exists('*haslocaldir') && haslocaldir() ? 'lcd ' : 'cd '
             let bufferDir      = getcwd()
             let tempSplitBelow = &splitbelow
@@ -241,7 +241,7 @@ fu! s:RunGitCommand(command, verbatim) "{{{
     "switches to the buffer repository before running the command and switches back after.
     if !a:verbatim
         "switches to the buffer repository before running the command and switches back after.
-        let cmd                = fugitive#buffer().repo().git_command() .' '. a:command
+        let cmd                = fugitive#repo().git_command() .' '. a:command
         let [result, finalCmd] = s:RunCommandRelativeToGitRepo(cmd)
     else
         let result   = system(a:command)
@@ -252,8 +252,8 @@ endfu "}}}
 fu! s:RunCommandRelativeToGitRepo(command) abort "{{{
     " Runs the command verbatim but first changing to the root git dir.
     " Input commands should include a --git-dir argument to git (see
-    " fugitive#buffer().repo().git_command()).
-    let workingDir = fugitive#buffer().repo().tree()
+    " fugitive#repo().git_command()).
+    let workingDir = fugitive#repo().tree()
 
     let cd = exists('*haslocaldir') && haslocaldir() ? 'lcd ' : 'cd '
     let bufferDir = getcwd()
@@ -282,7 +282,7 @@ fu! s:SanitizeReservedArgs(extraArgs) "{{{
     let selectedFiles = []
     let splitArgs = split(sanitizedArgs, ' ')
     let index = len(splitArgs)
-    let root = fugitive#buffer().repo().tree().'/'
+    let root = fugitive#repo().tree().'/'
     while index
         let index -= 1
         let path = splitArgs[index]
@@ -373,7 +373,7 @@ fu! s:CompleteGitv(arglead, cmdline, pos) "{{{
             let paths = "\n".glob(a:arglead.'*')
         endif
 
-        let refs = fugitive#buffer().repo().git_chomp('rev-parse', '--symbolic', '--branches', '--tags', '--remotes')
+        let refs = fugitive#repo().git_chomp('rev-parse', '--symbolic', '--branches', '--tags', '--remotes')
         let refs .= "\nHEAD\nFETCH_HEAD\nORIG_HEAD"
 
         " Complete ref names preceded by a ^ or anything followed by 2-3 dots
@@ -386,7 +386,6 @@ fu! s:CompleteGitv(arglead, cmdline, pos) "{{{
 endf "}}}
 fu! s:OpenBrowserMode(extraArgs) "{{{
     "this throws an exception if not a git repo which is caught immediately
-    let fubuffer = fugitive#buffer()
     silent Gtabedit HEAD:
 
     if s:IsHorizontal()
@@ -407,7 +406,7 @@ fu! s:OpenBrowserMode(extraArgs) "{{{
     endif
 endf "}}}
 fu! s:OpenFileMode(extraArgs, rangeStart, rangeEnd) "{{{
-    let relPath = fugitive#buffer().path()
+    let relPath = fugitive#Path(@%, a:0 ? a:1 : '')
     pclose!
     let range = a:rangeStart != a:rangeEnd ? s:GetRegexRange(a:rangeStart, a:rangeEnd) : []
     if !s:LoadGitv(&previewheight . "new gitv".'-'.g:Gitv_InstanceCounter, 0, g:Gitv_CommitStep, a:extraArgs, relPath, range)
@@ -522,7 +521,7 @@ fu! s:GetFileSlices(range, filePath, commitCount, extraArgs) "{{{
     "NOTE: this could get massive for a large repo and large range
     let range     = a:range[0] . ',' . a:range[1]
     let range     = substitute(range, "'", "'\\\\''", 'g') "force unix style escaping even on windows
-    let git       = fugitive#buffer().repo().git_command()
+    let git       = fugitive#repo().git_command()
     let sliceCmd  = "for hash in `".git." log " . a:extraArgs[0]
     let sliceCmd .= " --no-color --pretty=format:%H -".a:commitCount." -- " . a:filePath . '`; '
     let sliceCmd .= "do "
@@ -572,7 +571,7 @@ endfu "}}}
 fu! s:GetFinalOutputForHashes(hashes) "{{{
     if len(a:hashes) > 0
         let extraArgs = s:ReapplyReservedArgs(['', ''])
-        let git       = fugitive#buffer().repo().git_command()
+        let git       = fugitive#repo().git_command()
         let cmd       = 'for hash in ' . join(a:hashes, " ") . '; '
         let cmd      .= "do "
         let cmd      .= git.' log'
@@ -1515,7 +1514,7 @@ endf "}}} }}}
 "Mapped Functions:"{{{
 "Operations: "{{{
 fu! s:GetCommitMsg() "{{{
-    return fugitive#buffer().repo().tree().'/.git/COMMIT_EDITMSG'
+    return fugitive#repo().tree().'/.git/COMMIT_EDITMSG'
 endf "}}}
 fu! s:OpenGitvCommit(geditForm, forceOpenFugitive) "{{{
     let bindingsCmd = 'call s:MoveIntoPreviewAndExecute("call s:SetupMapping('."'".'toggleWindow'."'".', s:defaultMappings)", 0)'
@@ -1572,7 +1571,7 @@ endf
 fu! s:OpenWorkingCopy(geditForm)
     let fp = s:GetRelativeFilePath()
     let form = a:geditForm[1:] "strip off the leading 'G'
-    let cmd = form . " " . fugitive#buffer().repo().tree() . "/" . fp
+    let cmd = form . " " . fugitive#repo().tree() . "/" . fp
     let cmd = 'call s:RecordBufferExecAndWipe("'.cmd.'", '.(form=='edit').')'
     call s:MoveIntoPreviewAndExecute(cmd, 1)
 endfu
@@ -1675,7 +1674,7 @@ fu! s:RebaseSetInstruction(instruction) range "{{{
     endif
 endf "}}}
 fu! s:RebaseHasStarted() "{{{
-    return !empty(glob(fugitive#buffer().repo().tree().'/.git/rebase-merge'))
+    return !empty(glob(fugitive#repo().tree().'/.git/rebase-merge'))
 endf "}}}
 fu! s:RebaseGetRefs(line) "{{{
     let sha = gitv#util#line#sha(a:line)
@@ -2003,13 +2002,13 @@ fu! s:RebaseContinueCleanup() "{{{
     endif
 endf "}}}
 fu! s:GetRebaseHeadname() "{{{
-    return fugitive#buffer().repo().tree().'/.git/rebase-merge/head-name'
+    return fugitive#repo().tree().'/.git/rebase-merge/head-name'
 endf "}}}
 fu! s:GetRebaseDone() "{{{
-    return fugitive#buffer().repo().tree().'/.git/rebase-merge/done'
+    return fugitive#repo().tree().'/.git/rebase-merge/done'
 endf "}}}
 fu! s:GetRebaseTodo() "{{{
-    return fugitive#buffer().repo().tree().'/.git/rebase-merge/git-rebase-todo'
+    return fugitive#repo().tree().'/.git/rebase-merge/git-rebase-todo'
 endf "}}}
 fu! s:RebaseViewInstructions() "{{{
     exec 'edit' s:workingFile
@@ -2056,7 +2055,7 @@ fu! s:RebaseEdit() "{{{
 endf "}}} }}}
 "Bisect: "{{{
 fu! s:IsBisectingFiles(filePaths) "{{{
-    let path = fugitive#buffer().repo().tree().'/.git/BISECT_NAMES'
+    let path = fugitive#repo().tree().'/.git/BISECT_NAMES'
     if empty(glob(path))
         return 0
     endif
