@@ -1,3 +1,8 @@
+# Maintainers Needed
+
+I am no longer maintaining this project as I no longer use Gitv.
+If you would like to maintain this project, please email gregsexton.
+
 # Readme
 
 gitv is a repository viewer similar to gitk. It is an extension of the

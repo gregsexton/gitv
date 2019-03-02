@@ -1,7 +1,7 @@
 # Roadmap
 
 This document describes upcoming releases and planned features/enhancements.
-Gitv has a tentative 6 month release schedule, depending on availability.
+I no longer maintain this project, so this roadmap will probably not reflect the plan of future maintainers.
 
 <table>
   <tbody>
