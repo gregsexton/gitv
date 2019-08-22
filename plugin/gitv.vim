@@ -2258,7 +2258,24 @@ fu! s:CheckOutGitvCommit() "{{{
     if sha == ""
         return
     endif
-    let refs   = allrefs + [sha]
+
+    " Modify refs to create and checkout new local branch for remote-only branches
+    let newrefs = []
+    for ref in allrefs
+        if (match(ref, '^r:') == 0) || (match(ref, '^refs/remotes/') == 0)
+            " Remove remote part
+            let ref = substitute(ref, '^r:\(\w\+\)/\(.*\)', '\2', '')
+            let ref = substitute(ref, '^refs\/remotes\/\(\w\+\)/\(.*\)', '\2', '')
+            if count(allrefs, ref) == 0
+                " Prevent dublicates
+                let newrefs += [ref]
+            endif
+        else
+            let newrefs += [ref]
+        endif
+    endfor
+
+    let refs   = newrefs + [sha]
     let refstr = s:GetConfirmString(refs, 'Cancel')
     let choice = confirm("Checkout commit:", refstr)
     if choice == 0
