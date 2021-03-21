@@ -567,7 +567,7 @@ Once rebasing mode is enabled, `grc` may do one of several things. If the
 rebasing instruction would normally trigger a commit, the fugitive commit
 window will automatically open. If you are not sure why the window has opened,
 please view the comments in the commit window. If the window is closed, it can
-always be reopened with `Gcommit`. gitv may also do nothing. This indicates
+always be reopened with `Git commit`. gitv may also do nothing. This indicates
 that you have a chance to edit the commit.
 
 You can continue with the rebase process at any interactive instruction with

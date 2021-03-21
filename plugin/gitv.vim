@@ -1989,9 +1989,9 @@ fu! s:RebaseContinueCleanup() "{{{
     endif
     if mode == 'r' || mode == 's'
         if mode == 'r'
-            Gcommit --amend
+            Git commit --amend
         else
-            Gcommit
+            Git commit
         endif
         set modifiable
         if &ft == 'gitcommit'
@@ -2453,7 +2453,7 @@ fu! s:Revert() range "{{{
         throw split(result, '\n')[0]
         return
     endif
-    exec 'Gcommit'
+    exec 'Git commit'
 endfu "}}}
 fu! s:DeleteRef() range "{{{
     let refs = gitv#util#line#refs(a:firstline)
