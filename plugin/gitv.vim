@@ -241,7 +241,7 @@ fu! s:RunGitCommand(command, verbatim) "{{{
     "switches to the buffer repository before running the command and switches back after.
     if !a:verbatim
         "switches to the buffer repository before running the command and switches back after.
-        let cmd                = fugitive#repo().git_command() .' '. a:command
+        let cmd                = FugitiveShellCommand() .' '. a:command
         let [result, finalCmd] = s:RunCommandRelativeToGitRepo(cmd)
     else
         let result   = system(a:command)
@@ -252,7 +252,7 @@ endfu "}}}
 fu! s:RunCommandRelativeToGitRepo(command) abort "{{{
     " Runs the command verbatim but first changing to the root git dir.
     " Input commands should include a --git-dir argument to git (see
-    " fugitive#repo().git_command()).
+    " FugitiveShellCommand()).
     let workingDir = fugitive#repo().tree()
 
     let cd = exists('*haslocaldir') && haslocaldir() ? 'lcd ' : 'cd '
@@ -521,7 +521,7 @@ fu! s:GetFileSlices(range, filePath, commitCount, extraArgs) "{{{
     "NOTE: this could get massive for a large repo and large range
     let range     = a:range[0] . ',' . a:range[1]
     let range     = substitute(range, "'", "'\\\\''", 'g') "force unix style escaping even on windows
-    let git       = fugitive#repo().git_command()
+    let git       = FugitiveShellCommand()
     let sliceCmd  = "for hash in `".git." log " . a:extraArgs[0]
     let sliceCmd .= " --no-color --pretty=format:%H -".a:commitCount." -- " . a:filePath . '`; '
     let sliceCmd .= "do "
@@ -571,7 +571,7 @@ endfu "}}}
 fu! s:GetFinalOutputForHashes(hashes) "{{{
     if len(a:hashes) > 0
         let extraArgs = s:ReapplyReservedArgs(['', ''])
-        let git       = fugitive#repo().git_command()
+        let git       = FugitiveShellCommand()
         let cmd       = 'for hash in ' . join(a:hashes, " ") . '; '
         let cmd      .= "do "
         let cmd      .= git.' log'
