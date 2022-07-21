@@ -104,8 +104,8 @@ fu! Gitv_OpenGitCommand(command, windowCmd, ...) "{{{
             1,$ d _
         else
             let goBackTo       = winnr()
-            let dir            = fugitive#repo().dir()
-            let workingDir     = fugitive#repo().tree()
+            let dir            = FugitiveGitDir()
+            let workingDir     = FugitiveFind(":/")
             let cd             = exists('*haslocaldir') && haslocaldir() ? 'lcd ' : 'cd '
             let bufferDir      = getcwd()
             let tempSplitBelow = &splitbelow
@@ -253,7 +253,7 @@ fu! s:RunCommandRelativeToGitRepo(command) abort "{{{
     " Runs the command verbatim but first changing to the root git dir.
     " Input commands should include a --git-dir argument to git (see
     " fugitive#repo().git_command()).
-    let workingDir = fugitive#repo().tree()
+    let workingDir = FugitiveFind(":/")
 
     let cd = exists('*haslocaldir') && haslocaldir() ? 'lcd ' : 'cd '
     let bufferDir = getcwd()
@@ -282,7 +282,7 @@ fu! s:SanitizeReservedArgs(extraArgs) "{{{
     let selectedFiles = []
     let splitArgs = split(sanitizedArgs, ' ')
     let index = len(splitArgs)
-    let root = fugitive#repo().tree().'/'
+    let root = FugitiveFind(":/")
     while index
         let index -= 1
         let path = splitArgs[index]
@@ -1514,7 +1514,7 @@ endf "}}} }}}
 "Mapped Functions:"{{{
 "Operations: "{{{
 fu! s:GetCommitMsg() "{{{
-    return fugitive#repo().tree().'/.git/COMMIT_EDITMSG'
+    return FugitiveFind(":/").'/.git/COMMIT_EDITMSG'
 endf "}}}
 fu! s:OpenGitvCommit(geditForm, forceOpenFugitive) "{{{
     let bindingsCmd = 'call s:MoveIntoPreviewAndExecute("call s:SetupMapping('."'".'toggleWindow'."'".', s:defaultMappings)", 0)'
@@ -1571,7 +1571,7 @@ endf
 fu! s:OpenWorkingCopy(geditForm)
     let fp = s:GetRelativeFilePath()
     let form = a:geditForm[1:] "strip off the leading 'G'
-    let cmd = form . " " . fugitive#repo().tree() . "/" . fp
+    let cmd = form . " " . FugitiveFind(":/") . "/" . fp
     let cmd = 'call s:RecordBufferExecAndWipe("'.cmd.'", '.(form=='edit').')'
     call s:MoveIntoPreviewAndExecute(cmd, 1)
 endfu
@@ -1674,7 +1674,7 @@ fu! s:RebaseSetInstruction(instruction) range "{{{
     endif
 endf "}}}
 fu! s:RebaseHasStarted() "{{{
-    return !empty(glob(fugitive#repo().tree().'/.git/rebase-merge'))
+    return !empty(glob(FugitiveFind(":/").'/.git/rebase-merge'))
 endf "}}}
 fu! s:RebaseGetRefs(line) "{{{
     let sha = gitv#util#line#sha(a:line)
@@ -2002,13 +2002,13 @@ fu! s:RebaseContinueCleanup() "{{{
     endif
 endf "}}}
 fu! s:GetRebaseHeadname() "{{{
-    return fugitive#repo().tree().'/.git/rebase-merge/head-name'
+    return FugitiveFind(":/").'/.git/rebase-merge/head-name'
 endf "}}}
 fu! s:GetRebaseDone() "{{{
-    return fugitive#repo().tree().'/.git/rebase-merge/done'
+    return FugitiveFind(":/").'/.git/rebase-merge/done'
 endf "}}}
 fu! s:GetRebaseTodo() "{{{
-    return fugitive#repo().tree().'/.git/rebase-merge/git-rebase-todo'
+    return FugitiveFind(":/").'/.git/rebase-merge/git-rebase-todo'
 endf "}}}
 fu! s:RebaseViewInstructions() "{{{
     exec 'edit' s:workingFile
@@ -2055,7 +2055,7 @@ fu! s:RebaseEdit() "{{{
 endf "}}} }}}
 "Bisect: "{{{
 fu! s:IsBisectingFiles(filePaths) "{{{
-    let path = fugitive#repo().tree().'/.git/BISECT_NAMES'
+    let path = FugitiveFind(":/").'/.git/BISECT_NAMES'
     if empty(glob(path))
         return 0
     endif
